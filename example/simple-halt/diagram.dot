@@ -1,0 +1,26 @@
+digraph {
+  10430172767009159544 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<EntryEvent;no fields" ];
+  10430172767009159544 [ penwidth=5 ];
+  10335180506393400324 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<HaltEvent;no fields
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+* StateMachine<<EntryEvent;no fields" ];
+  11106146301305390142 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+* StateMachine<<EntryEvent;no fields" ];
+  10335180506393400324 -> 11106146301305390142;
+  11106146301305390142 -> 11106146301305390142;
+  10430172767009159544 -> 10335180506393400324;
+}

@@ -1,0 +1,59 @@
+digraph {
+  8911339139857591373 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:1};{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<EntryEvent;no fields" ];
+  15533644446788294699 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:2};{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+* StateMachine<<EntryEvent;no fields" ];
+  15533644446788294699 [ color=red, penwidth=3 ];
+  3961213157694457601 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:3};{Name:StateType,Type:main.StateType,Value:C}
+
+QueuedEvents:" ];
+  3961213157694457601 [ color=red, penwidth=3 ];
+  11051984779209966317 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:0};{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<EntryEvent;no fields" ];
+  11051984779209966317 [ penwidth=5 ];
+  2356670893530048470 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:2};{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+* StateMachine<<EntryEvent;no fields" ];
+  2356670893530048470 [ color=red, penwidth=3 ];
+  16399079221516314249 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:2};{Name:StateType,Type:main.StateType,Value:C}
+
+QueuedEvents:
+* StateMachine<<EntryEvent;no fields" ];
+  16399079221516314249 [ color=red, penwidth=3 ];
+  5081797476766332418 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:1};{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+* StateMachine<<EntryEvent;no fields" ];
+  11358107461462134347 [ label="StateMachines:
+* StateMachine={Name:Mut,Type:int,Value:1};{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+* StateMachine<<EntryEvent;no fields" ];
+  5081797476766332418 -> 11358107461462134347;
+  11358107461462134347 -> 8911339139857591373;
+  8911339139857591373 -> 15533644446788294699;
+  15533644446788294699 -> 2356670893530048470;
+  2356670893530048470 -> 16399079221516314249;
+  16399079221516314249 -> 3961213157694457601;
+  11051984779209966317 -> 5081797476766332418;
+}

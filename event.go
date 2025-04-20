@@ -1,0 +1,115 @@
+package goat
+
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
+
+type AbstractEvent interface {
+	isEvent() bool
+}
+
+type Event struct {
+	// this is needed to make Event copyable
+	r rune
+}
+
+func (e *Event) isEvent() bool {
+	return true
+}
+
+type (
+	// EntryEvent is an event that is triggered
+	// when a state machine enters a state.
+	EntryEvent struct {
+		Event
+	}
+
+	// ExitEvent is an event that is triggered
+	// when a state machine exits a state.
+	ExitEvent struct {
+		Event
+	}
+
+	// TransitionEvent is an event that is triggered
+	// when a state machine transitions from one state to another.
+	TransitionEvent struct {
+		Event
+		To AbstractState
+	}
+
+	// HaltEvent is an event that is triggered
+	// when a state machine halts.
+	HaltEvent struct {
+		Event
+	}
+)
+
+func cloneEvent(event AbstractEvent) AbstractEvent {
+	v := reflect.ValueOf(event)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	newEvent := reflect.New(v.Type()).Elem()
+	newEvent.Set(v)
+
+	return newEvent.Addr().Interface().(AbstractEvent)
+}
+
+func sameEvent(e1, e2 AbstractEvent) bool {
+	return getEventName(e1) == getEventName(e2)
+}
+
+// getEventName returns the name of the event type
+// that implements AbstractEvent.
+func getEventName(e AbstractEvent) string {
+	v := reflect.ValueOf(e)
+	if !v.IsValid() {
+		panic(fmt.Sprintf("INVALID EVENT: %v", e))
+	}
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	return v.Type().Name()
+}
+
+func getEventDetails(e AbstractEvent) string {
+	v := reflect.ValueOf(e)
+	if !v.IsValid() {
+		panic(fmt.Sprintf("INVALID EVENT: %v", e))
+	}
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	t := v.Type()
+
+	var fieldDetails []string
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		fieldName := t.Field(i).Name
+
+		if field.Kind() == reflect.Ptr {
+			continue
+		}
+
+		if fieldName != "Event" {
+			if field.CanInterface() {
+				fieldType := field.Type().String()
+				fieldValue := field.Interface()
+				fieldDetails = append(fieldDetails, fmt.Sprintf("{Name:%s,Type:%s,Value:%v}", fieldName, fieldType, fieldValue))
+			} else {
+				fieldDetails = append(fieldDetails, fmt.Sprintf("{Name:%s,Type:%s,Value:[UNACCESSIBLE]}", fieldName, field.Type().String()))
+			}
+		}
+	}
+
+	if len(fieldDetails) == 0 {
+		return fmt.Sprintf("no fields")
+	}
+
+	return strings.Join(fieldDetails, ",")
+}

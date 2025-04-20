@@ -1,0 +1,87 @@
+digraph {
+  17964288042359039285 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<EntryEvent;no fields" ];
+  6082823301770540954 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+* StateMachine<<EntryEvent;no fields" ];
+  7640619707847766127 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} A}}
+* StateMachine<<EntryEvent;no fields" ];
+  3108951696325647426 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+* StateMachine<<EntryEvent;no fields" ];
+  8391995857098703778 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:C}
+
+QueuedEvents:
+* StateMachine<<EntryEvent;no fields" ];
+  7139566126375982976 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} A}}
+* StateMachine<<EntryEvent;no fields" ];
+  6346312002851470401 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+* StateMachine<<EntryEvent;no fields" ];
+  17512442101710683052 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<EntryEvent;no fields" ];
+  17512442101710683052 [ penwidth=5 ];
+  3884178862275712841 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<ExitEvent;no fields
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+* StateMachine<<EntryEvent;no fields" ];
+  12562971346113468414 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+* StateMachine<<EntryEvent;no fields" ];
+  17194766139364348873 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:C}
+
+QueuedEvents:" ];
+  13338479987040355845 [ label="StateMachines:
+* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+* StateMachine<<EntryEvent;no fields" ];
+  12562971346113468414 -> 8391995857098703778;
+  3108951696325647426 -> 13338479987040355845;
+  13338479987040355845 -> 17964288042359039285;
+  17964288042359039285 -> 6082823301770540954;
+  17964288042359039285 -> 7139566126375982976;
+  7640619707847766127 -> 17512442101710683052;
+  6082823301770540954 -> 6346312002851470401;
+  6346312002851470401 -> 8391995857098703778;
+  17512442101710683052 -> 3108951696325647426;
+  17512442101710683052 -> 3884178862275712841;
+  3884178862275712841 -> 12562971346113468414;
+  8391995857098703778 -> 17194766139364348873;
+  7139566126375982976 -> 7640619707847766127;
+}
