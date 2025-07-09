@@ -46,6 +46,8 @@ type (
 	}
 )
 
+// WARNING: cloneEvent performs shallow copy, so nested pointers are shared
+// This is a potential bug - modifications to nested structs will affect both instances
 func cloneEvent(event AbstractEvent) AbstractEvent {
 	v := reflect.ValueOf(event)
 	if v.Kind() == reflect.Ptr {
@@ -92,6 +94,9 @@ func getEventDetails(e AbstractEvent) string {
 		field := v.Field(i)
 		fieldName := t.Field(i).Name
 
+		// WARNING: Pointer fields are intentionally skipped
+		// This prevents potential circular references and nil pointer dereferences,
+		// but means that important data in pointer fields will not be displayed
 		if field.Kind() == reflect.Ptr {
 			continue
 		}
@@ -108,7 +113,7 @@ func getEventDetails(e AbstractEvent) string {
 	}
 
 	if len(fieldDetails) == 0 {
-		return fmt.Sprintf("no fields")
+		return "no fields"
 	}
 
 	return strings.Join(fieldDetails, ",")
