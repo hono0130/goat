@@ -236,6 +236,80 @@ func (k *Kripke) WriteAsDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "}")
 }
 
+func (k *Kripke) WriteAsLog(w io.Writer, invariantDescription string) {
+	paths := k.findPathsToViolations()
+
+	if len(paths) == 0 {
+		_, _ = fmt.Fprintln(w, "No invariant violations found.")
+		return
+	}
+
+	for i, path := range paths {
+		if i > 0 {
+			_, _ = fmt.Fprintln(w, "")
+		}
+
+		_, _ = fmt.Fprintf(w, "InvariantError:  %s   ✘\n", invariantDescription)
+		_, _ = fmt.Fprintf(w, "Path (length = %d):\n", len(path))
+
+		for j, worldID := range path {
+			world := k.worlds[worldID]
+
+			if j == len(path)-1 && world.invariantViolation {
+				_, _ = fmt.Fprintf(w, "  [%d] <-- violation here\n", j)
+			} else {
+				_, _ = fmt.Fprintf(w, "  [%d]\n", j)
+			}
+			_, _ = fmt.Fprintf(w, "  StateMachines:\n")
+			for _, sm := range world.env.machines {
+				_, _ = fmt.Fprintf(w, "    Name: %s, Detail: %s, State: %s\n", getStateMachineName(sm), getStateMachineDetails(sm), getStateDetails(sm.currentState()))
+			}
+			_, _ = fmt.Fprintf(w, "  QueuedEvents:\n")
+			for smID, events := range world.env.queue {
+				for _, event := range events {
+					_, _ = fmt.Fprintf(w, "    StateMachine: %s, Event: %s, Detail: %s\n", getStateMachineName(world.env.machines[smID]), getEventName(event), getEventDetails(event))
+				}
+			}
+		}
+	}
+}
+
+func (k *Kripke) findPathsToViolations() [][]worldID {
+	var paths [][]worldID
+
+	visited := make(map[worldID]bool)
+
+	queue := [][]worldID{{k.initial.id}}
+
+	for len(queue) > 0 {
+		path := queue[0]
+		queue = queue[1:]
+
+		currentID := path[len(path)-1]
+
+		if visited[currentID] {
+			continue
+		}
+		visited[currentID] = true
+
+		if k.worlds[currentID].invariantViolation {
+			paths = append(paths, path)
+			continue
+		}
+
+		for _, nextID := range k.accessible[currentID] {
+			if !visited[nextID] {
+				newPath := make([]worldID, len(path)+1)
+				copy(newPath, path)
+				newPath[len(path)] = nextID
+				queue = append(queue, newPath)
+			}
+		}
+	}
+
+	return paths
+}
+
 func (k *Kripke) evaluateInvariants(w world) bool {
 	for _, invariant := range k.invariants {
 		if !invariant.Evaluate(w) {
@@ -279,3 +353,4 @@ func WithInvariants(is ...Invariant) Option {
 		o.invariants = is
 	})
 }
+

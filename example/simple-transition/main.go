@@ -83,5 +83,5 @@ func main() {
 		panic(err)
 	}
 
-	kripke.WriteAsDot(os.Stdout)
+	kripke.WriteAsLog(os.Stdout, "Mut <= 1")
 }
