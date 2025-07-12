@@ -8,50 +8,28 @@ type handlerInfo struct {
 }
 
 type Handler interface {
-	apply(*StateMachine, AbstractState)
 	handle(env Environment, smID string, event AbstractEvent) ([]localState, error)
 }
 
-func WithOnEntry(fs ...OnEntryFunc) Handler {
-	return &onEntryHandler{fs: fs}
-}
+type OnEntryFunc func(env *Environment)
 
-func WithOnExit(fs ...OnExitFunc) Handler {
-	return &onExitHandler{fs: fs}
-}
+type OnExitFunc func(env *Environment)
 
-func WithOnEvent(event AbstractEvent, fs ...OnEventFunc) Handler {
-	return &onEventHandler{fs: fs, event: event}
-}
+type OnEventFunc func(event AbstractEvent, env *Environment)
 
-func WithOnTransition(fs ...OnTransitionFunc) Handler {
-	return &onTransitionHandler{fs: fs}
-}
+type OnTransitionFunc func(toState AbstractState, env *Environment)
 
-type OnEntryFunc func(this AbstractStateMachine, env *Environment)
-
-type OnExitFunc func(this AbstractStateMachine, env *Environment)
-
-type OnEventFunc func(this AbstractStateMachine, event AbstractEvent, env *Environment)
-
-type OnTransitionFunc func(this AbstractStateMachine, toState AbstractState, env *Environment)
-
-type OnHaltFunc func(this AbstractStateMachine, env *Environment)
+type OnHaltFunc func(env *Environment)
 
 type onEntryHandler struct {
 	fs []OnEntryFunc
-}
-
-func (h *onEntryHandler) apply(sm *StateMachine, state AbstractState) {
-	sm.setEventHandler(&EntryEvent{}, state, h)
 }
 
 func (h *onEntryHandler) handle(env Environment, smID string, _ AbstractEvent) ([]localState, error) {
 	lss := make([]localState, 0)
 	for _, f := range h.fs {
 		ec := env.clone()
-		sm := ec.machines[smID]
-		f(sm, &ec)
+		f(&ec)
 		lss = append(lss, localState{env: ec})
 	}
 	return lss, nil
@@ -61,16 +39,11 @@ type onExitHandler struct {
 	fs []OnExitFunc
 }
 
-func (h *onExitHandler) apply(sm *StateMachine, state AbstractState) {
-	sm.setEventHandler(&ExitEvent{}, state, h)
-}
-
 func (h *onExitHandler) handle(env Environment, smID string, _ AbstractEvent) ([]localState, error) {
 	lss := make([]localState, 0)
 	for _, f := range h.fs {
 		ec := env.clone()
-		sm := ec.machines[smID]
-		f(sm, &ec)
+		f(&ec)
 		lss = append(lss, localState{env: ec})
 	}
 	return lss, nil
@@ -81,10 +54,6 @@ type onEventHandler struct {
 	event AbstractEvent
 }
 
-func (h *onEventHandler) apply(sm *StateMachine, state AbstractState) {
-	sm.setEventHandler(h.event, state, h)
-}
-
 func (h *onEventHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(h.event, event) {
 		return nil, nil
@@ -92,8 +61,7 @@ func (h *onEventHandler) handle(env Environment, smID string, event AbstractEven
 	lss := make([]localState, 0)
 	for _, f := range h.fs {
 		ec := env.clone()
-		sm := ec.machines[smID]
-		f(sm, event, &ec)
+		f(event, &ec)
 		lss = append(lss, localState{env: ec})
 	}
 	return lss, nil
@@ -101,10 +69,6 @@ func (h *onEventHandler) handle(env Environment, smID string, event AbstractEven
 
 type onTransitionHandler struct {
 	fs []OnTransitionFunc
-}
-
-func (h *onTransitionHandler) apply(sm *StateMachine, state AbstractState) {
-	sm.setEventHandler(&TransitionEvent{}, state, h)
 }
 
 func (h *onTransitionHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
@@ -115,7 +79,7 @@ func (h *onTransitionHandler) handle(env Environment, smID string, event Abstrac
 	for _, f := range h.fs {
 		ec := env.clone()
 		sm := ec.machines[smID]
-		f(sm, event.(*TransitionEvent).To, &ec)
+		f(event.(*TransitionEvent).To, &ec)
 		sm.setCurrentState(event.(*TransitionEvent).To)
 		lss = append(lss, localState{env: ec})
 	}
@@ -126,10 +90,6 @@ type onHaltHandler struct {
 	fs []OnHaltFunc
 }
 
-func (h *onHaltHandler) apply(sm *StateMachine, state AbstractState) {
-	sm.setEventHandler(&HaltEvent{}, state, h)
-}
-
 func (h *onHaltHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(&HaltEvent{}, event) {
 		panic(fmt.Sprintf("event is not a HaltEvent: %v", event))
@@ -138,7 +98,7 @@ func (h *onHaltHandler) handle(env Environment, smID string, event AbstractEvent
 	for _, f := range h.fs {
 		ec := env.clone()
 		sm := ec.machines[smID]
-		f(sm, &ec)
+		f(&ec)
 		innerSm := getInnerStateMachine(sm)
 		innerSm.halted = true
 		lss = append(lss, localState{env: ec})
@@ -147,16 +107,6 @@ func (h *onHaltHandler) handle(env Environment, smID string, event AbstractEvent
 }
 
 type defaultOnTransitionHandler struct{}
-
-func (h *defaultOnTransitionHandler) apply(sm *StateMachine, state AbstractState) {
-	handlers := sm.EventHandlers[state]
-	for _, hi := range handlers {
-		if sameEvent(&TransitionEvent{}, hi.event) {
-			return
-		}
-	}
-	sm.setEventHandler(&TransitionEvent{}, state, h)
-}
 
 func (h *defaultOnTransitionHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(&TransitionEvent{}, event) {
@@ -169,16 +119,6 @@ func (h *defaultOnTransitionHandler) handle(env Environment, smID string, event 
 }
 
 type defaultOnHaltHandler struct{}
-
-func (h *defaultOnHaltHandler) apply(sm *StateMachine, state AbstractState) {
-	handlers := sm.EventHandlers[state]
-	for _, hi := range handlers {
-		if sameEvent(&HaltEvent{}, hi.event) {
-			return
-		}
-	}
-	sm.setEventHandler(&HaltEvent{}, state, h)
-}
 
 func (h *defaultOnHaltHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(&HaltEvent{}, event) {

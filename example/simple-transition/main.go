@@ -35,30 +35,27 @@ func (sm *StateMachine) NewMachine() {
 		stateC = &State{StateType: StateC}
 	)
 
-	sm.StateMachine.New()
+	sm.StateMachine.New(stateA, stateB, stateC)
 	sm.SetInitialState(stateA)
 
-	sm.WithState(stateA,
-		goat.WithOnEntry(func(sm goat.AbstractStateMachine, env *goat.Environment) {
-			this := sm.(*StateMachine)
-			this.Mut = 1
-			this.Goto(stateB, env)
-		}),
+	sm.OnEntry(stateA,
+		func(env *goat.Environment) {
+			sm.Mut = 1
+			sm.Goto(stateB, env)
+		},
 	)
 
-	sm.WithState(stateB,
-		goat.WithOnEntry(func(sm goat.AbstractStateMachine, env *goat.Environment) {
-			this := sm.(*StateMachine)
-			this.Mut = 2
-			this.Goto(stateC, env)
-		}),
+	sm.OnEntry(stateB,
+		func(env *goat.Environment) {
+			sm.Mut = 2
+			sm.Goto(stateC, env)
+		},
 	)
 
-	sm.WithState(stateC,
-		goat.WithOnEntry(func(sm goat.AbstractStateMachine, env *goat.Environment) {
-			this := sm.(*StateMachine)
-			this.Mut = 3
-		}),
+	sm.OnEntry(stateC,
+		func(env *goat.Environment) {
+			sm.Mut = 3
+		},
 	)
 }
 

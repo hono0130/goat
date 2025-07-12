@@ -106,36 +106,33 @@ func (sm *ServerStateMachine) NewMachine(db *DBStateMachine) {
 		processing = &State{StateType: ServerProcessing}
 	)
 
-	sm.StateMachine.New()
+	sm.StateMachine.New(idle, processing)
 	sm.SetInitialState(idle)
 	sm.DB = db
 
-	sm.WithState(idle,
-		goat.WithOnEvent(&ReservationRequestEvent{}, func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-			server := sm.(*ServerStateMachine)
+	sm.OnEvent(idle, &ReservationRequestEvent{},
+		func(event goat.AbstractEvent, env *goat.Environment) {
 			e := event.(*ReservationRequestEvent)
-			server.CurrentRequest = e
+			sm.CurrentRequest = e
 
 			// First, SELECT FOR UPDATE to check and lock the room
 			selectEvent := &DBSelectEvent{
 				RoomID:   e.RoomID,
 				ClientID: e.ClientID,
-				Server:   server,
+				Server:   sm,
 			}
 
-			server.SendUnary(server.DB, selectEvent, env)
-			server.Goto(processing, env)
-		}),
+			sm.SendUnary(sm.DB, selectEvent, env)
+			sm.Goto(processing, env)
+		},
 	)
 
-	sm.WithState(processing,
-		// Handle SELECT result
-		goat.WithOnEvent(&DBSelectResultEvent{}, func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-			server := sm.(*ServerStateMachine)
+	sm.OnEvent(processing, &DBSelectResultEvent{},
+		func(event goat.AbstractEvent, env *goat.Environment) {
 			e := event.(*DBSelectResultEvent)
 
-			if server.CurrentRequest == nil {
-				server.Goto(idle, env)
+			if sm.CurrentRequest == nil {
+				sm.Goto(idle, env)
 				return
 			}
 
@@ -144,57 +141,58 @@ func (sm *ServerStateMachine) NewMachine(db *DBStateMachine) {
 				// Only update if room is not already reserved
 				if !e.IsReserved {
 					updateEvent := &DBUpdateEvent{
-						RoomID:   server.CurrentRequest.RoomID,
-						ClientID: server.CurrentRequest.ClientID,
-						Server:   server,
+						RoomID:   sm.CurrentRequest.RoomID,
+						ClientID: sm.CurrentRequest.ClientID,
+						Server:   sm,
 					}
 
-					server.SendUnary(server.DB, updateEvent, env)
+					sm.SendUnary(sm.DB, updateEvent, env)
 				} else {
 					// Room is already reserved, send failure to client
 					resultEvent := &ReservationResultEvent{
-						RoomID:    server.CurrentRequest.RoomID,
-						ClientID:  server.CurrentRequest.ClientID,
+						RoomID:    sm.CurrentRequest.RoomID,
+						ClientID:  sm.CurrentRequest.ClientID,
 						Succeeded: false,
 					}
 
-					server.SendUnary(server.CurrentRequest.Client, resultEvent, env)
-					server.CurrentRequest = nil
-					server.Goto(idle, env)
+					sm.SendUnary(sm.CurrentRequest.Client, resultEvent, env)
+					sm.CurrentRequest = nil
+					sm.Goto(idle, env)
 				}
 			} else {
 				// Failed to get lock, send failure to client
 				resultEvent := &ReservationResultEvent{
-					RoomID:    server.CurrentRequest.RoomID,
-					ClientID:  server.CurrentRequest.ClientID,
+					RoomID:    sm.CurrentRequest.RoomID,
+					ClientID:  sm.CurrentRequest.ClientID,
 					Succeeded: false,
 				}
 
-				server.SendUnary(server.CurrentRequest.Client, resultEvent, env)
-				server.CurrentRequest = nil
-				server.Goto(idle, env)
+				sm.SendUnary(sm.CurrentRequest.Client, resultEvent, env)
+				sm.CurrentRequest = nil
+				sm.Goto(idle, env)
 			}
-		}),
+		},
+	)
 
-		goat.WithOnEvent(&DBUpdateResultEvent{}, func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-			server := sm.(*ServerStateMachine)
+	sm.OnEvent(processing, &DBUpdateResultEvent{},
+		func(event goat.AbstractEvent, env *goat.Environment) {
 			e := event.(*DBUpdateResultEvent)
 
-			if server.CurrentRequest == nil {
-				server.Goto(idle, env)
+			if sm.CurrentRequest == nil {
+				sm.Goto(idle, env)
 				return
 			}
 
 			resultEvent := &ReservationResultEvent{
-				RoomID:    server.CurrentRequest.RoomID,
-				ClientID:  server.CurrentRequest.ClientID,
+				RoomID:    sm.CurrentRequest.RoomID,
+				ClientID:  sm.CurrentRequest.ClientID,
 				Succeeded: e.Succeeded,
 			}
 
-			server.SendUnary(server.CurrentRequest.Client, resultEvent, env)
-			server.CurrentRequest = nil
-			server.Goto(idle, env)
-		}),
+			sm.SendUnary(sm.CurrentRequest.Client, resultEvent, env)
+			sm.CurrentRequest = nil
+			sm.Goto(idle, env)
+		},
 	)
 }
 
@@ -203,19 +201,18 @@ func (sm *DBStateMachine) NewMachine() {
 		idle = &State{StateType: DBIdle}
 	)
 
-	sm.StateMachine.New()
+	sm.StateMachine.New(idle)
 	sm.SetInitialState(idle)
 	sm.Reservations = make([]Reservation, 0)
 	sm.LockedRooms = make(map[int]int)
 
-	sm.WithState(idle,
-		goat.WithOnEvent(&DBSelectEvent{}, func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-			db := sm.(*DBStateMachine)
+	sm.OnEvent(idle, &DBSelectEvent{},
+		func(event goat.AbstractEvent, env *goat.Environment) {
 			e := event.(*DBSelectEvent)
 
 			// Check if room is already reserved
 			isReserved := false
-			for _, res := range db.Reservations {
+			for _, res := range sm.Reservations {
 				if res.RoomID == e.RoomID {
 					isReserved = true
 					break
@@ -224,9 +221,9 @@ func (sm *DBStateMachine) NewMachine() {
 
 			// Try to acquire lock on the room
 			isLocked := false
-			if _, exists := db.LockedRooms[e.RoomID]; !exists {
+			if _, exists := sm.LockedRooms[e.RoomID]; !exists {
 				// Room is not locked, acquire lock
-				db.LockedRooms[e.RoomID] = e.ClientID
+				sm.LockedRooms[e.RoomID] = e.ClientID
 				isLocked = true
 			}
 
@@ -237,24 +234,25 @@ func (sm *DBStateMachine) NewMachine() {
 				IsLocked:   isLocked,
 			}
 
-			db.SendUnary(e.Server, resultEvent, env)
-			db.Goto(idle, env)
-		}),
+			sm.SendUnary(e.Server, resultEvent, env)
+			sm.Goto(idle, env)
+		},
+	)
 
-		goat.WithOnEvent(&DBUpdateEvent{}, func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-			db := sm.(*DBStateMachine)
+	sm.OnEvent(idle, &DBUpdateEvent{},
+		func(event goat.AbstractEvent, env *goat.Environment) {
 			e := event.(*DBUpdateEvent)
 
 			// Check if this client has the lock
 			hasLock := false
-			if clientID, exists := db.LockedRooms[e.RoomID]; exists && clientID == e.ClientID {
+			if clientID, exists := sm.LockedRooms[e.RoomID]; exists && clientID == e.ClientID {
 				hasLock = true
 			}
 
 			succeeded := false
 			if hasLock {
 				// Room is available, make reservation
-				db.Reservations = append(db.Reservations, Reservation{
+				sm.Reservations = append(sm.Reservations, Reservation{
 					UUID:     uuid.New().String(),
 					RoomID:   e.RoomID,
 					ClientID: e.ClientID,
@@ -268,9 +266,9 @@ func (sm *DBStateMachine) NewMachine() {
 				Succeeded: succeeded,
 			}
 
-			db.SendUnary(e.Server, resultEvent, env)
-			db.Goto(idle, env)
-		}),
+			sm.SendUnary(e.Server, resultEvent, env)
+			sm.Goto(idle, env)
+		},
 	)
 
 }
@@ -282,43 +280,43 @@ func (sm *ClientStateMachine) NewMachine(clientID int, roomID int, server *Serve
 		end        = &State{StateType: ClientEnd}
 	)
 
-	sm.StateMachine.New()
+	sm.StateMachine.New(idle, requesting, end)
 	sm.SetInitialState(idle)
 	sm.ClientID = clientID
 	sm.TargetRoom = roomID
 	sm.Server = server
 
-	sm.WithState(idle,
-		goat.WithOnEntry(func(sm goat.AbstractStateMachine, env *goat.Environment) {
-			client := sm.(*ClientStateMachine)
-
+	sm.OnEntry(idle,
+		func(env *goat.Environment) {
 			requestEvent := &ReservationRequestEvent{
-				RoomID:   client.TargetRoom,
-				ClientID: client.ClientID,
-				Client:   client,
+				RoomID:   sm.TargetRoom,
+				ClientID: sm.ClientID,
+				Client:   sm,
 			}
 
-			client.SendUnary(client.Server, requestEvent, env)
-			client.Goto(requesting, env)
-		}),
+			sm.SendUnary(sm.Server, requestEvent, env)
+			sm.Goto(requesting, env)
+		},
 	)
 
-	sm.WithState(requesting,
-		goat.WithOnEvent(&ReservationResultEvent{}, func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-			client := sm.(*ClientStateMachine)
+	sm.OnEvent(requesting, &ReservationResultEvent{},
+		func(event goat.AbstractEvent, env *goat.Environment) {
 			e := event.(*ReservationResultEvent)
 
-			if e.ClientID == client.ClientID {
+			if e.ClientID == sm.ClientID {
 				if e.Succeeded {
-					client.Goto(end, env)
+					sm.Goto(end, env)
 				} else {
-					client.Goto(end, env)
+					sm.Goto(end, env)
 				}
 			}
-		}),
+		},
 	)
 
-	sm.WithState(end, goat.WithOnEntry(func(sm goat.AbstractStateMachine, env *goat.Environment) {}))
+	sm.OnEntry(end,
+		func(env *goat.Environment) {
+		},
+	)
 }
 
 func main() {

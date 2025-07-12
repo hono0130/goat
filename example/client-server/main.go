@@ -97,42 +97,37 @@ func (c *Client) NewMachine(server *Server) {
 	c.Server = server
 	// [MUST] This is a must to call New() method to initialize the state machine.
 	// [MUST] This is a must to call SetInitialState() method to set the initial state.
-	c.StateMachine.New()
+	c.StateMachine.New(idle, waiting)
 	c.SetInitialState(idle)
 
-	// Define the state machine.
-	c.WithState(idle,
-		goat.WithOnEntry(
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
-				this := sm.(*Client)
-				ctx := Context{RequestID: randomRequestID()}
-				this.SendUnary(c.Server, &eCheckMenuExistenceRequest{
-					From:   c,
-					Ctx:    ctx,
-					MenuID: "menu_id",
-				}, env)
-				this.Goto(waiting, env)
-			},
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
-				this := sm.(*Client)
-				this.Mut = 100000
-				this.Goto(waiting, env)
-			},
-		),
+	// Define the default handlers for the idle state.
+	c.OnEntry(idle,
+		func(env *goat.Environment) {
+			ctx := Context{RequestID: randomRequestID()}
+			c.SendUnary(c.Server, &eCheckMenuExistenceRequest{
+				From:   c,
+				Ctx:    ctx,
+				MenuID: "menu_id",
+			}, env)
+			c.Goto(waiting, env)
+		},
+		func(env *goat.Environment) {
+			c.Mut = 100000
+			c.Goto(waiting, env)
+		},
 	)
 
-	c.WithState(waiting,
-		goat.WithOnEvent(&eCheckMenuExistenceResponse{},
-			func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-				this := sm.(*Client)
-				e := event.(*eCheckMenuExistenceResponse)
-				if e.Err {
-					this.Goto(idle, env)
-					return
-				}
-			},
-		),
+	// Define the default handlers for the waiting state.
+	c.OnEvent(waiting, &eCheckMenuExistenceResponse{},
+		func(event goat.AbstractEvent, env *goat.Environment) {
+			e := event.(*eCheckMenuExistenceResponse)
+			if e.Err {
+				c.Goto(idle, env)
+				return
+			}
+		},
 	)
+
 }
 
 func (s *Server) NewMachine() {
@@ -143,42 +138,36 @@ func (s *Server) NewMachine() {
 
 	// [MUST] This is a must to call New() method to initialize the state machine.
 	// [MUST] This is a must to call SetInitialState() method to set the initial state.
-	s.StateMachine.New()
+	s.StateMachine.New(init, running)
 	s.SetInitialState(init)
 
-	s.WithState(init,
-		goat.WithOnEntry(func(sm goat.AbstractStateMachine, env *goat.Environment) {
-			this := sm.(*Server)
-			this.Goto(running, env)
-		}),
+	s.OnEntry(init,
+		func(env *goat.Environment) {
+			s.Goto(running, env)
+		},
 	)
 
-	s.WithState(running,
-		goat.WithOnEvent(&eCheckMenuExistenceRequest{},
-			func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-				this := sm.(*Server)
+	s.OnEvent(running, &eCheckMenuExistenceRequest{},
+			func(event goat.AbstractEvent, env *goat.Environment) {
 				e := event.(*eCheckMenuExistenceRequest)
-				this.SendUnary(e.From, &eCheckMenuExistenceResponse{
+				s.SendUnary(e.From, &eCheckMenuExistenceResponse{
 					Exists: true,
 				}, env)
 			},
-			func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-				this := sm.(*Server)
+			func(event goat.AbstractEvent, env *goat.Environment) {
 				e := event.(*eCheckMenuExistenceRequest)
-				this.SendUnary(e.From, &eCheckMenuExistenceResponse{
+				s.SendUnary(e.From, &eCheckMenuExistenceResponse{
 					Exists: false,
 					Err:    false,
 				}, env)
 			},
-			func(sm goat.AbstractStateMachine, event goat.AbstractEvent, env *goat.Environment) {
-				this := sm.(*Server)
+			func(event goat.AbstractEvent, env *goat.Environment) {
 				e := event.(*eCheckMenuExistenceRequest)
-				this.SendUnary(e.From, &eCheckMenuExistenceResponse{
+				s.SendUnary(e.From, &eCheckMenuExistenceResponse{
 					Exists: false,
 					Err:    true,
-				}, env)
-			},
-		),
+			}, env)
+		},
 	)
 }
 
@@ -198,7 +187,7 @@ func main() {
 	if err := kripke.Solve(); err != nil {
 		panic(err)
 	}
-	kripke.WriteAsDot(os.Stdout)
+	kripke.WriteAsLog(os.Stdout, "A room should not be reserved by multiple clients")
 }
 
 func randomRequestID() string {

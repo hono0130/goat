@@ -33,28 +33,22 @@ func (sm *StateMachine) NewMachine() {
 		stateB = &State{StateType: StateB}
 	)
 
-	sm.StateMachine.New()
+	sm.StateMachine.New(stateA, stateB)
 	sm.SetInitialState(stateA)
 
-	sm.WithState(stateA,
-		goat.WithOnEntry(
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
-				this := sm.(*StateMachine)
-				this.Halt(this, env)
+	sm.OnEntry(stateA,
+			func(env *goat.Environment) {
+				sm.Halt(sm, env)
 				// no longer reachable since the state machine is halted.
-				this.Goto(stateB, env)
+				sm.Goto(stateB, env)
 			},
-		),
 	)
 
-	sm.WithState(stateB,
-		goat.WithOnEntry(
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
+	sm.OnEntry(stateB,
+			func(env *goat.Environment) {
 				fmt.Println("This should not be printed since the state machine is halted in state A.")
-				this := sm.(*StateMachine)
-				this.Goto(stateA, env)
+				sm.Goto(stateA, env)
 			},
-		),
 	)
 }
 
@@ -71,5 +65,5 @@ func main() {
 	if err := kripke.Solve(); err != nil {
 		panic(err)
 	}
-	kripke.WriteAsDot(os.Stdout)
+	kripke.WriteAsLog(os.Stdout, "The state machine should halt in state A.")
 }

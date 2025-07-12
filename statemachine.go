@@ -44,7 +44,12 @@ type AbstractStateMachine interface {
 	setCurrentState(state AbstractState)
 	id() string
 	SetInitialState(state AbstractState)
-	WithState(state AbstractState, hs ...Handler)
+	OnEntry(state AbstractState, fs ...OnEntryFunc)
+	OnExit(state AbstractState, fs ...OnExitFunc)
+	OnEvent(state AbstractState, event AbstractEvent, fs ...OnEventFunc)
+	OnTransition(state AbstractState, fs ...OnTransitionFunc)
+	OnHalt(state AbstractState, fs ...OnHaltFunc)
+	setDefaultHandlers(state AbstractState)
 }
 
 type StateMachine struct {
@@ -90,9 +95,12 @@ func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
 	return smc.Addr().Interface().(AbstractStateMachine)
 }
 
-func (sm *StateMachine) New() {
+func (sm *StateMachine) New(states ...AbstractState) {
 	sm.smID = uuid.New().String()
 	sm.EventHandlers = make(map[AbstractState][]handlerInfo)
+	for _, state := range states {
+		sm.setDefaultHandlers(state)
+	}
 }
 
 func (sm *StateMachine) validate() error {
@@ -138,18 +146,6 @@ func (sm *StateMachine) SetInitialState(state AbstractState) {
 	sm.State = state
 }
 
-func (sm *StateMachine) WithState(state AbstractState, hs ...Handler) {
-	// TODO: Optionで指定できるようにしてもいいかも
-	defaults := []Handler{
-		&defaultOnTransitionHandler{},
-		&defaultOnHaltHandler{},
-	}
-	hs = append(hs, defaults...)
-	for _, h := range hs {
-		h.apply(sm, state)
-	}
-}
-
 func (sm *StateMachine) Goto(state AbstractState, env *Environment) {
 	env.enqueueEvent(sm, &ExitEvent{})
 	env.enqueueEvent(sm, &TransitionEvent{To: state})
@@ -162,6 +158,36 @@ func (sm *StateMachine) SendUnary(to AbstractStateMachine, event AbstractEvent, 
 
 func (sm *StateMachine) Halt(to AbstractStateMachine, env *Environment) {
 	env.enqueueEvent(to, &HaltEvent{})
+}
+
+func (sm *StateMachine) setDefaultHandlers(state AbstractState) {
+	defaults := map[AbstractEvent]Handler{
+		&TransitionEvent{}: &defaultOnTransitionHandler{},
+		&HaltEvent{}:      &defaultOnHaltHandler{},
+	}
+	for event, h := range defaults {
+		sm.setEventHandler(event, state, h)
+	}
+}
+
+func (sm *StateMachine) OnEntry(state AbstractState, fs ...OnEntryFunc) {
+	sm.setEventHandler(&EntryEvent{}, state, &onEntryHandler{fs: fs})
+}
+
+func (sm *StateMachine) OnExit(state AbstractState, fs ...OnExitFunc) {
+	sm.setEventHandler(&ExitEvent{}, state, &onExitHandler{fs: fs})
+}
+
+func (sm *StateMachine) OnEvent(state AbstractState, event AbstractEvent, fs ...OnEventFunc) {
+	sm.setEventHandler(event, state, &onEventHandler{fs: fs, event: event})
+}
+
+func (sm *StateMachine) OnTransition(state AbstractState, fs ...OnTransitionFunc) {
+	sm.setEventHandler(&TransitionEvent{}, state, &onTransitionHandler{fs: fs})
+}
+
+func (sm *StateMachine) OnHalt(state AbstractState, fs ...OnHaltFunc) {
+	sm.setEventHandler(&HaltEvent{}, state, &onHaltHandler{fs: fs})
 }
 
 // getInnerStateMachine extracts the inner state machine from the arbitrary state machine

@@ -36,7 +36,7 @@ func (sm *StateMachine) NewMachine() {
 	)
 
 	// StateMachineを初期化
-	sm.StateMachine.New()
+	sm.StateMachine.New(stateA, stateB, stateC)
 	// 初期状態を設定
 	sm.SetInitialState(stateA)
 
@@ -44,37 +44,28 @@ func (sm *StateMachine) NewMachine() {
 	// 状態Aに遷移した際に以下の処理を非決定的に実行
 	// 1. 状態Bに遷移
 	// 2. 状態Cに遷移
-	sm.WithState(stateA,
-		goat.WithOnEntry(
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
-				this := sm.(*StateMachine)
-				this.Goto(stateB, env)
+	sm.OnEntry(stateA,
+			func(env *goat.Environment) {
+				sm.Goto(stateB, env)
 			},
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
-				this := sm.(*StateMachine)
-				this.Goto(stateC, env)
+			func(env *goat.Environment) {
+				sm.Goto(stateC, env)
 			},
-		),
 	)
 
 	// 状態Bにおける処理
 	// 状態Bに遷移した際に以下の処理を非決定的に実行
 	// 1. 状態Cに遷移
 	// 2. 状態Aに遷移
-	sm.WithState(stateB,
-		goat.WithOnEntry(
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
-				this := sm.(*StateMachine)
-				this.Goto(stateC, env)
+	sm.OnEntry(stateB,
+			func(env *goat.Environment) {
+				sm.Goto(stateC, env)
 			},
-			func(sm goat.AbstractStateMachine, env *goat.Environment) {
-				this := sm.(*StateMachine)
-				this.Goto(stateA, env)
+			func(env *goat.Environment) {
+				sm.Goto(stateA, env)
 			},
-		),
 	)
 
-	sm.WithState(stateC)
 }
 
 func main() {
@@ -90,5 +81,5 @@ func main() {
 	if err := kripke.Solve(); err != nil {
 		panic(err)
 	}
-	kripke.WriteAsDot(os.Stdout)
+	kripke.WriteAsLog(os.Stdout, "The state machine should transition to state B or state C.")
 }
