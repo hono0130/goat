@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -36,20 +37,16 @@ func (sm *StateMachine) NewMachine() {
 	sm.StateMachine.New(stateA, stateB)
 	sm.SetInitialState(stateA)
 
-	sm.OnEntry(stateA,
-			func(env *goat.Environment) {
-				sm.Halt(sm, env)
-				// no longer reachable since the state machine is halted.
-				sm.Goto(stateB, env)
-			},
-	)
+	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+		goat.Halt(ctx, machine)
+		// no longer reachable since the state machine is halted.
+		goat.Goto(ctx, stateB)
+	})
 
-	sm.OnEntry(stateB,
-			func(env *goat.Environment) {
-				fmt.Println("This should not be printed since the state machine is halted in state A.")
-				sm.Goto(stateA, env)
-			},
-	)
+	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+		fmt.Println("This should not be printed since the state machine is halted in state A.")
+		goat.Goto(ctx, stateA)
+	})
 }
 
 func main() {

@@ -1,8 +1,37 @@
 package goat
 
+import "context"
+
 type Environment struct {
 	machines map[string]AbstractStateMachine
 	queue    map[string][]AbstractEvent
+}
+
+type contextKey string
+
+const envKey contextKey = "environment"
+const smKey contextKey = "statemachine"
+
+func WithEnvAndSM(env *Environment, sm AbstractStateMachine) context.Context {
+	ctx := context.WithValue(context.Background(), envKey, env)
+	ctx = context.WithValue(ctx, smKey, sm)
+	return ctx
+}
+
+// getEnvFromContext extracts environment from context
+func getEnvFromContext(ctx context.Context) *Environment {
+	if env, ok := ctx.Value(envKey).(*Environment); ok {
+		return env
+	}
+	panic("Environment not found in context")
+}
+
+// getSMFromContext extracts state machine from context
+func getSMFromContext(ctx context.Context) AbstractStateMachine {
+	if sm, ok := ctx.Value(smKey).(AbstractStateMachine); ok {
+		return sm
+	}
+	panic("StateMachine not found in context")
 }
 
 type localState struct {
@@ -48,4 +77,22 @@ func (e *Environment) dequeueEvent(smID string) (AbstractEvent, bool) {
 	event := events[0]
 	e.queue[smID] = events[1:]
 	return event, true
+}
+
+func SendTo(ctx context.Context, target AbstractStateMachine, event AbstractEvent) {
+	env := getEnvFromContext(ctx)
+	env.enqueueEvent(target, event)
+}
+
+func Goto(ctx context.Context, state AbstractState) {
+	env := getEnvFromContext(ctx)
+	sm := getSMFromContext(ctx)
+	env.enqueueEvent(sm, &ExitEvent{})
+	env.enqueueEvent(sm, &TransitionEvent{To: state})
+	env.enqueueEvent(sm, &EntryEvent{})
+}
+
+func Halt(ctx context.Context, target AbstractStateMachine) {
+	env := getEnvFromContext(ctx)
+	env.enqueueEvent(target, &HaltEvent{})
 }

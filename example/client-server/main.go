@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/goatx/goat"
@@ -100,29 +101,27 @@ func (c *Client) NewMachine(server *Server) {
 	c.StateMachine.New(idle, waiting)
 	c.SetInitialState(idle)
 
-	// Define the default handlers for the idle state.
-	c.OnEntry(idle,
-		func(env *goat.Environment) {
-			ctx := Context{RequestID: randomRequestID()}
-			c.SendUnary(c.Server, &eCheckMenuExistenceRequest{
-				From:   c,
-				Ctx:    ctx,
-				MenuID: "menu_id",
-			}, env)
-			c.Goto(waiting, env)
-		},
-		func(env *goat.Environment) {
-			c.Mut = 100000
-			c.Goto(waiting, env)
-		},
-	)
+	// Define the default handlers for the idle state using new type-safe API
+	goat.OnEntry(c, idle, func(ctx context.Context, client *Client) {
+		reqCtx := Context{RequestID: randomRequestID()}
+		goat.SendTo(ctx, client.Server, &eCheckMenuExistenceRequest{
+			From:   client,
+			Ctx:    reqCtx,
+			MenuID: "menu_id",
+		})
+		goat.Goto(ctx, waiting)
+	})
+	
+	goat.OnEntry(c, idle, func(ctx context.Context, client *Client) {
+		client.Mut = 100000
+		goat.Goto(ctx, waiting)
+	})
 
-	// Define the default handlers for the waiting state.
-	c.OnEvent(waiting, &eCheckMenuExistenceResponse{},
-		func(event goat.AbstractEvent, env *goat.Environment) {
-			e := event.(*eCheckMenuExistenceResponse)
-			if e.Err {
-				c.Goto(idle, env)
+	// Define the default handlers for the waiting state using new type-safe API
+	goat.OnEvent(c, waiting, &eCheckMenuExistenceResponse{}, 
+		func(ctx context.Context, event *eCheckMenuExistenceResponse, client *Client) {
+			if event.Err {
+				goat.Goto(ctx, idle)
 				return
 			}
 		},
@@ -141,32 +140,33 @@ func (s *Server) NewMachine() {
 	s.StateMachine.New(init, running)
 	s.SetInitialState(init)
 
-	s.OnEntry(init,
-		func(env *goat.Environment) {
-			s.Goto(running, env)
+	goat.OnEntry(s, init, func(ctx context.Context, server *Server) {
+		goat.Goto(ctx, running)
+	})
+
+	goat.OnEvent(s, running, &eCheckMenuExistenceRequest{},
+		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
+			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
+				Exists: true,
+			})
 		},
 	)
-
-	s.OnEvent(running, &eCheckMenuExistenceRequest{},
-			func(event goat.AbstractEvent, env *goat.Environment) {
-				e := event.(*eCheckMenuExistenceRequest)
-				s.SendUnary(e.From, &eCheckMenuExistenceResponse{
-					Exists: true,
-				}, env)
-			},
-			func(event goat.AbstractEvent, env *goat.Environment) {
-				e := event.(*eCheckMenuExistenceRequest)
-				s.SendUnary(e.From, &eCheckMenuExistenceResponse{
-					Exists: false,
-					Err:    false,
-				}, env)
-			},
-			func(event goat.AbstractEvent, env *goat.Environment) {
-				e := event.(*eCheckMenuExistenceRequest)
-				s.SendUnary(e.From, &eCheckMenuExistenceResponse{
-					Exists: false,
-					Err:    true,
-			}, env)
+	
+	goat.OnEvent(s, running, &eCheckMenuExistenceRequest{},
+		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
+			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
+				Exists: false,
+				Err:    false,
+			})
+		},
+	)
+	
+	goat.OnEvent(s, running, &eCheckMenuExistenceRequest{},
+		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
+			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
+				Exists: false,
+				Err:    true,
+			})
 		},
 	)
 }

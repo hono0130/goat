@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/goatx/goat"
@@ -38,25 +39,19 @@ func (sm *StateMachine) NewMachine() {
 	sm.StateMachine.New(stateA, stateB, stateC)
 	sm.SetInitialState(stateA)
 
-	sm.OnEntry(stateA,
-		func(env *goat.Environment) {
-			sm.Mut = 1
-			sm.Goto(stateB, env)
-		},
-	)
+	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+		machine.Mut = 1
+		goat.Goto(ctx, stateB)
+	})
 
-	sm.OnEntry(stateB,
-		func(env *goat.Environment) {
-			sm.Mut = 2
-			sm.Goto(stateC, env)
-		},
-	)
+	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+		machine.Mut = 2
+		goat.Goto(ctx, stateC)
+	})
 
-	sm.OnEntry(stateC,
-		func(env *goat.Environment) {
-			sm.Mut = 3
-		},
-	)
+	goat.OnEntry(sm, stateC, func(ctx context.Context, machine *StateMachine) {
+		machine.Mut = 3
+	})
 }
 
 func main() {

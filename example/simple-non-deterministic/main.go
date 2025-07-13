@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/goatx/goat"
@@ -44,27 +45,23 @@ func (sm *StateMachine) NewMachine() {
 	// 状態Aに遷移した際に以下の処理を非決定的に実行
 	// 1. 状態Bに遷移
 	// 2. 状態Cに遷移
-	sm.OnEntry(stateA,
-			func(env *goat.Environment) {
-				sm.Goto(stateB, env)
-			},
-			func(env *goat.Environment) {
-				sm.Goto(stateC, env)
-			},
-	)
+	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+		goat.Goto(ctx, stateB)
+	})
+	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+		goat.Goto(ctx, stateC)
+	})
 
 	// 状態Bにおける処理
 	// 状態Bに遷移した際に以下の処理を非決定的に実行
 	// 1. 状態Cに遷移
 	// 2. 状態Aに遷移
-	sm.OnEntry(stateB,
-			func(env *goat.Environment) {
-				sm.Goto(stateC, env)
-			},
-			func(env *goat.Environment) {
-				sm.Goto(stateA, env)
-			},
-	)
+	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+		goat.Goto(ctx, stateC)
+	})
+	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+		goat.Goto(ctx, stateA)
+	})
 
 }
 

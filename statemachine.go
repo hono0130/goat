@@ -44,11 +44,6 @@ type AbstractStateMachine interface {
 	setCurrentState(state AbstractState)
 	id() string
 	SetInitialState(state AbstractState)
-	OnEntry(state AbstractState, fs ...OnEntryFunc)
-	OnExit(state AbstractState, fs ...OnExitFunc)
-	OnEvent(state AbstractState, event AbstractEvent, fs ...OnEventFunc)
-	OnTransition(state AbstractState, fs ...OnTransitionFunc)
-	OnHalt(state AbstractState, fs ...OnHaltFunc)
 	setDefaultHandlers(state AbstractState)
 }
 
@@ -170,24 +165,53 @@ func (sm *StateMachine) setDefaultHandlers(state AbstractState) {
 	}
 }
 
-func (sm *StateMachine) OnEntry(state AbstractState, fs ...OnEntryFunc) {
-	sm.setEventHandler(&EntryEvent{}, state, &onEntryHandler{fs: fs})
+
+// Type-safe helper functions with context for environment access
+
+// OnEvent creates a type-safe event handler using context for environment access
+func OnEvent[T AbstractEvent, SM AbstractStateMachine](sm SM, state AbstractState, event T, handler EventHandler[T, SM]) {
+	innerSM := getInnerStateMachine(sm)
+	smID := innerSM.id()
+	innerSM.setEventHandler(event, state, &eventHandlers{
+		fs:    []eventHandler{handleEvent[T, SM](smID, handler)},
+		event: event,
+	})
 }
 
-func (sm *StateMachine) OnExit(state AbstractState, fs ...OnExitFunc) {
-	sm.setEventHandler(&ExitEvent{}, state, &onExitHandler{fs: fs})
+// OnEntry creates a type-safe entry handler using context for environment access
+func OnEntry[SM AbstractStateMachine](sm SM, state AbstractState, handler EntryHandler[SM]) {
+	innerSM := getInnerStateMachine(sm)
+	smID := innerSM.id()
+	innerSM.setEventHandler(&EntryEvent{}, state, &entryHandlers{
+		fs: []entryHandler{handleEntry[SM](smID, handler)},
+	})
 }
 
-func (sm *StateMachine) OnEvent(state AbstractState, event AbstractEvent, fs ...OnEventFunc) {
-	sm.setEventHandler(event, state, &onEventHandler{fs: fs, event: event})
+// OnExit creates a type-safe exit handler using context for environment access
+func OnExit[SM AbstractStateMachine](sm SM, state AbstractState, handler ExitHandler[SM]) {
+	innerSM := getInnerStateMachine(sm)
+	smID := innerSM.id()
+	innerSM.setEventHandler(&ExitEvent{}, state, &exitHandlers{
+		fs: []exitHandler{handleExit[SM](smID, handler)},
+	})
 }
 
-func (sm *StateMachine) OnTransition(state AbstractState, fs ...OnTransitionFunc) {
-	sm.setEventHandler(&TransitionEvent{}, state, &onTransitionHandler{fs: fs})
+// OnTransition creates a type-safe transition handler using context for environment access
+func OnTransition[SM AbstractStateMachine](sm SM, state AbstractState, handler TransitionHandler[SM]) {
+	innerSM := getInnerStateMachine(sm)
+	smID := innerSM.id()
+	innerSM.setEventHandler(&TransitionEvent{}, state, &transitionHandlers{
+		fs: []transitionHandler{handleTransition[SM](smID, handler)},
+	})
 }
 
-func (sm *StateMachine) OnHalt(state AbstractState, fs ...OnHaltFunc) {
-	sm.setEventHandler(&HaltEvent{}, state, &onHaltHandler{fs: fs})
+// OnHalt creates a type-safe halt handler using context for environment access
+func OnHalt[SM AbstractStateMachine](sm SM, state AbstractState, handler HaltHandler[SM]) {
+	innerSM := getInnerStateMachine(sm)
+	smID := innerSM.id()
+	innerSM.setEventHandler(&HaltEvent{}, state, &haltHandlers{
+		fs: []haltHandler{handleHalt[SM](smID, handler)},
+	})
 }
 
 // getInnerStateMachine extracts the inner state machine from the arbitrary state machine
