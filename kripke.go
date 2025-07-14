@@ -9,7 +9,7 @@ import (
 )
 
 // Kripke represents a Kripke model for goat.
-type Kripke struct {
+type kripke struct {
 	worlds     worlds
 	initial    world
 	accessible map[worldID][]worldID
@@ -171,14 +171,14 @@ func stepGlobal(w world) ([]world, error) {
 	return ws, nil
 }
 
-func KripkeModel(opts ...Option) (Kripke, error) {
+func kripkeModel(opts ...Option) (kripke, error) {
 	os := newOptions(opts...)
 	if len(os.sms) == 0 {
-		return Kripke{}, fmt.Errorf("no state machines provided")
+		return kripke{}, fmt.Errorf("no state machines provided")
 	}
 
 	initial := initialWorld(os.sms...)
-	return Kripke{
+	return kripke{
 		initial:    initial,
 		worlds:     make(worlds),
 		accessible: make(map[worldID][]worldID),
@@ -186,7 +186,7 @@ func KripkeModel(opts ...Option) (Kripke, error) {
 	}, nil
 }
 
-func (k *Kripke) Solve() error {
+func (k *kripke) Solve() error {
 	k.worlds.insert(k.initial)
 	stack := []world{k.initial}
 
@@ -217,7 +217,7 @@ func (k *Kripke) Solve() error {
 	return nil
 }
 
-func (k *Kripke) WriteAsDot(w io.Writer) {
+func (k *kripke) WriteAsDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "digraph {")
 	for id, wld := range k.worlds {
 		_, _ = fmt.Fprintf(w, "  %d [ label=\"%s\" ];\n", id, wld.label())
@@ -236,7 +236,7 @@ func (k *Kripke) WriteAsDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "}")
 }
 
-func (k *Kripke) WriteAsLog(w io.Writer, invariantDescription string) {
+func (k *kripke) WriteAsLog(w io.Writer, invariantDescription string) {
 	paths := k.findPathsToViolations()
 
 	if len(paths) == 0 {
@@ -274,7 +274,7 @@ func (k *Kripke) WriteAsLog(w io.Writer, invariantDescription string) {
 	}
 }
 
-func (k *Kripke) findPathsToViolations() [][]worldID {
+func (k *kripke) findPathsToViolations() [][]worldID {
 	var paths [][]worldID
 
 	visited := make(map[worldID]bool)
@@ -310,7 +310,7 @@ func (k *Kripke) findPathsToViolations() [][]worldID {
 	return paths
 }
 
-func (k *Kripke) evaluateInvariants(w world) bool {
+func (k *kripke) evaluateInvariants(w world) bool {
 	for _, invariant := range k.invariants {
 		if !invariant.Evaluate(w) {
 			return false
@@ -320,6 +320,7 @@ func (k *Kripke) evaluateInvariants(w world) bool {
 }
 
 type options struct {
+	// smsは実際には使われていない？
 	sms        []AbstractStateMachine
 	invariants []Invariant
 }
@@ -340,17 +341,5 @@ type optionFunc func(*options)
 
 func (f optionFunc) apply(o *options) {
 	f(o)
-}
-
-func WithStateMachines(sms ...AbstractStateMachine) Option {
-	return optionFunc(func(o *options) {
-		o.sms = sms
-	})
-}
-
-func WithInvariants(is ...Invariant) Option {
-	return optionFunc(func(o *options) {
-		o.invariants = is
-	})
 }
 

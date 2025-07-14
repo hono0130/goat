@@ -4,77 +4,61 @@ import (
 	"testing"
 )
 
-func TestRef_Statemachine(t *testing.T) {
-
+func TestInvariantFor(t *testing.T) {
 	tests := []struct {
-		name         string
-		initiate     func() (world, *Ref, AbstractStateMachine)
-		expectExists bool
-	}{
-		{
-			name: "ToRef creates correct reference",
-			initiate: func() (world, *Ref, AbstractStateMachine) {
-				sm := NewTestStateMachine("initial")
-				return NewTestWorld(NewTestEnvironment(sm)), ToRef(sm), sm
-			},
-			expectExists: true,
-		},
-		{
-			name: "Non-existent state machine",
-			initiate: func() (world, *Ref, AbstractStateMachine) {
-				sm := NewTestStateMachine("initial")
-				nonExistentRef := &Ref{id: "non-existent"}
-				return NewTestWorld(NewTestEnvironment(sm)), nonExistentRef, sm
-			},
-			expectExists: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			world, ref, sm := tt.initiate()
-			retrievedSm, exists := ref.statemachine(world)
-			if exists != tt.expectExists {
-				t.Errorf("Expected exists to be %v, but got %v", tt.expectExists, exists)
-			}
-			if !exists {
-				return 
-			}
-
-			if retrievedSm.id() != sm.id() {
-				t.Errorf("Expected retrieved state machine id to be %s, but got %s", sm.id(), retrievedSm.id())
-			}
-		})
-	}
-}
-
-func TestRef_Invariant(t *testing.T) {
-	tests := []struct {
-		name        string
-		initiate    func() (world, *Ref)
-		invariantFn func(sm AbstractStateMachine) bool
-		wantResult  bool
+		name       string
+		setup      func() (*TestStateMachine, world)
+		checkFunc  func(*TestStateMachine) bool
+		wantResult bool
 	}{
 		{
 			name: "always true invariant",
-			initiate: func() (world, *Ref) {
+			setup: func() (*TestStateMachine, world) {
 				sm := NewTestStateMachine("initial")
-				return NewTestWorld(NewTestEnvironment(sm)), ToRef(sm)
+				return sm, NewTestWorld(NewTestEnvironment(sm))
 			},
-			invariantFn: func(sm AbstractStateMachine) bool {
+			checkFunc: func(sm *TestStateMachine) bool {
 				return true
 			},
 			wantResult: true,
 		},
 		{
 			name: "always false invariant",
-			initiate: func() (world, *Ref) {
+			setup: func() (*TestStateMachine, world) {
 				sm := NewTestStateMachine("initial")
-				return NewTestWorld(NewTestEnvironment(sm)), ToRef(sm)
+				return sm, NewTestWorld(NewTestEnvironment(sm))
 			},
-			invariantFn: func(sm AbstractStateMachine) bool {
+			checkFunc: func(sm *TestStateMachine) bool {
 				return false
+			},
+			wantResult: false,
+		},
+		{
+			name: "check specific state",
+			setup: func() (*TestStateMachine, world) {
+				sm := NewTestStateMachine("initial")
+				return sm, NewTestWorld(NewTestEnvironment(sm))
+			},
+			checkFunc: func(sm *TestStateMachine) bool {
+				// Access the embedded StateMachine
+				currentState := sm.currentState().(*TestState)
+				return currentState.name == "initial"
+			},
+			wantResult: true,
+		},
+		{
+			name: "non-existent state machine",
+			setup: func() (*TestStateMachine, world) {
+				sm := NewTestStateMachine("initial")
+				// Create world without this state machine
+				emptyEnv := Environment{
+					machines: make(map[string]AbstractStateMachine),
+					queue:    make(map[string][]AbstractEvent),
+				}
+				return sm, NewTestWorld(emptyEnv)
+			},
+			checkFunc: func(sm *TestStateMachine) bool {
+				return true
 			},
 			wantResult: false,
 		},
@@ -82,8 +66,39 @@ func TestRef_Invariant(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w, ref := tt.initiate()
-			invariant := ref.Invariant(tt.invariantFn)
+			sm, w := tt.setup()
+			invariant := NewInvariant(sm, tt.checkFunc)
+			
+			got := invariant.Evaluate(w)
+			if got != tt.wantResult {
+				t.Errorf("Evaluate() = %v, want %v", got, tt.wantResult)
+			}
+		})
+	}
+}
+
+func TestBoolInvariant(t *testing.T) {
+	tests := []struct {
+		name       string
+		value      bool
+		wantResult bool
+	}{
+		{
+			name:       "true invariant",
+			value:      true,
+			wantResult: true,
+		},
+		{
+			name:       "false invariant",
+			value:      false,
+			wantResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := NewTestWorld(NewTestEnvironment())
+			invariant := BoolInvariant(tt.value)
 			
 			got := invariant.Evaluate(w)
 			if got != tt.wantResult {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 
 	"github.com/goatx/goat"
 )
@@ -58,22 +57,15 @@ func main() {
 	sm := &StateMachine{}
 	sm.NewMachine()
 
-	ref := goat.ToRef(sm)
-	kripke, err := goat.KripkeModel(
+	err := goat.Test(
 		goat.WithStateMachines(sm),
 		goat.WithInvariants(
-			ref.Invariant(func(sm goat.AbstractStateMachine) bool {
-				return sm.(*StateMachine).Mut <= 1
+			goat.NewInvariant(sm, func(sm *StateMachine) bool {
+				return sm.Mut <= 1
 			}),
 		),
 	)
 	if err != nil {
 		panic(err)
 	}
-
-	if err := kripke.Solve(); err != nil {
-		panic(err)
-	}
-
-	kripke.WriteAsLog(os.Stdout, "Mut <= 1")
 }

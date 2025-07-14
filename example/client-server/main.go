@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 
 	"github.com/goatx/goat"
 )
@@ -178,16 +177,12 @@ func main() {
 	client := &Client{}
 	client.NewMachine(server)
 
-	kripke, err := goat.KripkeModel(
+	err := goat.Test(
 		goat.WithStateMachines(server, client),
 	)
 	if err != nil {
 		panic(err)
 	}
-	if err := kripke.Solve(); err != nil {
-		panic(err)
-	}
-	kripke.WriteAsLog(os.Stdout, "A room should not be reserved by multiple clients")
 }
 
 func randomRequestID() string {

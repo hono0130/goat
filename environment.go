@@ -12,7 +12,7 @@ type contextKey string
 const envKey contextKey = "environment"
 const smKey contextKey = "statemachine"
 
-func WithEnvAndSM(env *Environment, sm AbstractStateMachine) context.Context {
+func withEnvAndSM(env *Environment, sm AbstractStateMachine) context.Context {
 	ctx := context.WithValue(context.Background(), envKey, env)
 	ctx = context.WithValue(ctx, smKey, sm)
 	return ctx

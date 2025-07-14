@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 
 	"github.com/goatx/goat"
 )
@@ -69,14 +68,10 @@ func main() {
 	sm := &StateMachine{}
 	sm.NewMachine()
 
-	kripke, err := goat.KripkeModel(
+	err := goat.Test(
 		goat.WithStateMachines(sm),
 	)
 	if err != nil {
 		panic(err)
 	}
-	if err := kripke.Solve(); err != nil {
-		panic(err)
-	}
-	kripke.WriteAsLog(os.Stdout, "The state machine should transition to state B or state C.")
 }

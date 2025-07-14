@@ -129,15 +129,15 @@ type HaltHandler[SM AbstractStateMachine] func(ctx context.Context, sm SM)
 func handleEvent[T AbstractEvent, SM AbstractStateMachine](smID string, handler EventHandler[T, SM]) eventHandler {
 	return func(event AbstractEvent, env *Environment) {
 		typedEvent := event.(T)
-		
+
 		machine, exists := env.machines[smID]
 		if !exists {
 			panic(fmt.Sprintf("StateMachine with ID %s not found in environment", smID))
 		}
-		
+
 		sm := machine.(SM)
-		ctx := WithEnvAndSM(env, sm)
-		
+		ctx := withEnvAndSM(env, sm)
+
 		handler(ctx, typedEvent, sm)
 	}
 }
@@ -148,10 +148,10 @@ func handleEntry[SM AbstractStateMachine](smID string, handler EntryHandler[SM])
 		if !exists {
 			panic(fmt.Sprintf("StateMachine with ID %s not found in environment", smID))
 		}
-		
+
 		sm := machine.(SM)
-		ctx := WithEnvAndSM(env, sm)
-		
+		ctx := withEnvAndSM(env, sm)
+
 		handler(ctx, sm)
 	}
 }
@@ -162,10 +162,10 @@ func handleExit[SM AbstractStateMachine](smID string, handler ExitHandler[SM]) e
 		if !exists {
 			panic(fmt.Sprintf("StateMachine with ID %s not found in environment", smID))
 		}
-		
+
 		sm := machine.(SM)
-		ctx := WithEnvAndSM(env, sm)
-		
+		ctx := withEnvAndSM(env, sm)
+
 		handler(ctx, sm)
 	}
 }
@@ -176,10 +176,10 @@ func handleTransition[SM AbstractStateMachine](smID string, handler TransitionHa
 		if !exists {
 			panic(fmt.Sprintf("StateMachine with ID %s not found in environment", smID))
 		}
-		
+
 		sm := machine.(SM)
-		ctx := WithEnvAndSM(env, sm)
-		
+		ctx := withEnvAndSM(env, sm)
+
 		handler(ctx, toState, sm)
 	}
 }
@@ -190,12 +190,10 @@ func handleHalt[SM AbstractStateMachine](smID string, handler HaltHandler[SM]) h
 		if !exists {
 			panic(fmt.Sprintf("StateMachine with ID %s not found in environment", smID))
 		}
-		
+
 		sm := machine.(SM)
-		ctx := WithEnvAndSM(env, sm)
-		
+		ctx := withEnvAndSM(env, sm)
+
 		handler(ctx, sm)
 	}
 }
-
-

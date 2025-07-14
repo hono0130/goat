@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/goatx/goat"
 	"github.com/google/uuid"
@@ -326,14 +325,15 @@ func main() {
 	client2 := &ClientStateMachine{}
 	client2.NewMachine(1, 101, server2) // Client 1, Same Room 101
 
-	// Create Kripke model
-	kripke, err := goat.KripkeModel(
+	fmt.Println("Meeting Room Reservation System (With Proper Exclusion Control)")
+	fmt.Println("Simulating: SELECT FOR UPDATE → UPDATE (with locking)")
+
+	// Use the new Test API
+	err := goat.Test(
 		goat.WithStateMachines(server1, server2, db, client1, client2),
 		goat.WithInvariants(
 			// Invariant: A room should not be reserved by multiple clients
-			goat.ToRef(db).Invariant(func(sm goat.AbstractStateMachine) bool {
-				db := sm.(*DBStateMachine)
-
+			goat.NewInvariant(db, func(db *DBStateMachine) bool {
 				roomClients := make(map[int]map[int]bool)
 				for _, res := range db.Reservations {
 					if _, ok := roomClients[res.RoomID]; !ok {
@@ -355,12 +355,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	if err := kripke.Solve(); err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Meeting Room Reservation System (With Proper Exclusion Control)")
-	fmt.Println("Simulating: SELECT FOR UPDATE → UPDATE (with locking)")
-	kripke.WriteAsLog(os.Stdout, "A room should not be reserved by multiple clients")
 }
