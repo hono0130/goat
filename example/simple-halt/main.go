@@ -27,30 +27,27 @@ type StateMachine struct {
 	goat.StateMachine
 }
 
-func (sm *StateMachine) NewMachine() {
-	var (
-		stateA = &State{StateType: StateA}
-		stateB = &State{StateType: StateB}
-	)
+func main() {
+	// === StateMachine Spec ===
+	spec := goat.NewStateMachineSpec(&StateMachine{})
+	stateA := &State{StateType: StateA}
+	stateB := &State{StateType: StateB}
 
-	sm.StateMachine.New(stateA, stateB)
-	sm.SetInitialState(stateA)
+	spec.DefineStates(stateA, stateB).SetInitialState(stateA)
 
-	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateA, func(ctx context.Context, machine *StateMachine) {
 		goat.Halt(ctx, machine)
 		// no longer reachable since the state machine is halted.
 		goat.Goto(ctx, stateB)
 	})
 
-	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateB, func(ctx context.Context, machine *StateMachine) {
 		fmt.Println("This should not be printed since the state machine is halted in state A.")
 		goat.Goto(ctx, stateA)
 	})
-}
 
-func main() {
-	sm := &StateMachine{}
-	sm.NewMachine()
+	// === Create Instance ===
+	sm := spec.NewInstance()
 
 	err := goat.Test(
 		goat.WithStateMachines(sm),

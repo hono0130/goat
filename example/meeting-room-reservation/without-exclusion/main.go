@@ -97,95 +97,15 @@ type ClientStateMachine struct {
 	Server     *ServerStateMachine
 }
 
-func (sm *ServerStateMachine) NewMachine(db *DBStateMachine) {
-	var (
-		idle       = &State{StateType: ServerIdle}
-		processing = &State{StateType: ServerProcessing}
-	)
+func main() {
+	// === Database Spec ===
+	dbSpec := goat.NewStateMachineSpec(&DBStateMachine{})
+	dbIdle := &State{StateType: DBIdle}
 
-	sm.StateMachine.New(idle, processing)
-	sm.SetInitialState(idle)
-	sm.DB = db
+	dbSpec.DefineStates(dbIdle).SetInitialState(dbIdle)
 
-	goat.OnEvent(sm, idle, &ReservationRequestEvent{},
-		func(ctx context.Context, event *ReservationRequestEvent, server *ServerStateMachine) {
-			server.CurrentRequest = event
-
-			// First, SELECT to check if room is already reserved
-			selectEvent := &DBSelectEvent{
-				RoomID:   event.RoomID,
-				ClientID: event.ClientID,
-				Server:   server,
-			}
-
-			goat.SendTo(ctx, server.DB, selectEvent)
-			goat.Goto(ctx, processing)
-		},
-	)
-
-	// Handle SELECT result
-	goat.OnEvent(sm, processing, &DBSelectResultEvent{},
-		func(ctx context.Context, event *DBSelectResultEvent, server *ServerStateMachine) {
-			if server.CurrentRequest == nil {
-				goat.Goto(ctx, idle)
-				return
-			}
-
-			if event.IsReserved {
-				// Room is already reserved, send failure to client
-				resultEvent := &ReservationResultEvent{
-					RoomID:    server.CurrentRequest.RoomID,
-					ClientID:  server.CurrentRequest.ClientID,
-					Succeeded: false,
-				}
-
-				goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
-				server.CurrentRequest = nil
-				goat.Goto(ctx, idle)
-				return
-			}
-
-			// Room is not reserved, proceed with UPDATE
-			updateEvent := &DBUpdateEvent{
-				RoomID:   server.CurrentRequest.RoomID,
-				ClientID: server.CurrentRequest.ClientID,
-				Server:   server,
-			}
-
-			goat.SendTo(ctx, server.DB, updateEvent)
-		},
-	)
-
-	goat.OnEvent(sm, processing, &DBUpdateResultEvent{},
-		func(ctx context.Context, event *DBUpdateResultEvent, server *ServerStateMachine) {
-			if server.CurrentRequest == nil {
-				goat.Goto(ctx, idle)
-				return
-			}
-
-			resultEvent := &ReservationResultEvent{
-				RoomID:    server.CurrentRequest.RoomID,
-				ClientID:  server.CurrentRequest.ClientID,
-				Succeeded: event.Succeeded,
-			}
-
-			goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
-			server.CurrentRequest = nil
-			goat.Goto(ctx, idle)
-		},
-	)
-}
-
-func (sm *DBStateMachine) NewMachine() {
-	var (
-		idle = &State{StateType: DBIdle}
-	)
-
-	sm.StateMachine.New(idle)
-	sm.SetInitialState(idle)
-	sm.Reservations = make([]Reservation, 0)
-
-	goat.OnEvent(sm, idle, &DBSelectEvent{},
+	// DBのハンドラーをSpecに登録
+	goat.OnEvent(dbSpec, dbIdle, &DBSelectEvent{},
 		func(ctx context.Context, event *DBSelectEvent, db *DBStateMachine) {
 			// Check if room is already reserved
 			isReserved := false
@@ -203,10 +123,9 @@ func (sm *DBStateMachine) NewMachine() {
 			}
 
 			goat.SendTo(ctx, event.Server, resultEvent)
-		},
-	)
+		})
 
-	goat.OnEvent(sm, idle, &DBUpdateEvent{},
+	goat.OnEvent(dbSpec, dbIdle, &DBUpdateEvent{},
 		func(ctx context.Context, event *DBUpdateEvent, db *DBStateMachine) {
 			db.Reservations = append(db.Reservations, Reservation{
 				UUID:     uuid.New().String(),
@@ -217,29 +136,93 @@ func (sm *DBStateMachine) NewMachine() {
 			resultEvent := &DBUpdateResultEvent{
 				RoomID:    event.RoomID,
 				ClientID:  event.ClientID,
-				Succeeded: true, 
+				Succeeded: true,
 			}
 
 			goat.SendTo(ctx, event.Server, resultEvent)
-		},
-	)
+		})
 
-}
+	// === Server Spec ===
+	serverSpec := goat.NewStateMachineSpec(&ServerStateMachine{})
+	serverIdle := &State{StateType: ServerIdle}
+	serverProcessing := &State{StateType: ServerProcessing}
 
-func (sm *ClientStateMachine) NewMachine(clientID int, roomID int, server *ServerStateMachine) {
-	var (
-		idle       = &State{StateType: ClientIdle}
-		requesting = &State{StateType: ClientRequesting}
-		end        = &State{StateType: ClientEnd}
-	)
+	serverSpec.DefineStates(serverIdle, serverProcessing).SetInitialState(serverIdle)
 
-	sm.StateMachine.New(idle, requesting, end)
-	sm.SetInitialState(idle)
-	sm.ClientID = clientID
-	sm.TargetRoom = roomID
-	sm.Server = server
+	goat.OnEvent(serverSpec, serverIdle, &ReservationRequestEvent{},
+		func(ctx context.Context, event *ReservationRequestEvent, server *ServerStateMachine) {
+			server.CurrentRequest = event
 
-	goat.OnEntry(sm, idle, 
+			// First, SELECT to check if room is already reserved
+			selectEvent := &DBSelectEvent{
+				RoomID:   event.RoomID,
+				ClientID: event.ClientID,
+				Server:   server,
+			}
+
+			goat.SendTo(ctx, server.DB, selectEvent)
+			goat.Goto(ctx, serverProcessing)
+		})
+
+	// Handle SELECT result
+	goat.OnEvent(serverSpec, serverProcessing, &DBSelectResultEvent{},
+		func(ctx context.Context, event *DBSelectResultEvent, server *ServerStateMachine) {
+			if server.CurrentRequest == nil {
+				goat.Goto(ctx, serverIdle)
+				return
+			}
+
+			if event.IsReserved {
+				// Room is already reserved, send failure to client
+				resultEvent := &ReservationResultEvent{
+					RoomID:    server.CurrentRequest.RoomID,
+					ClientID:  server.CurrentRequest.ClientID,
+					Succeeded: false,
+				}
+
+				goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
+				server.CurrentRequest = nil
+				goat.Goto(ctx, serverIdle)
+				return
+			}
+
+			// Room is not reserved, proceed with UPDATE
+			updateEvent := &DBUpdateEvent{
+				RoomID:   server.CurrentRequest.RoomID,
+				ClientID: server.CurrentRequest.ClientID,
+				Server:   server,
+			}
+
+			goat.SendTo(ctx, server.DB, updateEvent)
+		})
+
+	goat.OnEvent(serverSpec, serverProcessing, &DBUpdateResultEvent{},
+		func(ctx context.Context, event *DBUpdateResultEvent, server *ServerStateMachine) {
+			if server.CurrentRequest == nil {
+				goat.Goto(ctx, serverIdle)
+				return
+			}
+
+			resultEvent := &ReservationResultEvent{
+				RoomID:    server.CurrentRequest.RoomID,
+				ClientID:  server.CurrentRequest.ClientID,
+				Succeeded: event.Succeeded,
+			}
+
+			goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
+			server.CurrentRequest = nil
+			goat.Goto(ctx, serverIdle)
+		})
+
+	// === Client Spec ===
+	clientSpec := goat.NewStateMachineSpec(&ClientStateMachine{})
+	clientIdle := &State{StateType: ClientIdle}
+	clientRequesting := &State{StateType: ClientRequesting}
+	clientEnd := &State{StateType: ClientEnd}
+
+	clientSpec.DefineStates(clientIdle, clientRequesting, clientEnd).SetInitialState(clientIdle)
+
+	goat.OnEntry(clientSpec, clientIdle,
 		func(ctx context.Context, client *ClientStateMachine) {
 			requestEvent := &ReservationRequestEvent{
 				RoomID:   client.TargetRoom,
@@ -248,46 +231,46 @@ func (sm *ClientStateMachine) NewMachine(clientID int, roomID int, server *Serve
 			}
 
 			goat.SendTo(ctx, client.Server, requestEvent)
-			goat.Goto(ctx, requesting)
-		},
-	)
+			goat.Goto(ctx, clientRequesting)
+		})
 
-	goat.OnEvent(sm, requesting, &ReservationResultEvent{},
+	goat.OnEvent(clientSpec, clientRequesting, &ReservationResultEvent{},
 		func(ctx context.Context, event *ReservationResultEvent, client *ClientStateMachine) {
 			if event.ClientID == client.ClientID {
 				if event.Succeeded {
-					goat.Goto(ctx, end)
+					goat.Goto(ctx, clientEnd)
 				} else {
-					goat.Goto(ctx, end)
+					goat.Goto(ctx, clientEnd)
 				}
 			}
-		},
-	)
+		})
 
-	goat.OnEntry(sm, end,
+	goat.OnEntry(clientSpec, clientEnd,
 		func(ctx context.Context, client *ClientStateMachine) {
-		},
-	)
-}
+		})
 
-func main() {
-	// Create database
-	db := &DBStateMachine{}
-	db.NewMachine()
+	// === Create Instances ===
+	// Create database instance
+	db := dbSpec.NewInstance()
+	db.Reservations = make([]Reservation, 0)
 
-	// Create server
-	server1 := &ServerStateMachine{}
-	server1.NewMachine(db)
+	// Create server instances
+	server1 := serverSpec.NewInstance()
+	server1.DB = db
 
-	// Create two clients trying to reserve the same room
-	client1 := &ClientStateMachine{}
-	client1.NewMachine(0, 101, server1) // Client 0, Room 101
+	server2 := serverSpec.NewInstance()
+	server2.DB = db
 
-	server2 := &ServerStateMachine{}
-	server2.NewMachine(db)
+	// Create client instances
+	client1 := clientSpec.NewInstance()
+	client1.ClientID = 0
+	client1.TargetRoom = 101
+	client1.Server = server1
 
-	client2 := &ClientStateMachine{}
-	client2.NewMachine(1, 101, server2) // Client 1, Same Room 101
+	client2 := clientSpec.NewInstance()
+	client2.ClientID = 1
+	client2.TargetRoom = 101
+	client2.Server = server2
 
 	fmt.Println("Meeting Room Reservation System (Without Proper Exclusion Control)")
 	fmt.Println("Simulating: SELECT → UPDATE (without locking)")

@@ -39,12 +39,10 @@ func sameState(s1, s2 AbstractState) bool {
 
 type AbstractStateMachine interface {
 	isStateMachine() bool
-	setEventHandler(event AbstractEvent, state AbstractState, handler Handler)
 	currentState() AbstractState
 	setCurrentState(state AbstractState)
 	id() string
 	SetInitialState(state AbstractState)
-	setDefaultHandlers(state AbstractState)
 }
 
 type StateMachine struct {
@@ -93,9 +91,6 @@ func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
 func (sm *StateMachine) New(states ...AbstractState) {
 	sm.smID = uuid.New().String()
 	sm.EventHandlers = make(map[AbstractState][]handlerInfo)
-	for _, state := range states {
-		sm.setDefaultHandlers(state)
-	}
 }
 
 func (sm *StateMachine) validate() error {
@@ -110,13 +105,6 @@ func (sm *StateMachine) validate() error {
 
 func (sm *StateMachine) isStateMachine() bool {
 	return true
-}
-
-func (sm *StateMachine) setEventHandler(event AbstractEvent, state AbstractState, handler Handler) {
-	sm.EventHandlers[state] = append(sm.EventHandlers[state], handlerInfo{
-		event:   event,
-		handler: handler,
-	})
 }
 
 func (sm *StateMachine) currentState() AbstractState {
@@ -139,79 +127,6 @@ func (sm *StateMachine) SetInitialState(state AbstractState) {
 		panic("initial state already set")
 	}
 	sm.State = state
-}
-
-func (sm *StateMachine) Goto(state AbstractState, env *Environment) {
-	env.enqueueEvent(sm, &ExitEvent{})
-	env.enqueueEvent(sm, &TransitionEvent{To: state})
-	env.enqueueEvent(sm, &EntryEvent{})
-}
-
-func (sm *StateMachine) SendUnary(to AbstractStateMachine, event AbstractEvent, env *Environment) {
-	env.enqueueEvent(to, event)
-}
-
-func (sm *StateMachine) Halt(to AbstractStateMachine, env *Environment) {
-	env.enqueueEvent(to, &HaltEvent{})
-}
-
-func (sm *StateMachine) setDefaultHandlers(state AbstractState) {
-	defaults := map[AbstractEvent]Handler{
-		&TransitionEvent{}: &defaultOnTransitionHandler{},
-		&HaltEvent{}:      &defaultOnHaltHandler{},
-	}
-	for event, h := range defaults {
-		sm.setEventHandler(event, state, h)
-	}
-}
-
-
-// Type-safe helper functions with context for environment access
-
-// OnEvent creates a type-safe event handler using context for environment access
-func OnEvent[T AbstractEvent, SM AbstractStateMachine](sm SM, state AbstractState, event T, handler EventHandler[T, SM]) {
-	innerSM := getInnerStateMachine(sm)
-	smID := innerSM.id()
-	innerSM.setEventHandler(event, state, &eventHandlers{
-		fs:    []eventHandler{handleEvent[T, SM](smID, handler)},
-		event: event,
-	})
-}
-
-// OnEntry creates a type-safe entry handler using context for environment access
-func OnEntry[SM AbstractStateMachine](sm SM, state AbstractState, handler EntryHandler[SM]) {
-	innerSM := getInnerStateMachine(sm)
-	smID := innerSM.id()
-	innerSM.setEventHandler(&EntryEvent{}, state, &entryHandlers{
-		fs: []entryHandler{handleEntry[SM](smID, handler)},
-	})
-}
-
-// OnExit creates a type-safe exit handler using context for environment access
-func OnExit[SM AbstractStateMachine](sm SM, state AbstractState, handler ExitHandler[SM]) {
-	innerSM := getInnerStateMachine(sm)
-	smID := innerSM.id()
-	innerSM.setEventHandler(&ExitEvent{}, state, &exitHandlers{
-		fs: []exitHandler{handleExit[SM](smID, handler)},
-	})
-}
-
-// OnTransition creates a type-safe transition handler using context for environment access
-func OnTransition[SM AbstractStateMachine](sm SM, state AbstractState, handler TransitionHandler[SM]) {
-	innerSM := getInnerStateMachine(sm)
-	smID := innerSM.id()
-	innerSM.setEventHandler(&TransitionEvent{}, state, &transitionHandlers{
-		fs: []transitionHandler{handleTransition[SM](smID, handler)},
-	})
-}
-
-// OnHalt creates a type-safe halt handler using context for environment access
-func OnHalt[SM AbstractStateMachine](sm SM, state AbstractState, handler HaltHandler[SM]) {
-	innerSM := getInnerStateMachine(sm)
-	smID := innerSM.id()
-	innerSM.setEventHandler(&HaltEvent{}, state, &haltHandlers{
-		fs: []haltHandler{handleHalt[SM](smID, handler)},
-	})
 }
 
 // getInnerStateMachine extracts the inner state machine from the arbitrary state machine

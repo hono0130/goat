@@ -27,27 +27,26 @@ type StateMachine struct {
 	goat.StateMachine
 }
 
-func (sm *StateMachine) NewMachine() {
+func main() {
+	// === StateMachine Spec ===
+	spec := goat.NewStateMachineSpec(&StateMachine{})
+
 	// StateMachineが取る状態を定義
-	var (
-		stateA = &State{StateType: StateA}
-		stateB = &State{StateType: StateB}
-		stateC = &State{StateType: StateC}
-	)
+	stateA := &State{StateType: StateA}
+	stateB := &State{StateType: StateB}
+	stateC := &State{StateType: StateC}
 
 	// StateMachineを初期化
-	sm.StateMachine.New(stateA, stateB, stateC)
-	// 初期状態を設定
-	sm.SetInitialState(stateA)
+	spec.DefineStates(stateA, stateB, stateC).SetInitialState(stateA)
 
 	// 状態Aにおける処理
 	// 状態Aに遷移した際に以下の処理を非決定的に実行
 	// 1. 状態Bに遷移
 	// 2. 状態Cに遷移
-	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateA, func(ctx context.Context, machine *StateMachine) {
 		goat.Goto(ctx, stateB)
 	})
-	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateA, func(ctx context.Context, machine *StateMachine) {
 		goat.Goto(ctx, stateC)
 	})
 
@@ -55,18 +54,15 @@ func (sm *StateMachine) NewMachine() {
 	// 状態Bに遷移した際に以下の処理を非決定的に実行
 	// 1. 状態Cに遷移
 	// 2. 状態Aに遷移
-	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateB, func(ctx context.Context, machine *StateMachine) {
 		goat.Goto(ctx, stateC)
 	})
-	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateB, func(ctx context.Context, machine *StateMachine) {
 		goat.Goto(ctx, stateA)
 	})
 
-}
-
-func main() {
-	sm := &StateMachine{}
-	sm.NewMachine()
+	// === Create Instance ===
+	sm := spec.NewInstance()
 
 	err := goat.Test(
 		goat.WithStateMachines(sm),

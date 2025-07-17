@@ -61,11 +61,11 @@ func TestEnvironmentEnqueueEvent(t *testing.T) {
 
 func TestEnvironmentDequeueEvent(t *testing.T) {
 	tests := []struct {
-		name           string
-		smID           string
-		initialQueue   map[string][]AbstractEvent
-		expectedEvent  *TestEvent
-		expectedOK     bool
+		name          string
+		smID          string
+		initialQueue  map[string][]AbstractEvent
+		expectedEvent *TestEvent
+		expectedOK    bool
 		expectedQueue map[string][]AbstractEvent
 	}{
 		{
@@ -74,14 +74,14 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 			initialQueue: map[string][]AbstractEvent{
 				"test-sm-id": {},
 			},
-			expectedOK:     false,
+			expectedOK: false,
 		},
 		{
-			name:           "non-existent state machine ID",
-			smID:           "non-existent-id",
-			initialQueue:   make(map[string][]AbstractEvent),
-			expectedEvent:  nil,
-			expectedOK:     false,
+			name:          "non-existent state machine ID",
+			smID:          "non-existent-id",
+			initialQueue:  make(map[string][]AbstractEvent),
+			expectedEvent: nil,
+			expectedOK:    false,
 		},
 		{
 			name: "dequeue from queue with events",
@@ -89,8 +89,8 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 			initialQueue: map[string][]AbstractEvent{
 				"test-sm-id": {&TestEvent{value: 1}, &TestEvent{value: 2}, &TestEvent{value: 3}},
 			},
-			expectedEvent:  &TestEvent{value: 1},
-			expectedOK:     true,
+			expectedEvent: &TestEvent{value: 1},
+			expectedOK:    true,
 			expectedQueue: map[string][]AbstractEvent{
 				"test-sm-id": {&TestEvent{value: 2}, &TestEvent{value: 3}},
 			},

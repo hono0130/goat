@@ -28,34 +28,31 @@ type StateMachine struct {
 	Mut int
 }
 
-func (sm *StateMachine) NewMachine() {
-	var (
-		stateA = &State{StateType: StateA}
-		stateB = &State{StateType: StateB}
-		stateC = &State{StateType: StateC}
-	)
+func main() {
+	// === StateMachine Spec ===
+	spec := goat.NewStateMachineSpec(&StateMachine{})
+	stateA := &State{StateType: StateA}
+	stateB := &State{StateType: StateB}
+	stateC := &State{StateType: StateC}
 
-	sm.StateMachine.New(stateA, stateB, stateC)
-	sm.SetInitialState(stateA)
+	spec.DefineStates(stateA, stateB, stateC).SetInitialState(stateA)
 
-	goat.OnEntry(sm, stateA, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateA, func(ctx context.Context, machine *StateMachine) {
 		machine.Mut = 1
 		goat.Goto(ctx, stateB)
 	})
 
-	goat.OnEntry(sm, stateB, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateB, func(ctx context.Context, machine *StateMachine) {
 		machine.Mut = 2
 		goat.Goto(ctx, stateC)
 	})
 
-	goat.OnEntry(sm, stateC, func(ctx context.Context, machine *StateMachine) {
+	goat.OnEntry(spec, stateC, func(ctx context.Context, machine *StateMachine) {
 		machine.Mut = 3
 	})
-}
 
-func main() {
-	sm := &StateMachine{}
-	sm.NewMachine()
+	// === Create Instance ===
+	sm := spec.NewInstance()
 
 	err := goat.Test(
 		goat.WithStateMachines(sm),

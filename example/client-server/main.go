@@ -86,72 +86,27 @@ type (
 	}
 )
 
-func (c *Client) NewMachine(server *Server) {
-	var (
-		idle    = &ClientState{ClientState: ClientStateIdle}
-		waiting = &ClientState{ClientState: ClientStateWaiting}
-	)
+func main() {
+	// === Server Spec ===
+	serverSpec := goat.NewStateMachineSpec(&Server{})
+	serverInit := &ServerState{ServerState: ServerStateInit}
+	serverRunning := &ServerState{ServerState: ServerStateRunning}
 
-	// Initialize the client.
-	// Set the server that the client is connected to.
-	c.Server = server
-	// [MUST] This is a must to call New() method to initialize the state machine.
-	// [MUST] This is a must to call SetInitialState() method to set the initial state.
-	c.StateMachine.New(idle, waiting)
-	c.SetInitialState(idle)
+	serverSpec.DefineStates(serverInit, serverRunning).SetInitialState(serverInit)
 
-	// Define the default handlers for the idle state using new type-safe API
-	goat.OnEntry(c, idle, func(ctx context.Context, client *Client) {
-		reqCtx := Context{RequestID: randomRequestID()}
-		goat.SendTo(ctx, client.Server, &eCheckMenuExistenceRequest{
-			From:   client,
-			Ctx:    reqCtx,
-			MenuID: "menu_id",
-		})
-		goat.Goto(ctx, waiting)
-	})
-	
-	goat.OnEntry(c, idle, func(ctx context.Context, client *Client) {
-		client.Mut = 100000
-		goat.Goto(ctx, waiting)
+	goat.OnEntry(serverSpec, serverInit, func(ctx context.Context, server *Server) {
+		goat.Goto(ctx, serverRunning)
 	})
 
-	// Define the default handlers for the waiting state using new type-safe API
-	goat.OnEvent(c, waiting, &eCheckMenuExistenceResponse{}, 
-		func(ctx context.Context, event *eCheckMenuExistenceResponse, client *Client) {
-			if event.Err {
-				goat.Goto(ctx, idle)
-				return
-			}
-		},
-	)
-
-}
-
-func (s *Server) NewMachine() {
-	var (
-		init    = &ServerState{ServerState: ServerStateInit}
-		running = &ServerState{ServerState: ServerStateRunning}
-	)
-
-	// [MUST] This is a must to call New() method to initialize the state machine.
-	// [MUST] This is a must to call SetInitialState() method to set the initial state.
-	s.StateMachine.New(init, running)
-	s.SetInitialState(init)
-
-	goat.OnEntry(s, init, func(ctx context.Context, server *Server) {
-		goat.Goto(ctx, running)
-	})
-
-	goat.OnEvent(s, running, &eCheckMenuExistenceRequest{},
+	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
 			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
 				Exists: true,
 			})
 		},
 	)
-	
-	goat.OnEvent(s, running, &eCheckMenuExistenceRequest{},
+
+	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
 			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
 				Exists: false,
@@ -159,8 +114,8 @@ func (s *Server) NewMachine() {
 			})
 		},
 	)
-	
-	goat.OnEvent(s, running, &eCheckMenuExistenceRequest{},
+
+	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
 			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
 				Exists: false,
@@ -168,14 +123,44 @@ func (s *Server) NewMachine() {
 			})
 		},
 	)
-}
 
-func main() {
-	server := &Server{}
-	server.NewMachine()
+	// === Client Spec ===
+	clientSpec := goat.NewStateMachineSpec(&Client{})
+	clientIdle := &ClientState{ClientState: ClientStateIdle}
+	clientWaiting := &ClientState{ClientState: ClientStateWaiting}
 
-	client := &Client{}
-	client.NewMachine(server)
+	clientSpec.DefineStates(clientIdle, clientWaiting).SetInitialState(clientIdle)
+
+	// Define the default handlers for the idle state using new type-safe API
+	goat.OnEntry(clientSpec, clientIdle, func(ctx context.Context, client *Client) {
+		reqCtx := Context{RequestID: randomRequestID()}
+		goat.SendTo(ctx, client.Server, &eCheckMenuExistenceRequest{
+			From:   client,
+			Ctx:    reqCtx,
+			MenuID: "menu_id",
+		})
+		goat.Goto(ctx, clientWaiting)
+	})
+
+	goat.OnEntry(clientSpec, clientIdle, func(ctx context.Context, client *Client) {
+		client.Mut = 100000
+		goat.Goto(ctx, clientWaiting)
+	})
+
+	// Define the default handlers for the waiting state using new type-safe API
+	goat.OnEvent(clientSpec, clientWaiting, &eCheckMenuExistenceResponse{},
+		func(ctx context.Context, event *eCheckMenuExistenceResponse, client *Client) {
+			if event.Err {
+				goat.Goto(ctx, clientIdle)
+				return
+			}
+		},
+	)
+
+	// === Create Instances ===
+	server := serverSpec.NewInstance()
+	client := clientSpec.NewInstance()
+	client.Server = server
 
 	err := goat.Test(
 		goat.WithStateMachines(server, client),

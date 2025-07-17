@@ -342,4 +342,3 @@ type optionFunc func(*options)
 func (f optionFunc) apply(o *options) {
 	f(o)
 }
-

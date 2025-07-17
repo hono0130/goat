@@ -68,7 +68,7 @@ func TestInvariantFor(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sm, w := tt.setup()
 			invariant := NewInvariant(sm, tt.checkFunc)
-			
+
 			got := invariant.Evaluate(w)
 			if got != tt.wantResult {
 				t.Errorf("Evaluate() = %v, want %v", got, tt.wantResult)
@@ -99,7 +99,7 @@ func TestBoolInvariant(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			w := NewTestWorld(NewTestEnvironment())
 			invariant := BoolInvariant(tt.value)
-			
+
 			got := invariant.Evaluate(w)
 			if got != tt.wantResult {
 				t.Errorf("Evaluate() = %v, want %v", got, tt.wantResult)
