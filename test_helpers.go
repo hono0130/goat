@@ -18,9 +18,7 @@ type TestEvent struct {
 
 type TestHandler struct{}
 
-func (h TestHandler) apply(_ *StateMachine, _ AbstractState) {}
-
-func (h TestHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
+func (TestHandler) handle(_ Environment, _ string, _ AbstractEvent) ([]localState, error) {
 	return nil, nil
 }
 

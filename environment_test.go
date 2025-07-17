@@ -6,7 +6,6 @@ import (
 )
 
 func TestEnvironmentClone(t *testing.T) {
-	// Create test data
 	sm1 := NewTestStateMachine("state1")
 	sm2 := NewTestStateMachine("state2")
 
@@ -20,7 +19,6 @@ func TestEnvironmentClone(t *testing.T) {
 
 	cloned := original.clone()
 
-	// Verify cloned environment Equality
 	AssertEnvironmentEqual(t, original, cloned)
 
 	// Verify state machine pointer addresses are different
@@ -44,7 +42,6 @@ func TestEnvironmentClone(t *testing.T) {
 }
 
 func TestEnvironmentEnqueueEvent(t *testing.T) {
-	// Create test data
 	sm := NewTestStateMachine("initial")
 	env := NewTestEnvironment(sm)
 	event1 := &TestEvent{value: 1}

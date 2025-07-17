@@ -47,13 +47,13 @@ type (
 // Client states
 const (
 	ClientStateIdle    ClientStateType = "idle"    // The client is idle
-	ClientStateWaiting                 = "waiting" // The client is waiting for a response
+	ClientStateWaiting ClientStateType = "waiting" // The client is waiting for a response
 )
 
 // Server states
 const (
 	ServerStateInit    ServerStateType = "init"    // The server is initializing
-	ServerStateRunning                 = "running" // The server is running
+	ServerStateRunning ServerStateType = "running" // The server is running
 )
 
 type (

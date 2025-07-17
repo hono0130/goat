@@ -18,7 +18,6 @@ func withEnvAndSM(env *Environment, sm AbstractStateMachine) context.Context {
 	return ctx
 }
 
-// getEnvFromContext extracts environment from context
 func getEnvFromContext(ctx context.Context) *Environment {
 	if env, ok := ctx.Value(envKey).(*Environment); ok {
 		return env
@@ -26,7 +25,6 @@ func getEnvFromContext(ctx context.Context) *Environment {
 	panic("Environment not found in context")
 }
 
-// getSMFromContext extracts state machine from context
 func getSMFromContext(ctx context.Context) AbstractStateMachine {
 	if sm, ok := ctx.Value(smKey).(AbstractStateMachine); ok {
 		return sm

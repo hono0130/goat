@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// Kripke represents a Kripke model for goat.
 type kripke struct {
 	worlds     worlds
 	initial    world
@@ -63,9 +62,7 @@ func id(env Environment) worldID {
 		}
 	}
 	sort.Strings(qeNames)
-	for _, qeName := range qeNames {
-		strs = append(strs, qeName)
-	}
+	strs = append(strs, qeNames...)
 	hasher := fnv.New64a()
 	_, _ = hasher.Write([]byte(strings.Join(strs, ",")))
 	return worldID(hasher.Sum64())
@@ -86,7 +83,7 @@ func (w world) label() string {
 
 	strs = append(strs, "\nQueuedEvents:")
 	smIDs = make([]string, 0)
-	for smID, _ := range w.env.queue {
+	for smID := range w.env.queue {
 		smIDs = append(smIDs, smID)
 	}
 	sort.Strings(smIDs)
@@ -141,9 +138,8 @@ func stepLocal(env Environment, smID string) ([]localState, error) {
 					}
 					if len(lss) > 0 {
 						return lss, nil
-					} else {
-						return []localState{{env: ec}}, nil
 					}
+					return []localState{{env: ec}}, nil
 				}
 			}
 		}
@@ -320,7 +316,6 @@ func (k *kripke) evaluateInvariants(w world) bool {
 }
 
 type options struct {
-	// smsは実際には使われていない？
 	sms        []AbstractStateMachine
 	invariants []Invariant
 }

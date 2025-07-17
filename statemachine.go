@@ -8,16 +8,92 @@ import (
 	"github.com/google/uuid"
 )
 
+const noFieldsMessage = "no fields"
+
+type handlerBuilder func(smID string) Handler
+
+type handlerBuilderInfo struct {
+	event   AbstractEvent
+	builder handlerBuilder
+}
+
+type StateMachineSpec[T AbstractStateMachine] struct {
+	prototype       T
+	states          []AbstractState
+	initialState    AbstractState
+	handlerBuilders map[AbstractState][]handlerBuilderInfo
+}
+
+func NewStateMachineSpec[T AbstractStateMachine](prototype T) *StateMachineSpec[T] {
+	return &StateMachineSpec[T]{
+		prototype:       prototype,
+		handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
+	}
+}
+
+func (spec *StateMachineSpec[T]) DefineStates(states ...AbstractState) *StateMachineSpec[T] {
+	spec.states = states
+	for _, state := range states {
+		spec.setDefaultHandlerBuilders(state)
+	}
+	return spec
+}
+
+func (spec *StateMachineSpec[T]) SetInitialState(state AbstractState) *StateMachineSpec[T] {
+	spec.initialState = state
+	return spec
+}
+
+func (spec *StateMachineSpec[T]) setDefaultHandlerBuilders(state AbstractState) {
+	transitionBuilder := func(smID string) Handler {
+		return &defaultOnTransitionHandler{}
+	}
+	spec.handlerBuilders[state] = append(spec.handlerBuilders[state], handlerBuilderInfo{
+		event:   &TransitionEvent{},
+		builder: transitionBuilder,
+	})
+
+	haltBuilder := func(smID string) Handler {
+		return &defaultOnHaltHandler{}
+	}
+	spec.handlerBuilders[state] = append(spec.handlerBuilders[state], handlerBuilderInfo{
+		event:   &HaltEvent{},
+		builder: haltBuilder,
+	})
+}
+
+func (spec *StateMachineSpec[T]) NewInstance() T {
+	instance := cloneStateMachine(spec.prototype).(T)
+	innerSM := getInnerStateMachine(instance)
+
+	innerSM.smID = uuid.New().String()
+	innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
+	innerSM.State = spec.initialState
+	innerSM.halted = false
+
+	for state, builders := range spec.handlerBuilders {
+		for _, builderInfo := range builders {
+			handler := builderInfo.builder(innerSM.smID)
+			innerSM.EventHandlers[state] = append(innerSM.EventHandlers[state], handlerInfo{
+				event:   builderInfo.event,
+				handler: handler,
+			})
+		}
+	}
+
+	return instance
+}
+
 type AbstractState interface {
 	isState() bool
 }
 
 type State struct {
 	// this is needed to make State copyable
-	r rune
+	_ rune
 }
 
-func (s *State) isState() bool {
+func (*State) isState() bool {
 	return true
 }
 
@@ -46,12 +122,10 @@ type AbstractStateMachine interface {
 }
 
 type StateMachine struct {
-	// immutable fields
 	smID          string
 	EventHandlers map[AbstractState][]handlerInfo
-	// mutable fields
-	halted bool
-	State  AbstractState
+	halted        bool
+	State         AbstractState
 }
 
 func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
@@ -88,22 +162,12 @@ func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
 	return smc.Addr().Interface().(AbstractStateMachine)
 }
 
-func (sm *StateMachine) New(states ...AbstractState) {
+func (sm *StateMachine) New(_ ...AbstractState) {
 	sm.smID = uuid.New().String()
 	sm.EventHandlers = make(map[AbstractState][]handlerInfo)
 }
 
-func (sm *StateMachine) validate() error {
-	if sm.smID == "" {
-		return fmt.Errorf("StateMachine doesn't have an id. Please call New() before anything else: %w", ErrInitializeStateMachine)
-	}
-	if sm.currentState() == nil {
-		return fmt.Errorf("StateMachine doesn't have a current state. Please set the current state: %w", ErrInitializeStateMachine)
-	}
-	return nil
-}
-
-func (sm *StateMachine) isStateMachine() bool {
+func (*StateMachine) isStateMachine() bool {
 	return true
 }
 
@@ -129,8 +193,6 @@ func (sm *StateMachine) SetInitialState(state AbstractState) {
 	sm.State = state
 }
 
-// getInnerStateMachine extracts the inner state machine from the arbitrary state machine
-// that implements AbstractStateMachine.
 func getInnerStateMachine(sm AbstractStateMachine) *StateMachine {
 	v := reflect.ValueOf(sm)
 	if !v.IsValid() {
@@ -149,8 +211,6 @@ func getInnerStateMachine(sm AbstractStateMachine) *StateMachine {
 	panic("INVALID STATE MACHINE")
 }
 
-// getStateMachineName returns the type name of the state machine
-// that implements AbstractStateMachine.
 func getStateMachineName(sm AbstractStateMachine) string {
 	v := reflect.ValueOf(sm)
 	if !v.IsValid() {
@@ -163,8 +223,6 @@ func getStateMachineName(sm AbstractStateMachine) string {
 	return v.Type().Name()
 }
 
-// getStateMachineDetails returns the details of the state machine
-// that implements AbstractStateMachine.
 func getStateMachineDetails(sm AbstractStateMachine) string {
 	v := reflect.ValueOf(sm)
 	if !v.IsValid() {
@@ -197,29 +255,12 @@ func getStateMachineDetails(sm AbstractStateMachine) string {
 	}
 
 	if len(fieldDetails) == 0 {
-		return fmt.Sprintf("no fields")
+		return noFieldsMessage
 	}
 
 	return strings.Join(fieldDetails, ",")
 }
 
-// getStateName returns the type name of the state
-// that implements AbstractState.
-func getStateName(s AbstractState) string {
-	v := reflect.ValueOf(s)
-	if !v.IsValid() {
-		panic(fmt.Sprintf("INVALID STATE: %v", s))
-	}
-
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-
-	return v.Type().Name()
-}
-
-// getStateDetails returns the details of the state
-// that implements AbstractState.
 func getStateDetails(s AbstractState) string {
 	v := reflect.ValueOf(s)
 	if !v.IsValid() {
@@ -249,7 +290,7 @@ func getStateDetails(s AbstractState) string {
 	}
 
 	if len(fieldDetails) == 0 {
-		return fmt.Sprintf("no fields")
+		return noFieldsMessage
 	}
 
 	return strings.Join(fieldDetails, ",")

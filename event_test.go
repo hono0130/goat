@@ -160,7 +160,7 @@ func TestGetEventDetails(t *testing.T) {
 		{
 			name:     "EntryEvent no fields",
 			event:    &EntryEvent{},
-			expected: "no fields",
+			expected: noFieldsMessage,
 		},
 		{
 			name:     "TransitionEvent with To state",
@@ -170,7 +170,7 @@ func TestGetEventDetails(t *testing.T) {
 		{
 			name:     "TestEventWithPointer",
 			event:    &TestEventWithPointer{ptr: &testStruct{value: 100}},
-			expected: "no fields", // ptr field is skipped because it's a pointer
+			expected: noFieldsMessage, // ptr field is skipped because it's a pointer
 		},
 	}
 
