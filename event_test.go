@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-type TestEventWithPointer struct {
+type testEventWithPointer struct {
 	Event
 	ptr *testStruct
 }
@@ -20,8 +20,8 @@ func TestCloneEvent(t *testing.T) {
 		original AbstractEvent
 	}{
 		{
-			name:     "TestEvent",
-			original: &TestEvent{value: 42},
+			name:     "testEvent",
+			original: &testEvent{value: 42},
 		},
 		{
 			name:     "EntryEvent",
@@ -37,11 +37,11 @@ func TestCloneEvent(t *testing.T) {
 		},
 		{
 			name:     "TransitionEvent",
-			original: &TransitionEvent{To: &TestState{name: "target"}},
+			original: &TransitionEvent{To: &testState{name: "target"}},
 		},
 		{
-			name:     "TestEventWithPointer",
-			original: &TestEventWithPointer{ptr: &testStruct{value: 100}},
+			name:     "testEventWithPointer",
+			original: &testEventWithPointer{ptr: &testStruct{value: 100}},
 		},
 	}
 
@@ -74,9 +74,9 @@ func TestSameEvent(t *testing.T) {
 		expected bool
 	}{
 		{
-			name:     "same TestEvent types",
-			event1:   &TestEvent{value: 1},
-			event2:   &TestEvent{value: 2},
+			name:     "same testEvent types",
+			event1:   &testEvent{value: 1},
+			event2:   &testEvent{value: 2},
 			expected: true,
 		},
 		{
@@ -87,7 +87,7 @@ func TestSameEvent(t *testing.T) {
 		},
 		{
 			name:     "different types",
-			event1:   &TestEvent{},
+			event1:   &testEvent{},
 			event2:   &EntryEvent{},
 			expected: false,
 		},
@@ -110,9 +110,9 @@ func TestGetEventName(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "TestEvent",
-			event:    &TestEvent{},
-			expected: "TestEvent",
+			name:     "testEvent",
+			event:    &testEvent{},
+			expected: "testEvent",
 		},
 		{
 			name:     "EntryEvent",
@@ -153,8 +153,8 @@ func TestGetEventDetails(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "TestEvent with value",
-			event:    &TestEvent{value: 42},
+			name:     "testEvent with value",
+			event:    &testEvent{value: 42},
 			expected: "{Name:value,Type:int,Value:[UNACCESSIBLE]}",
 		},
 		{
@@ -164,12 +164,12 @@ func TestGetEventDetails(t *testing.T) {
 		},
 		{
 			name:     "TransitionEvent with To state",
-			event:    &TransitionEvent{To: &TestState{name: "target"}},
+			event:    &TransitionEvent{To: &testState{name: "target"}},
 			expected: "{Name:To,Type:goat.AbstractState,Value:&{{0} target}}",
 		},
 		{
-			name:     "TestEventWithPointer",
-			event:    &TestEventWithPointer{ptr: &testStruct{value: 100}},
+			name:     "testEventWithPointer",
+			event:    &testEventWithPointer{ptr: &testStruct{value: 100}},
 			expected: noFieldsMessage, // ptr field is skipped because it's a pointer
 		},
 	}
