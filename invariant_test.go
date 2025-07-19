@@ -7,57 +7,57 @@ import (
 func TestInvariantFor(t *testing.T) {
 	tests := []struct {
 		name       string
-		setup      func() (*TestStateMachine, world)
-		checkFunc  func(*TestStateMachine) bool
+		setup      func() (*testStateMachine, world)
+		checkFunc  func(*testStateMachine) bool
 		wantResult bool
 	}{
 		{
 			name: "always true invariant",
-			setup: func() (*TestStateMachine, world) {
-				sm := NewTestStateMachine("initial")
-				return sm, NewTestWorld(NewTestEnvironment(sm))
+			setup: func() (*testStateMachine, world) {
+				sm := newTestStateMachine(newTestState("initial"))
+				return sm, newTestWorld(newTestEnvironment(sm))
 			},
-			checkFunc: func(sm *TestStateMachine) bool {
+			checkFunc: func(sm *testStateMachine) bool {
 				return true
 			},
 			wantResult: true,
 		},
 		{
 			name: "always false invariant",
-			setup: func() (*TestStateMachine, world) {
-				sm := NewTestStateMachine("initial")
-				return sm, NewTestWorld(NewTestEnvironment(sm))
+			setup: func() (*testStateMachine, world) {
+				sm := newTestStateMachine(newTestState("initial"))
+				return sm, newTestWorld(newTestEnvironment(sm))
 			},
-			checkFunc: func(sm *TestStateMachine) bool {
+			checkFunc: func(sm *testStateMachine) bool {
 				return false
 			},
 			wantResult: false,
 		},
 		{
 			name: "check specific state",
-			setup: func() (*TestStateMachine, world) {
-				sm := NewTestStateMachine("initial")
-				return sm, NewTestWorld(NewTestEnvironment(sm))
+			setup: func() (*testStateMachine, world) {
+				sm := newTestStateMachine(newTestState("initial"))
+				return sm, newTestWorld(newTestEnvironment(sm))
 			},
-			checkFunc: func(sm *TestStateMachine) bool {
+			checkFunc: func(sm *testStateMachine) bool {
 				// Access the embedded StateMachine
-				currentState := sm.currentState().(*TestState)
+				currentState := sm.currentState().(*testState)
 				return currentState.name == "initial"
 			},
 			wantResult: true,
 		},
 		{
 			name: "non-existent state machine",
-			setup: func() (*TestStateMachine, world) {
-				sm := NewTestStateMachine("initial")
+			setup: func() (*testStateMachine, world) {
+				sm := newTestStateMachine(newTestState("initial"))
 				// Create world without this state machine
 				emptyEnv := Environment{
 					machines: make(map[string]AbstractStateMachine),
 					queue:    make(map[string][]AbstractEvent),
 				}
-				return sm, NewTestWorld(emptyEnv)
+				return sm, newTestWorld(emptyEnv)
 			},
-			checkFunc: func(sm *TestStateMachine) bool {
+			checkFunc: func(sm *testStateMachine) bool {
 				return true
 			},
 			wantResult: false,
@@ -97,7 +97,7 @@ func TestBoolInvariant(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := NewTestWorld(NewTestEnvironment())
+			w := newTestWorld(newTestEnvironment())
 			invariant := BoolInvariant(tt.value)
 
 			got := invariant.Evaluate(w)
