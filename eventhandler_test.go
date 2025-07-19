@@ -1,532 +1,237 @@
 package goat
 
-// func TestOnEntryHandler_Handle(t *testing.T) {
-// 	tests := []struct {
-// 		name            string
-// 		handler         *onEntryHandler
-// 		environment		 Environment
-// 		initiate        func() (Environment, AbstractStateMachine)
-// 		wantLocalStates func(env Environment, sm AbstractStateMachine) []localState
-// 		wantError       bool
-// 	}{
-// 		{
-// 			name: "handles entry event",
-// 			handler: &onEntryHandler{
-// 				fs: []OnEntryFunc{
-// 					func(env *Environment) {
-// 						// Add an event to the queue
-// 						env.enqueueEvent(sm, &TestEvent{value: 42})
-// 					},
-// 				},
-// 			},
+import (
+	"context"
+	"testing"
+)
 
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("test")
-// 				env := NewTestEnvironment(sm)
-// 				return env, sm
-// 			},
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				expectedEnv := env.clone()
-// 				expectedEnv.queue[sm.id()] = []AbstractEvent{&TestEvent{value: 42}}
-// 				return []localState{{env: expectedEnv}}
-// 			},
-// 			wantError: false,
-// 		},
-// 	}
+func TestOnEvent(t *testing.T) {
+	t.Run("registers handler builder for specified state and event", func(t *testing.T) {
+		spec := &StateMachineSpec[*testStateMachine]{
+			prototype:       &testStateMachine{},
+			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
+		}
+		state := &testState{name: "test"}
+		event := &testEvent{value: 1}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			env, sm := tt.initiate()
-// 			got, err := tt.handler.handle(env, sm.id(), &EntryEvent{})
-// 			if tt.wantError {
-// 				assert.Error(t, err, "expected error but got none")
-// 				return
-// 			} else {
-// 				assert.NoError(t, err, "unexpected error")
-// 			}
+		OnEvent(spec, state, event, func(ctx context.Context, e *testEvent, sm *testStateMachine) {})
 
-// 			want := tt.wantLocalStates(env, sm)
-// 			for i, ls := range got {
-// 				AssertQueueEqual(t, ls.env.queue, want[i].env.queue)
-// 				AssertStateMachinesEqual(t, ls.env.machines, want[i].env.machines)
-// 			}
-// 		})
-// 	}
-// }
+		// Validate that handler builder was registered for the correct state
+		builders, exists := spec.handlerBuilders[state]
+		if !exists {
+			t.Error("Handler builder should be registered for the specified state")
+		}
+		if len(builders) != 1 {
+			t.Error("Exactly one handler builder should be registered")
+		}
 
-// func TestOnExitHandler_Handle(t *testing.T) {
-// 	tests := []struct {
-// 		name            string
-// 		handler         *onExitHandler
-// 		initiate        func() (Environment, AbstractStateMachine)
-// 		wantLocalStates func(env Environment, sm AbstractStateMachine) []localState
-// 		wantError       bool
-// 	}{
-// 		{
-// 			name: "handles exit event",
-// 			handler: &onExitHandler{
-// 				fs: []OnExitFunc{
-// 					func(env *Environment) {
-// 						// Add a transition event to the queue
-// 						env.enqueueEvent(sm, &TransitionEvent{To: &TestState{name: "next"}})
-// 					},
-// 				},
-// 			},
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("test")
-// 				env := NewTestEnvironment(sm)
-// 				return env, sm
-// 			},
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				expectedEnv := env.clone()
-// 				expectedEnv.queue[sm.id()] = []AbstractEvent{&TransitionEvent{To: &TestState{name: "next"}}}
-// 				return []localState{{env: expectedEnv}}
-// 			},
-// 			wantError: false,
-// 		},
-// 	}
+		builderInfo := builders[0]
+		if !sameEvent(builderInfo.event, event) {
+			t.Error("Handler builder should be registered for the specified event")
+		}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			env, sm := tt.initiate()
-// 			got, err := tt.handler.handle(env, sm.id(), &ExitEvent{})
-// 			if tt.wantError {
-// 				assert.Error(t, err, "expected error but got none")
-// 				return
-// 			} else {
-// 				assert.NoError(t, err, "unexpected error")
-// 			}
+	})
+}
 
-// 			want := tt.wantLocalStates(env, sm)
-// 			for i, ls := range got {
-// 				AssertQueueEqual(t, ls.env.queue, want[i].env.queue)
-// 				AssertStateMachinesEqual(t, ls.env.machines, want[i].env.machines)
-// 			}
-// 		})
-// 	}
-// }
+func TestOnEntry(t *testing.T) {
+	t.Run("registers entry handler builder for specified state", func(t *testing.T) {
+		spec := &StateMachineSpec[*testStateMachine]{
+			prototype:       &testStateMachine{},
+			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
+		}
+		state := &testState{name: "entry_test"}
 
-// func TestOnEventHandler_Handle(t *testing.T) {
-// 	tests := []struct {
-// 		name            string
-// 		handler         *onEventHandler
-// 		initiate        func() (Environment, AbstractStateMachine)
-// 		event           AbstractEvent
-// 		wantLocalStates func(env Environment, sm AbstractStateMachine) []localState
-// 		wantError       bool
-// 	}{
-// 		{
-// 			name: "handles matching event type",
-// 			handler: &onEventHandler{
-// 				event: &TestEvent{value: 42},
-// 				fs: []OnEventFunc{
-// 					func(event AbstractEvent, env *Environment) {
-// 						// Add another event to the queue
-// 						env.enqueueEvent(sm, &EntryEvent{})
-// 					},
-// 				},
-// 			},
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("test")
-// 				env := NewTestEnvironment(sm)
-// 				return env, sm
-// 			},
-// 			event: &TestEvent{value: 99}, // Same type, different value
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				expectedEnv := env.clone()
-// 				expectedEnv.queue[sm.id()] = []AbstractEvent{&EntryEvent{}}
-// 				return []localState{{env: expectedEnv}}
-// 			},
-// 			wantError: false,
-// 		},
-// 		{
-// 			name: "ignores different event type",
-// 			handler: &onEventHandler{
-// 				event: &TestEvent{value: 42},
-// 				fs: []OnEventFunc{
-// 					func(event AbstractEvent, env *Environment) {},
-// 				},
-// 			},
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("test")
-// 				env := NewTestEnvironment(sm)
-// 				return env, sm
-// 			},
-// 			event: &EntryEvent{}, // Different event type
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				return []localState{}
-// 			},
-// 			wantError: false,
-// 		},
-// 	}
+		OnEntry(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			env, sm := tt.initiate()
-// 			got, err := tt.handler.handle(env, sm.id(), tt.event)
-// 			if tt.wantError {
-// 				assert.Error(t, err, "expected error but got none")
-// 				return
-// 			} else {
-// 				assert.NoError(t, err, "unexpected error")
-// 			}
+		// Validate that handler builder was registered for the correct state
+		builders, exists := spec.handlerBuilders[state]
+		if !exists {
+			t.Error("Handler builder should be registered for the specified state")
+		}
+		if len(builders) != 1 {
+			t.Error("Exactly one handler builder should be registered")
+		}
 
-// 			want := tt.wantLocalStates(env, sm)
-// 			for i, ls := range got {
-// 				AssertQueueEqual(t, ls.env.queue, want[i].env.queue)
-// 				AssertStateMachinesEqual(t, ls.env.machines, want[i].env.machines)
-// 			}
-// 		})
-// 	}
-// }
+		builderInfo := builders[0]
+		if !sameEvent(builderInfo.event, &EntryEvent{}) {
+			t.Error("Handler builder should be registered for EntryEvent")
+		}
+	})
+}
 
-// func TestOnTransitionHandler_Handle(t *testing.T) {
-// 	tests := []struct {
-// 		name            string
-// 		handler         *onTransitionHandler
-// 		initiate        func() (Environment, AbstractStateMachine)
-// 		event           AbstractEvent
-// 		wantLocalStates func(env Environment, sm AbstractStateMachine) []localState
-// 		wantNewState    string
-// 		wantError       bool
-// 	}{
-// 		{
-// 			name: "handles transition event and changes state",
-// 			handler: &onTransitionHandler{
-// 				fs: []OnTransitionFunc{
-// 					func(toState AbstractState, env *Environment) {
-// 						// Add an exit event after transition
-// 						env.enqueueEvent(sm, &ExitEvent{})
-// 					},
-// 				},
-// 			},
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("from")
-// 				env := NewTestEnvironment(sm)
-// 				return env, sm
-// 			},
-// 			event: &TransitionEvent{To: &TestState{name: "to"}},
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				expectedEnv := env.clone()
-// 				expectedEnv.queue[sm.id()] = []AbstractEvent{&ExitEvent{}}
-// 				// Update state in the expected environment
-// 				expectedSm := expectedEnv.machines[sm.id()]
-// 				expectedSm.setCurrentState(&TestState{name: "to"})
-// 				return []localState{{env: expectedEnv}}
-// 			},
-// 			wantNewState: "to",
-// 			wantError:    false,
-// 		},
-// 	}
+func TestOnExit(t *testing.T) {
+	t.Run("registers exit handler builder for specified state", func(t *testing.T) {
+		spec := &StateMachineSpec[*testStateMachine]{
+			prototype:       &testStateMachine{},
+			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
+		}
+		state := &testState{name: "exit_test"}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			env, sm := tt.initiate()
-// 			got, err := tt.handler.handle(env, sm.id(), tt.event)
-// 			if tt.wantError {
-// 				assert.Error(t, err, "expected error but got none")
-// 				return
-// 			} else {
-// 				assert.NoError(t, err, "unexpected error")
-// 			}
+		OnExit(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
-// 			want := tt.wantLocalStates(env, sm)
-// 			for i, ls := range got {
-// 				AssertQueueEqual(t, ls.env.queue, want[i].env.queue)
-// 				AssertStateMachinesEqual(t, ls.env.machines, want[i].env.machines)
-// 			}
+		// Validate that handler builder was registered for the correct state
+		builders, exists := spec.handlerBuilders[state]
+		if !exists {
+			t.Error("Handler builder should be registered for the specified state")
+		}
+		if len(builders) != 1 {
+			t.Error("Exactly one handler builder should be registered")
+		}
 
-// 			// Check that state was changed in the returned local state
-// 			if len(got) > 0 {
-// 				updatedSm := got[0].env.machines[sm.id()]
-// 				assert.Equal(t, tt.wantNewState, updatedSm.currentState().(*TestState).name, "state transition failed")
-// 			}
-// 		})
-// 	}
-// }
+		builderInfo := builders[0]
+		if !sameEvent(builderInfo.event, &ExitEvent{}) {
+			t.Error("Handler builder should be registered for ExitEvent")
+		}
+	})
+}
 
-// func TestDefaultOnTransitionHandler_Apply(t *testing.T) {
-// 	tests := []struct {
-// 		name     string
-// 		initiate func() (StateMachine, AbstractState)
-// 		want     func(StateMachine, AbstractState) StateMachine
-// 	}{
-// 		{
-// 			name: "applies handler when no transition handler exists",
-// 			initiate: func() (StateMachine, AbstractState) {
-// 				sm := NewTestStateMachine("test")
-// 				state := NewTestState("test")
-// 				return sm.StateMachine, state
-// 			},
-// 			want: func(sm StateMachine, state AbstractState) StateMachine {
-// 				sm.EventHandlers[state] = append(sm.EventHandlers[state], handlerInfo{
-// 					event:   &TransitionEvent{},
-// 					handler: &defaultOnTransitionHandler{},
-// 				})
-// 				return sm
-// 			},
-// 		},
-// 		{
-// 			name: "does not apply when transition handler already exists",
-// 			initiate: func() (StateMachine, AbstractState) {
-// 				sm := NewTestStateMachine("test")
-// 				state := NewTestState("test")
-// 				sm.EventHandlers[state] = append(sm.EventHandlers[state], handlerInfo{
-// 					event:   &TransitionEvent{},
-// 					handler: TestHandler{},
-// 				})
-// 				return sm.StateMachine, state
-// 			},
-// 			want: func(sm StateMachine, state AbstractState) StateMachine {
-// 				// No new handler should be added
-// 				return sm
-// 			},
-// 		},
-// 	}
+func TestOnTransition(t *testing.T) {
+	t.Run("registers transition handler builder for specified state", func(t *testing.T) {
+		spec := &StateMachineSpec[*testStateMachine]{
+			prototype:       &testStateMachine{},
+			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
+		}
+		state := &testState{name: "transition_test"}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			sm, state := tt.initiate()
-// 			want := tt.want(sm, state)
+		OnTransition(spec, state, func(ctx context.Context, toState AbstractState, sm *testStateMachine) {})
 
-// 			handler := &defaultOnTransitionHandler{}
-// 			handler.apply(&sm, state)
+		// Validate that handler builder was registered for the correct state
+		builders, exists := spec.handlerBuilders[state]
+		if !exists {
+			t.Error("Handler builder should be registered for the specified state")
+		}
+		if len(builders) != 1 {
+			t.Error("Exactly one handler builder should be registered")
+		}
 
-// 			assert.Equal(t, want.EventHandlers[state], sm.EventHandlers[state], "event handlers should match after applying default handler")
-// 		})
-// 	}
-// }
+		builderInfo := builders[0]
+		if !sameEvent(builderInfo.event, &TransitionEvent{}) {
+			t.Error("Handler builder should be registered for TransitionEvent")
+		}
+	})
+}
 
-// func TestDefaultOnTransitionHandler_Handle(t *testing.T) {
-// 	tests := []struct {
-// 		name            string
-// 		handler         *defaultOnTransitionHandler
-// 		initiate        func() (Environment, AbstractStateMachine)
-// 		event           AbstractEvent
-// 		wantLocalStates func(env Environment, sm AbstractStateMachine) []localState
-// 		wantNewState    string
-// 		wantError       bool
-// 	}{
-// 		{
-// 			name:    "transitions to new state",
-// 			handler: &defaultOnTransitionHandler{},
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("from")
-// 				env := NewTestEnvironment(sm)
-// 				return env, sm
-// 			},
-// 			event: &TransitionEvent{To: &TestState{name: "to"}},
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				expectedEnv := env.clone()
-// 				expectedSm := expectedEnv.machines[sm.id()]
-// 				expectedSm.setCurrentState(&TestState{name: "to"})
-// 				return []localState{{env: expectedEnv}}
-// 			},
-// 			wantNewState: "to",
-// 			wantError:    false,
-// 		},
-// 	}
+func TestOnHalt(t *testing.T) {
+	t.Run("registers halt handler builder for specified state", func(t *testing.T) {
+		spec := &StateMachineSpec[*testStateMachine]{
+			prototype:       &testStateMachine{},
+			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
+		}
+		state := &testState{name: "halt_test"}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			env, sm := tt.initiate()
-// 			got, err := tt.handler.handle(env, sm.id(), tt.event)
-// 			if tt.wantError {
-// 				assert.Error(t, err, "expected error but got none")
-// 				return
-// 			} else {
-// 				assert.NoError(t, err, "unexpected error")
-// 			}
+		OnHalt(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
-// 			want := tt.wantLocalStates(env, sm)
-// 			for i, ls := range got {
-// 				AssertQueueEqual(t, ls.env.queue, want[i].env.queue)
-// 				AssertStateMachinesEqual(t, ls.env.machines, want[i].env.machines)
-// 			}
+		// Validate that handler builder was registered for the correct state
+		builders, exists := spec.handlerBuilders[state]
+		if !exists {
+			t.Error("Handler builder should be registered for the specified state")
+		}
+		if len(builders) != 1 {
+			t.Error("Exactly one handler builder should be registered")
+		}
 
-// 			// Check that state was changed
-// 			if len(got) > 0 {
-// 				updatedSm := got[0].env.machines[sm.id()]
-// 				assert.Equal(t, tt.wantNewState, updatedSm.currentState().(*TestState).name, "state transition failed")
-// 			}
-// 		})
-// 	}
-// }
+		builderInfo := builders[0]
+		if !sameEvent(builderInfo.event, &HaltEvent{}) {
+			t.Error("Handler builder should be registered for HaltEvent")
+		}
+	})
+}
 
-// func TestOnHaltHandler_Handle(t *testing.T) {
-// 	tests := []struct {
-// 		name            string
-// 		handler         *onHaltHandler
-// 		initiate        func() (Environment, AbstractStateMachine)
-// 		event           AbstractEvent
-// 		wantLocalStates func(env Environment, sm AbstractStateMachine) []localState
-// 		wantHalted      bool
-// 		wantError       bool
-// 	}{
-// 		{
-// 			name: "handles halt event",
-// 			handler: &onHaltHandler{
-// 				fs: []OnHaltFunc{
-// 					func(env *Environment) {
-// 						// Clear the queue on halt
-// 						env.queue[sm.id()] = []AbstractEvent{}
-// 					},
-// 				},
-// 			},
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("test")
-// 				env := NewTestEnvironment(sm)
-// 				return env, sm
-// 			},
-// 			event: &HaltEvent{},
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				expectedEnv := env.clone()
-// 				expectedSm := expectedEnv.machines[sm.id()]
-// 				innerSm := getInnerStateMachine(expectedSm)
-// 				innerSm.halted = true                          // Should be halted
-// 				expectedEnv.queue[sm.id()] = []AbstractEvent{} // Queue should be empty
-// 				return []localState{{env: expectedEnv}}
-// 			},
-// 			wantHalted: true,
-// 			wantError:  false,
-// 		},
-// 	}
+func TestDefaultOnTransitionHandler_handle(t *testing.T) {
+	t.Run("returns single local state with updated state machine", func(t *testing.T) {
+		handler := &defaultOnTransitionHandler{}
+		initialState := newTestState("initial")
+		targetState := newTestState("target")
+		sm := newTestStateMachine(initialState, targetState)
+		env := newTestEnvironment(sm)
+		event := &TransitionEvent{To: targetState}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			env, sm := tt.initiate()
-// 			got, err := tt.handler.handle(env, sm.id(), tt.event)
-// 			if tt.wantError {
-// 				assert.Error(t, err, "expected error but got none")
-// 				return
-// 			} else {
-// 				assert.NoError(t, err, "unexpected error")
-// 			}
+		states, err := handler.handle(env, sm.id(), event)
+		if err != nil {
+			t.Errorf("handle() error = %v", err)
+		}
+		if len(states) != 1 {
+			t.Errorf("Expected 1 state, got %d", len(states))
+		}
+		newSM := states[0].env.machines[sm.id()]
+		if !sameState(newSM.currentState(), targetState) {
+			t.Error("State should be changed to target state")
+		}
+	})
+}
 
-// 			want := tt.wantLocalStates(env, sm)
-// 			for i, ls := range got {
-// 				AssertQueueEqual(t, ls.env.queue, want[i].env.queue)
-// 				AssertStateMachinesEqual(t, ls.env.machines, want[i].env.machines)
-// 			}
+func TestDefaultOnHaltHandler_handle(t *testing.T) {
+	t.Run("returns single local state with halted state machine", func(t *testing.T) {
+		handler := &defaultOnHaltHandler{}
+		initialState := newTestState("initial")
+		sm := newTestStateMachine(initialState)
+		env := newTestEnvironment(sm)
+		event := &HaltEvent{}
 
-// 			// Check that state machine was halted
-// 			if len(got) > 0 && tt.wantHalted {
-// 				updatedSm := got[0].env.machines[sm.id()]
-// 				innerSm := getInnerStateMachine(updatedSm)
-// 				assert.True(t, innerSm.halted, "state machine should be halted")
-// 			}
-// 		})
-// 	}
-// }
+		states, err := handler.handle(env, sm.id(), event)
 
-// func TestDefaultOnHaltHandler_Apply(t *testing.T) {
-// 	tests := []struct {
-// 		name     string
-// 		initiate func() (StateMachine, AbstractState)
-// 		want     func(StateMachine, AbstractState) StateMachine
-// 	}{
-// 		{
-// 			name: "applies handler when no halt handler exists",
-// 			initiate: func() (StateMachine, AbstractState) {
-// 				sm := NewTestStateMachine("test")
-// 				state := NewTestState("test")
-// 				return sm.StateMachine, state
-// 			},
-// 			want: func(sm StateMachine, state AbstractState) StateMachine {
-// 				sm.EventHandlers[state] = append(sm.EventHandlers[state], handlerInfo{
-// 					event:   &HaltEvent{},
-// 					handler: &defaultOnHaltHandler{},
-// 				})
-// 				return sm
-// 			},
-// 		},
-// 		{
-// 			name: "does not apply when halt handler already exists",
-// 			initiate: func() (StateMachine, AbstractState) {
-// 				sm := NewTestStateMachine("test")
-// 				state := NewTestState("test")
-// 				sm.EventHandlers[state] = append(sm.EventHandlers[state], handlerInfo{
-// 					event:   &HaltEvent{},
-// 					handler: &onHaltHandler{fs: []OnHaltFunc{func(env *Environment) {}}},
-// 				})
-// 				return sm.StateMachine, state
-// 			},
-// 			want: func(sm StateMachine, state AbstractState) StateMachine {
-// 				// No new handler should be added
-// 				return sm
-// 			},
-// 		},
-// 	}
+		if err != nil {
+			t.Errorf("handle() error = %v", err)
+		}
+		if len(states) != 1 {
+			t.Errorf("Expected 1 state, got %d", len(states))
+		}
+		newSM := states[0].env.machines[sm.id()]
+		innerSM := getInnerStateMachine(newSM)
+		if !innerSM.halted {
+			t.Error("State machine should be halted")
+		}
+	})
+}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			sm, state := tt.initiate()
-// 			want := tt.want(sm, state)
+func TestEventHandlers_handle(t *testing.T) {
+	t.Run("returns nil for non-matching event types", func(t *testing.T) {
+		handlers := &eventHandlers{
+			fs:    []eventHandler{},
+			event: &testEvent{value: 1},
+		}
+		env := Environment{
+			machines: make(map[string]AbstractStateMachine),
+			queue:    make(map[string][]AbstractEvent),
+		}
+		wrongEvent := &EntryEvent{}
 
-// 			handler := &defaultOnHaltHandler{}
-// 			handler.apply(&sm, state)
+		states, err := handlers.handle(env, "test", wrongEvent)
 
-// 			assert.Equal(t, want.EventHandlers[state], sm.EventHandlers[state], "event handlers should match after applying default handler")
-// 		})
-// 	}
-// }
+		if err != nil {
+			t.Errorf("handle() error = %v", err)
+		}
+		if states != nil {
+			t.Error("Should return nil for non-matching event types")
+		}
+	})
 
-// func TestDefaultOnHaltHandler_Handle(t *testing.T) {
-// 	tests := []struct {
-// 		name            string
-// 		handler         *defaultOnHaltHandler
-// 		initiate        func() (Environment, AbstractStateMachine)
-// 		event           AbstractEvent
-// 		wantLocalStates func(env Environment, sm AbstractStateMachine) []localState
-// 		wantHalted      bool
-// 		wantError       bool
-// 	}{
-// 		{
-// 			name:    "halts state machine",
-// 			handler: &defaultOnHaltHandler{},
-// 			initiate: func() (Environment, AbstractStateMachine) {
-// 				sm := NewTestStateMachine("test")
-// 				env := NewTestEnvironment(sm)
-// 				env.queue[sm.id()] = []AbstractEvent{&TestEvent{value: 100}} // Has some events in queue
-// 				return env, sm
-// 			},
-// 			event: &HaltEvent{},
-// 			wantLocalStates: func(env Environment, sm AbstractStateMachine) []localState {
-// 				expectedEnv := env.clone()
-// 				expectedSm := expectedEnv.machines[sm.id()]
-// 				innerSm := getInnerStateMachine(expectedSm)
-// 				innerSm.halted = true // Should be halted
-// 				// Queue remains unchanged from initiate
-// 				return []localState{{env: expectedEnv}}
-// 			},
-// 			wantHalted: true,
-// 			wantError:  false,
-// 		},
-// 	}
+	t.Run("processes matching event types and returns local states", func(t *testing.T) {
+		called := false
+		testHandler := func(event AbstractEvent, env *Environment) {
+			called = true
+		}
+		
+		handlers := &eventHandlers{
+			fs:    []eventHandler{testHandler},
+			event: &testEvent{value: 1},
+		}
+		env := Environment{
+			machines: make(map[string]AbstractStateMachine),
+			queue:    make(map[string][]AbstractEvent),
+		}
+		matchingEvent := &testEvent{value: 1}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			env, sm := tt.initiate()
-// 			got, err := tt.handler.handle(env, sm.id(), tt.event)
-// 			if tt.wantError {
-// 				assert.Error(t, err, "expected error but got none")
-// 				return
-// 			} else {
-// 				assert.NoError(t, err, "unexpected error")
-// 			}
+		states, err := handlers.handle(env, "test", matchingEvent)
 
-// 			want := tt.wantLocalStates(env, sm)
-// 			for i, ls := range got {
-// 				AssertQueueEqual(t, ls.env.queue, want[i].env.queue)
-// 				AssertStateMachinesEqual(t, ls.env.machines, want[i].env.machines)
-// 			}
-
-// 			// Check that state machine was halted
-// 			if len(got) > 0 && tt.wantHalted {
-// 				updatedSm := got[0].env.machines[sm.id()]
-// 				innerSm := getInnerStateMachine(updatedSm)
-// 				assert.True(t, innerSm.halted, "state machine should be halted")
-// 			}
-// 		})
-// 	}
-// }
+		if err != nil {
+			t.Errorf("handle() error = %v", err)
+		}
+		if len(states) != 1 {
+			t.Errorf("Expected 1 state, got %d", len(states))
+		}
+		if !called {
+			t.Error("Event handler should have been called")
+		}
+	})
+}
