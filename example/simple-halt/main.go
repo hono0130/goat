@@ -27,7 +27,7 @@ type StateMachine struct {
 	goat.StateMachine
 }
 
-func main() {
+func createSimpleHaltModel() (*StateMachine, []goat.Option) {
 	// === StateMachine Spec ===
 	spec := goat.NewStateMachineSpec(&StateMachine{})
 	stateA := &State{StateType: StateA}
@@ -49,9 +49,17 @@ func main() {
 	// === Create Instance ===
 	sm := spec.NewInstance()
 
-	err := goat.Test(
+	opts := []goat.Option{
 		goat.WithStateMachines(sm),
-	)
+	}
+
+	return sm, opts
+}
+
+func main() {
+	_, opts := createSimpleHaltModel()
+	
+	err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
 	}

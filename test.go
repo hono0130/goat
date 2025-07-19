@@ -1,6 +1,7 @@
 package goat
 
 import (
+	"io"
 	"os"
 )
 
@@ -35,4 +36,17 @@ func WithInvariants(is ...Invariant) Option {
 	return optionFunc(func(o *options) {
 		o.invariants = is
 	})
+}
+
+func Debug(w io.Writer, opts ...Option) error {
+	kripke, err := kripkeModel(opts...)
+	if err != nil {
+		return err
+	}
+
+	if err := kripke.Solve(); err != nil {
+		return err
+	}
+
+	return kripke.WriteWorldsAsJSON(w)
 }

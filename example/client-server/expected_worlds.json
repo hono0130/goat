@@ -1,0 +1,2430 @@
+[
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} running}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": []
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "ExitEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} idle}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "TransitionEvent",
+        "details": "{Name:To,Type:goat.AbstractState,Value:&{{0} idle}}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "eCheckMenuExistenceResponse",
+        "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:0}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "eCheckMenuExistenceRequest",
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": []
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      },
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Client",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  },
+  {
+    "invariant_violation": false,
+    "state_machines": [
+      {
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:running}",
+        "details": "no fields"
+      },
+      {
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:waiting}",
+        "details": "{Name:Mut,Type:int,Value:100000}"
+      }
+    ],
+    "queued_events": [
+      {
+        "target_machine": "Server",
+        "event_name": "EntryEvent",
+        "details": "no fields"
+      }
+    ]
+  }
+]

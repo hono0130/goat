@@ -3,7 +3,6 @@ package goat
 import (
 	"fmt"
 	"hash/fnv"
-	"io"
 	"sort"
 	"strings"
 )
@@ -66,34 +65,6 @@ func id(env Environment) worldID {
 	hasher := fnv.New64a()
 	_, _ = hasher.Write([]byte(strings.Join(strs, ",")))
 	return worldID(hasher.Sum64())
-}
-
-func (w world) label() string {
-	strs := make([]string, 0)
-	strs = append(strs, "StateMachines:")
-	smIDs := make([]string, 0)
-	for _, sm := range w.env.machines {
-		smIDs = append(smIDs, sm.id())
-	}
-	sort.Strings(smIDs)
-	for _, name := range smIDs {
-		sm := w.env.machines[name]
-		strs = append(strs, fmt.Sprintf("* %s=%s;%s", getStateMachineName(sm), getStateMachineDetails(sm), getStateDetails(sm.currentState())))
-	}
-
-	strs = append(strs, "\nQueuedEvents:")
-	smIDs = make([]string, 0)
-	for smID := range w.env.queue {
-		smIDs = append(smIDs, smID)
-	}
-	sort.Strings(smIDs)
-	for _, smID := range smIDs {
-		for _, e := range w.env.queue[smID] {
-			sm := w.env.machines[smID]
-			strs = append(strs, fmt.Sprintf("* %s<<%s;%s", getStateMachineName(sm), getEventName(e), getEventDetails(e)))
-		}
-	}
-	return strings.Join(strs, "\n")
 }
 
 func initialWorld(sms ...AbstractStateMachine) world {
@@ -211,99 +182,6 @@ func (k *kripke) Solve() error {
 	}
 
 	return nil
-}
-
-func (k *kripke) WriteAsDot(w io.Writer) {
-	_, _ = fmt.Fprintln(w, "digraph {")
-	for id, wld := range k.worlds {
-		_, _ = fmt.Fprintf(w, "  %d [ label=\"%s\" ];\n", id, wld.label())
-		if id == k.initial.id {
-			_, _ = fmt.Fprintf(w, "  %d [ penwidth=5 ];\n", id)
-		}
-		if wld.invariantViolation {
-			_, _ = fmt.Fprintf(w, "  %d [ color=red, penwidth=3 ];\n", id)
-		}
-	}
-	for from, tos := range k.accessible {
-		for _, to := range tos {
-			_, _ = fmt.Fprintf(w, "  %d -> %d;\n", from, to)
-		}
-	}
-	_, _ = fmt.Fprintln(w, "}")
-}
-
-func (k *kripke) WriteAsLog(w io.Writer, invariantDescription string) {
-	paths := k.findPathsToViolations()
-
-	if len(paths) == 0 {
-		_, _ = fmt.Fprintln(w, "No invariant violations found.")
-		return
-	}
-
-	for i, path := range paths {
-		if i > 0 {
-			_, _ = fmt.Fprintln(w, "")
-		}
-
-		_, _ = fmt.Fprintf(w, "InvariantError:  %s   ✘\n", invariantDescription)
-		_, _ = fmt.Fprintf(w, "Path (length = %d):\n", len(path))
-
-		for j, worldID := range path {
-			world := k.worlds[worldID]
-
-			if j == len(path)-1 && world.invariantViolation {
-				_, _ = fmt.Fprintf(w, "  [%d] <-- violation here\n", j)
-			} else {
-				_, _ = fmt.Fprintf(w, "  [%d]\n", j)
-			}
-			_, _ = fmt.Fprintf(w, "  StateMachines:\n")
-			for _, sm := range world.env.machines {
-				_, _ = fmt.Fprintf(w, "    Name: %s, Detail: %s, State: %s\n", getStateMachineName(sm), getStateMachineDetails(sm), getStateDetails(sm.currentState()))
-			}
-			_, _ = fmt.Fprintf(w, "  QueuedEvents:\n")
-			for smID, events := range world.env.queue {
-				for _, event := range events {
-					_, _ = fmt.Fprintf(w, "    StateMachine: %s, Event: %s, Detail: %s\n", getStateMachineName(world.env.machines[smID]), getEventName(event), getEventDetails(event))
-				}
-			}
-		}
-	}
-}
-
-func (k *kripke) findPathsToViolations() [][]worldID {
-	var paths [][]worldID
-
-	visited := make(map[worldID]bool)
-
-	queue := [][]worldID{{k.initial.id}}
-
-	for len(queue) > 0 {
-		path := queue[0]
-		queue = queue[1:]
-
-		currentID := path[len(path)-1]
-
-		if visited[currentID] {
-			continue
-		}
-		visited[currentID] = true
-
-		if k.worlds[currentID].invariantViolation {
-			paths = append(paths, path)
-			continue
-		}
-
-		for _, nextID := range k.accessible[currentID] {
-			if !visited[nextID] {
-				newPath := make([]worldID, len(path)+1)
-				copy(newPath, path)
-				newPath[len(path)] = nextID
-				queue = append(queue, newPath)
-			}
-		}
-	}
-
-	return paths
 }
 
 func (k *kripke) evaluateInvariants(w world) bool {

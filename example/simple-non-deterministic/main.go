@@ -27,7 +27,7 @@ type StateMachine struct {
 	goat.StateMachine
 }
 
-func main() {
+func createSimpleNonDeterministicModel() (*StateMachine, []goat.Option) {
 	// === StateMachine Spec ===
 	spec := goat.NewStateMachineSpec(&StateMachine{})
 
@@ -64,9 +64,17 @@ func main() {
 	// === Create Instance ===
 	sm := spec.NewInstance()
 
-	err := goat.Test(
+	opts := []goat.Option{
 		goat.WithStateMachines(sm),
-	)
+	}
+
+	return sm, opts
+}
+
+func main() {
+	_, opts := createSimpleNonDeterministicModel()
+	
+	err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
 	}
