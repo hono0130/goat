@@ -12,7 +12,7 @@ import (
 )
 
 func TestSimpleNonDeterministic(t *testing.T) {
-	_, opts := createSimpleNonDeterministicModel()
+	opts := createSimpleNonDeterministicModel()
 
 	var buf bytes.Buffer
 	err := goat.Debug(&buf, opts...)
@@ -22,265 +22,265 @@ func TestSimpleNonDeterministic(t *testing.T) {
 
 	fmt.Println(buf.String())
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
 
-	expected := map[string]interface{}{
-		"worlds": []interface{}{
-			map[string]interface{}{
+	expected := map[string]any{
+		"worlds": []any{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "ExitEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "ExitEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} C}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} C}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "ExitEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} A}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "ExitEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} C}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} A}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
-					map[string]interface{}{
+					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} C}}",
 						"event_name":     "TransitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events":       []interface{}{},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"queued_events":       []any{},
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:C}",
 					},
 				},
 			},
-			map[string]interface{}{
+			map[string]any{
 				"invariant_violation": false,
-				"queued_events": []interface{}{
-					map[string]interface{}{
+				"queued_events": []any{
+					map[string]any{
 						"details":        "no fields",
 						"event_name":     "EntryEvent",
 						"target_machine": "StateMachine",
 					},
 				},
-				"state_machines": []interface{}{
-					map[string]interface{}{
+				"state_machines": []any{
+					map[string]any{
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:C}",
@@ -292,9 +292,14 @@ func TestSimpleNonDeterministic(t *testing.T) {
 
 	cmpOpts := cmp.Options{
 		// Ignore "id" keys in maps (though they should be gone now)
-		cmpopts.IgnoreMapEntries(func(k, v interface{}) bool {
+		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)
 			return ok && key == "id"
+		}),
+		// Ignore "summary" key since we only want to test worlds data
+		cmpopts.IgnoreMapEntries(func(k, v any) bool {
+			key, ok := k.(string)
+			return ok && key == "summary"
 		}),
 	}
 

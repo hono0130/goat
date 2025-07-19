@@ -86,7 +86,7 @@ type (
 	}
 )
 
-func createClientServerModel() (*Server, *Client, []goat.Option) {
+func createClientServerModel() []goat.Option {
 	// === Server Spec ===
 	serverSpec := goat.NewStateMachineSpec(&Server{})
 	serverInit := &ServerState{ServerState: ServerStateInit}
@@ -166,12 +166,12 @@ func createClientServerModel() (*Server, *Client, []goat.Option) {
 		goat.WithStateMachines(server, client),
 	}
 
-	return server, client, opts
+	return opts
 }
 
 func main() {
-	_, _, opts := createClientServerModel()
-	
+	opts := createClientServerModel()
+
 	err := goat.Test(opts...)
 	if err != nil {
 		panic(err)

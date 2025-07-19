@@ -13,7 +13,7 @@ import (
 )
 
 func TestClientServer(t *testing.T) {
-	_, _, opts := createClientServerModel()
+	opts := createClientServerModel()
 
 	var buf bytes.Buffer
 	err := goat.Debug(&buf, opts...)
@@ -23,7 +23,7 @@ func TestClientServer(t *testing.T) {
 
 	fmt.Println(buf.String())
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
@@ -34,13 +34,13 @@ func TestClientServer(t *testing.T) {
 		t.Fatalf("Failed to read expected worlds file: %v", err)
 	}
 
-	var expectedWorlds interface{}
+	var expectedWorlds any
 	if err := json.Unmarshal(expectedWorldsData, &expectedWorlds); err != nil {
 		t.Fatalf("Failed to parse expected worlds JSON: %v", err)
 	}
 
 	cmpOpts := cmp.Options{
-		cmpopts.IgnoreMapEntries(func(k, v interface{}) bool {
+		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)
 			return ok && key == "id"
 		}),

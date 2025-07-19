@@ -25,37 +25,59 @@ package main
 // 		t.Fatalf("Failed to parse JSON: %v", err)
 // 	}
 
-// 	// Meeting room reservation without exclusion should have invariant violations
-// 	worlds, ok := data["worlds"].([]interface{})
+// 	// Verify summary structure
+// 	summary, ok := data["summary"].(map[string]interface{})
 // 	if !ok {
-// 		t.Fatalf("Expected worlds to be an array, got %T", data["worlds"])
+// 		t.Fatalf("Expected summary to be an object, got %T", data["summary"])
 // 	}
 
-// 	if len(worlds) == 0 {
-// 		t.Fatalf("Expected at least one world, got %d", len(worlds))
+// 	// Check total worlds
+// 	totalWorlds, ok := summary["total_worlds"].(float64)
+// 	if !ok {
+// 		t.Fatalf("Expected total_worlds to be a number, got %T", summary["total_worlds"])
 // 	}
 
-// 	// This is the WITHOUT exclusion example, so we expect to find invariant violations
-// 	foundViolation := false
-// 	for i, world := range worlds {
-// 		worldMap, ok := world.(map[string]interface{})
-// 		if !ok {
-// 			t.Fatalf("Expected world %d to be an object, got %T", i, world)
-// 		}
-
-// 		violation, ok := worldMap["invariant_violation"].(bool)
-// 		if !ok {
-// 			t.Fatalf("Expected invariant_violation to be a boolean in world %d, got %T", i, worldMap["invariant_violation"])
-// 		}
-
-// 		if violation {
-// 			foundViolation = true
-// 		}
+// 	if totalWorlds == 0 {
+// 		t.Fatalf("Expected at least one world, got %f", totalWorlds)
 // 	}
 
-// 	if !foundViolation {
-// 		t.Errorf("Expected to find invariant violations but none were found")
+// 	// Check invariant violations - WITHOUT exclusion should have violations
+// 	violations, ok := summary["invariant_violations"].(map[string]interface{})
+// 	if !ok {
+// 		t.Fatalf("Expected invariant_violations to be an object, got %T", summary["invariant_violations"])
 // 	}
 
-// 	t.Logf("Meeting room reservation without exclusion test passed with %d worlds explored (invariant violations detected as expected)", len(worlds))
+// 	found, ok := violations["found"].(bool)
+// 	if !ok {
+// 		t.Fatalf("Expected found to be a boolean, got %T", violations["found"])
+// 	}
+
+// 	count, ok := violations["count"].(float64)
+// 	if !ok {
+// 		t.Fatalf("Expected count to be a number, got %T", violations["count"])
+// 	}
+
+// 	// Since this is WITHOUT exclusion, we expect violations
+// 	if !found {
+// 		t.Errorf("Expected invariant violations to be found but none were detected")
+// 	}
+
+// 	if count == 0 {
+// 		t.Errorf("Expected violation count to be greater than 0, got %f", count)
+// 	}
+
+// 	// Check execution time
+// 	executionTime, ok := summary["execution_time_ms"].(float64)
+// 	if !ok {
+// 		t.Fatalf("Expected execution_time_ms to be a number, got %T", summary["execution_time_ms"])
+// 	}
+
+// 	if executionTime < 0 {
+// 		t.Errorf("Expected execution time to be non-negative, got %f", executionTime)
+// 	}
+
+// 	t.Logf("Meeting room reservation WITHOUT exclusion test passed:")
+// 	t.Logf("  - Total worlds: %f", totalWorlds)
+// 	t.Logf("  - Invariant violations: %t (count: %f)", found, count)
+// 	t.Logf("  - Execution time: %fms", executionTime)
 // }
