@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/goatx/goat"
-	"github.com/google/uuid"
 )
 
 type (
@@ -74,7 +73,6 @@ type DBUpdateResultEvent struct {
 }
 
 type Reservation struct {
-	UUID     string
 	RoomID   int
 	ClientID int
 }
@@ -128,7 +126,6 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 	goat.OnEvent(dbSpec, dbIdle, &DBUpdateEvent{},
 		func(ctx context.Context, event *DBUpdateEvent, db *DBStateMachine) {
 			db.Reservations = append(db.Reservations, Reservation{
-				UUID:     uuid.New().String(),
 				RoomID:   event.RoomID,
 				ClientID: event.ClientID,
 			})
