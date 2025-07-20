@@ -40,6 +40,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:0}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
@@ -67,6 +68,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:1}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
@@ -89,6 +91,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:1}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
@@ -106,6 +109,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:1}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
@@ -133,6 +137,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:2}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
@@ -155,6 +160,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:2}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:B}",
@@ -172,6 +178,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:2}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:C}",
@@ -183,6 +190,7 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events":       []any{},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "{Name:Mut,Type:int,Value:3}",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:C}",
@@ -193,11 +201,6 @@ func TestSimpleTransition(t *testing.T) {
 	}
 
 	cmpOpts := cmp.Options{
-		// Ignore "id" keys in maps (though they should be gone now)
-		cmpopts.IgnoreMapEntries(func(k, v any) bool {
-			key, ok := k.(string)
-			return ok && key == "id"
-		}),
 		// Ignore "summary" key since we only want to test worlds data
 		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)

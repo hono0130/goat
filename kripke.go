@@ -83,13 +83,13 @@ func initialWorld(sms ...AbstractStateMachine) world {
 			finalID = baseName
 		} else {
 			// Subsequent instances: add suffix starting from _1
-			finalID = strings.Join([]string{baseName, strconv.Itoa(count)}, "_")
+			finalID = baseName + "_" + strconv.Itoa(count)
 		}
 
 		// Update the state machine's ID
 		innerSM := getInnerStateMachine(sm)
 		innerSM.smID = finalID
-		
+
 		// Build EventHandlers with the correct ID
 		innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
 		for state, builders := range innerSM.HandlerBuilders {
@@ -102,7 +102,7 @@ func initialWorld(sms ...AbstractStateMachine) world {
 			}
 		}
 		innerSM.HandlerBuilders = nil
- 
+
 		machines[finalID] = sm
 		queue[finalID] = []AbstractEvent{&EntryEvent{}}
 		nameCounts[baseName]++

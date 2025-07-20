@@ -40,9 +40,10 @@ func TestClientServer(t *testing.T) {
 	}
 
 	cmpOpts := cmp.Options{
+		// Ignore "summary" key since we only want to test worlds data
 		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)
-			return ok && key == "id"
+			return ok && key == "summary"
 		}),
 	}
 

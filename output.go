@@ -1,7 +1,6 @@
 package goat
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
@@ -156,6 +155,7 @@ type WorldJSON struct {
 }
 
 type StateMachineJSON struct {
+	ID      string `json:"id"`
 	Name    string `json:"name"`
 	State   string `json:"state"`
 	Details string `json:"details"`
@@ -182,17 +182,40 @@ func (k *kripke) toWorldsData() []WorldJSON {
 }
 
 func compareWorlds(a, b WorldJSON) bool {
-	var jsonA, jsonB []byte
-	jsonA, err := json.Marshal(a)
-	if err != nil {
-		panic(err)
-	}
-	jsonB, err = json.Marshal(b)
-	if err != nil {
-		panic(err)
+	// First compare by invariant violation (false < true)
+	if a.InvariantViolation != b.InvariantViolation {
+		return !a.InvariantViolation && b.InvariantViolation
 	}
 
-	return string(jsonA) < string(jsonB)
+	// Compare by state machines
+	for i := 0; i < len(a.StateMachines) && i < len(b.StateMachines); i++ {
+		if a.StateMachines[i].ID != b.StateMachines[i].ID {
+			return a.StateMachines[i].ID < b.StateMachines[i].ID
+		}
+		if a.StateMachines[i].State != b.StateMachines[i].State {
+			return a.StateMachines[i].State < b.StateMachines[i].State
+		}
+		if a.StateMachines[i].Details != b.StateMachines[i].Details {
+			return a.StateMachines[i].Details < b.StateMachines[i].Details
+		}
+	}
+	if len(a.StateMachines) != len(b.StateMachines) {
+		return len(a.StateMachines) < len(b.StateMachines)
+	}
+
+	// Compare by queued events
+	for i := 0; i < len(a.QueuedEvents) && i < len(b.QueuedEvents); i++ {
+		if a.QueuedEvents[i].TargetMachine != b.QueuedEvents[i].TargetMachine {
+			return a.QueuedEvents[i].TargetMachine < b.QueuedEvents[i].TargetMachine
+		}
+		if a.QueuedEvents[i].EventName != b.QueuedEvents[i].EventName {
+			return a.QueuedEvents[i].EventName < b.QueuedEvents[i].EventName
+		}
+		if a.QueuedEvents[i].Details != b.QueuedEvents[i].Details {
+			return a.QueuedEvents[i].Details < b.QueuedEvents[i].Details
+		}
+	}
+	return len(a.QueuedEvents) < len(b.QueuedEvents)
 }
 
 func (*kripke) worldToJSON(w world) WorldJSON {
@@ -200,19 +223,13 @@ func (*kripke) worldToJSON(w world) WorldJSON {
 	for smID := range w.env.machines {
 		smIDs = append(smIDs, smID)
 	}
-	sort.Slice(smIDs, func(i, j int) bool {
-		detailsI := getStateMachineDetails(w.env.machines[smIDs[i]])
-		detailsJ := getStateMachineDetails(w.env.machines[smIDs[j]])
-		if detailsI != detailsJ {
-			return detailsI < detailsJ
-		}
-		panic("cannot establish deterministic ordering for state machines")
-	})
+	sort.Strings(smIDs)
 
 	stateMachines := make([]StateMachineJSON, 0, len(smIDs))
 	for _, smID := range smIDs {
 		sm := w.env.machines[smID]
 		stateMachines = append(stateMachines, StateMachineJSON{
+			ID:      smID,
 			Name:    getStateMachineName(sm),
 			State:   getStateDetails(sm.currentState()),
 			Details: getStateMachineDetails(sm),
@@ -233,18 +250,15 @@ func (*kripke) worldToJSON(w world) WorldJSON {
 		}
 	}
 
-	// Sort queued events deterministically
+	// Sort queued events deterministically by target machine, then event name, then details
 	sort.Slice(queuedEvents, func(i, j int) bool {
-		if queuedEvents[i].Details != queuedEvents[j].Details {
-			return queuedEvents[i].Details < queuedEvents[j].Details
+		if queuedEvents[i].TargetMachine != queuedEvents[j].TargetMachine {
+			return queuedEvents[i].TargetMachine < queuedEvents[j].TargetMachine
 		}
 		if queuedEvents[i].EventName != queuedEvents[j].EventName {
 			return queuedEvents[i].EventName < queuedEvents[j].EventName
 		}
-		if queuedEvents[i].TargetMachine != queuedEvents[j].TargetMachine {
-			return queuedEvents[i].TargetMachine < queuedEvents[j].TargetMachine
-		}
-		panic("cannot establish deterministic ordering for queued events")
+		return queuedEvents[i].Details < queuedEvents[j].Details
 	})
 
 	return WorldJSON{
