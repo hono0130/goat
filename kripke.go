@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -70,10 +71,43 @@ func id(env Environment) worldID {
 func initialWorld(sms ...AbstractStateMachine) world {
 	machines := make(map[string]AbstractStateMachine)
 	queue := make(map[string][]AbstractEvent)
+	nameCounts := make(map[string]int)
+
 	for _, sm := range sms {
-		machines[sm.id()] = sm
-		queue[sm.id()] = []AbstractEvent{&EntryEvent{}}
+		baseName := sm.id()
+		count := nameCounts[baseName]
+
+		var finalID string
+		if count == 0 {
+			// First instance: no suffix
+			finalID = baseName
+		} else {
+			// Subsequent instances: add suffix starting from _1
+			finalID = strings.Join([]string{baseName, strconv.Itoa(count)}, "_")
+		}
+
+		// Update the state machine's ID
+		innerSM := getInnerStateMachine(sm)
+		innerSM.smID = finalID
+		
+		// Build EventHandlers with the correct ID
+		innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
+		for state, builders := range innerSM.HandlerBuilders {
+			for _, builderInfo := range builders {
+				handler := builderInfo.builder(finalID)
+				innerSM.EventHandlers[state] = append(innerSM.EventHandlers[state], handlerInfo{
+					event:   builderInfo.event,
+					handler: handler,
+				})
+			}
+		}
+		innerSM.HandlerBuilders = nil
+ 
+		machines[finalID] = sm
+		queue[finalID] = []AbstractEvent{&EntryEvent{}}
+		nameCounts[baseName]++
 	}
+
 	env := Environment{
 		machines: machines,
 		queue:    queue,

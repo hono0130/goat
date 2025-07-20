@@ -66,19 +66,14 @@ func (spec *StateMachineSpec[T]) NewInstance() T {
 	instance := cloneStateMachine(spec.prototype).(T)
 	innerSM := getInnerStateMachine(instance)
 
-	innerSM.smID = uuid.New().String()
-	innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
+	innerSM.smID = getStateMachineName(instance)
+	innerSM.EventHandlers = nil // Will be built later in initialWorld
+	innerSM.HandlerBuilders = make(map[AbstractState][]handlerBuilderInfo)
 	innerSM.State = spec.initialState
 	innerSM.halted = false
 
 	for state, builders := range spec.handlerBuilders {
-		for _, builderInfo := range builders {
-			handler := builderInfo.builder(innerSM.smID)
-			innerSM.EventHandlers[state] = append(innerSM.EventHandlers[state], handlerInfo{
-				event:   builderInfo.event,
-				handler: handler,
-			})
-		}
+		innerSM.HandlerBuilders[state] = append([]handlerBuilderInfo{}, builders...)
 	}
 
 	return instance
@@ -122,10 +117,11 @@ type AbstractStateMachine interface {
 }
 
 type StateMachine struct {
-	smID          string
-	EventHandlers map[AbstractState][]handlerInfo
-	halted        bool
-	State         AbstractState
+	smID            string
+	EventHandlers   map[AbstractState][]handlerInfo
+	HandlerBuilders map[AbstractState][]handlerBuilderInfo
+	halted          bool
+	State           AbstractState
 }
 
 func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
