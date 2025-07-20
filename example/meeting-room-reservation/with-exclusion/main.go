@@ -340,7 +340,6 @@ func main() {
 	fmt.Println("Simulating: SELECT FOR UPDATE → UPDATE (with locking)")
 
 	opts := createMeetingRoomWithExclusionModel()
-
 	err := goat.Test(opts...)
 	if err != nil {
 		panic(err)

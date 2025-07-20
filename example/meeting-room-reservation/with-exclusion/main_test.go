@@ -40,7 +40,7 @@ package main
 // 	if totalWorlds == 0 {
 // 		t.Fatalf("Expected at least one world, got %f", totalWorlds)
 // 	}
-
+ 
 // 	// Check invariant violations - WITH exclusion should have NO violations
 // 	violations, ok := summary["invariant_violations"].(map[string]interface{})
 // 	if !ok {
@@ -50,7 +50,7 @@ package main
 // 	found, ok := violations["found"].(bool)
 // 	if !ok {
 // 		t.Fatalf("Expected found to be a boolean, got %T", violations["found"])
-// 	}
+// 	}         
 
 // 	count, ok := violations["count"].(float64)
 // 	if !ok {

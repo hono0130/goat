@@ -21,7 +21,7 @@ func TestCloneEvent(t *testing.T) {
 	}{
 		{
 			name:     "testEvent",
-			original: &testEvent{value: 42},
+			original: &testEvent{Value: 42},
 		},
 		{
 			name:     "EntryEvent",
@@ -37,7 +37,7 @@ func TestCloneEvent(t *testing.T) {
 		},
 		{
 			name:     "TransitionEvent",
-			original: &TransitionEvent{To: &testState{name: "target"}},
+			original: &TransitionEvent{To: &testState{Name: "target"}},
 		},
 		{
 			name:     "testEventWithPointer",
@@ -75,8 +75,8 @@ func TestSameEvent(t *testing.T) {
 	}{
 		{
 			name:     "same testEvent types",
-			event1:   &testEvent{value: 1},
-			event2:   &testEvent{value: 2},
+			event1:   &testEvent{Value: 1},
+			event2:   &testEvent{Value: 2},
 			expected: true,
 		},
 		{
@@ -154,8 +154,8 @@ func TestGetEventDetails(t *testing.T) {
 	}{
 		{
 			name:     "testEvent with value",
-			event:    &testEvent{value: 42},
-			expected: "{Name:value,Type:int,Value:[UNACCESSIBLE]}",
+			event:    &testEvent{Value: 42},
+			expected: "{Name:Value,Type:int,Value:42}",
 		},
 		{
 			name:     "EntryEvent no fields",
@@ -164,7 +164,7 @@ func TestGetEventDetails(t *testing.T) {
 		},
 		{
 			name:     "TransitionEvent with To state",
-			event:    &TransitionEvent{To: &testState{name: "target"}},
+			event:    &TransitionEvent{To: &testState{Name: "target"}},
 			expected: "{Name:To,Type:goat.AbstractState,Value:&{{0} target}}",
 		},
 		{

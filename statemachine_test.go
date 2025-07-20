@@ -90,10 +90,15 @@ func TestStateMachineSpec_NewInstance(t *testing.T) {
 			t.Errorf("Initial state mismatch:\n%s", cmp.Diff(initialState, instance.currentState()))
 		}
 
-		// Should have event handlers initialized
+		// EventHandlers should be nil (built lazily in initialWorld)
 		innerSM := getInnerStateMachine(instance)
-		if innerSM.EventHandlers == nil {
-			t.Error("Event handlers should be initialized")
+		if innerSM.EventHandlers != nil {
+			t.Error("Event handlers should be nil initially (built in initialWorld)")
+		}
+		
+		// HandlerBuilders should be initialized
+		if innerSM.HandlerBuilders == nil {
+			t.Error("Handler builders should be initialized")
 		}
 
 		// Should not be halted initially

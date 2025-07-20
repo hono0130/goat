@@ -80,4 +80,5 @@ package main
 // 	t.Logf("  - Total worlds: %f", totalWorlds)
 // 	t.Logf("  - Invariant violations: %t (count: %f)", found, count)
 // 	t.Logf("  - Execution time: %fms", executionTime)
+
 // }

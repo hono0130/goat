@@ -42,7 +42,7 @@ func TestInvariantFor(t *testing.T) {
 			checkFunc: func(sm *testStateMachine) bool {
 				// Access the embedded StateMachine
 				currentState := sm.currentState().(*testState)
-				return currentState.name == "initial"
+				return currentState.Name == "initial"
 			},
 			wantResult: true,
 		},

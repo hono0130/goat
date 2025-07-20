@@ -9,9 +9,9 @@ func TestEnvironmentClone(t *testing.T) {
 	sm1 := newTestStateMachine(newTestState("state1"))
 	sm2 := newTestStateMachine(newTestState("state2"))
 
-	event1 := &testEvent{value: 1}
-	event2 := &testEvent{value: 2}
-	event3 := &testEvent{value: 3}
+	event1 := &testEvent{Value: 1}
+	event2 := &testEvent{Value: 2}
+	event3 := &testEvent{Value: 3}
 
 	original := newTestEnvironment(sm1, sm2)
 	original.queue[sm1.id()] = []AbstractEvent{event1, event2}
@@ -44,8 +44,8 @@ func TestEnvironmentClone(t *testing.T) {
 func TestEnvironmentEnqueueEvent(t *testing.T) {
 	sm := newTestStateMachine(newTestState("initial"))
 	env := newTestEnvironment(sm)
-	event1 := &testEvent{value: 1}
-	event2 := &testEvent{value: 2}
+	event1 := &testEvent{Value: 1}
+	event2 := &testEvent{Value: 2}
 	expectedQueue := map[string][]AbstractEvent{
 		sm.id(): {event1, event2},
 	}
@@ -84,12 +84,12 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 			name: "dequeue from queue with events",
 			smID: "test-sm-id",
 			initialQueue: map[string][]AbstractEvent{
-				"test-sm-id": {&testEvent{value: 1}, &testEvent{value: 2}, &testEvent{value: 3}},
+				"test-sm-id": {&testEvent{Value: 1}, &testEvent{Value: 2}, &testEvent{Value: 3}},
 			},
-			expectedEvent: &testEvent{value: 1},
+			expectedEvent: &testEvent{Value: 1},
 			expectedOK:    true,
 			expectedQueue: map[string][]AbstractEvent{
-				"test-sm-id": {&testEvent{value: 2}, &testEvent{value: 3}},
+				"test-sm-id": {&testEvent{Value: 2}, &testEvent{Value: 3}},
 			},
 		},
 	}

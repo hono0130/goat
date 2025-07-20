@@ -11,8 +11,8 @@ func TestOnEvent(t *testing.T) {
 			prototype:       &testStateMachine{},
 			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
 		}
-		state := &testState{name: "test"}
-		event := &testEvent{value: 1}
+		state := &testState{Name: "test"}
+		event := &testEvent{Value: 1}
 
 		OnEvent(spec, state, event, func(ctx context.Context, e *testEvent, sm *testStateMachine) {})
 
@@ -39,7 +39,7 @@ func TestOnEntry(t *testing.T) {
 			prototype:       &testStateMachine{},
 			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
 		}
-		state := &testState{name: "entry_test"}
+		state := &testState{Name: "entry_test"}
 
 		OnEntry(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
@@ -65,7 +65,7 @@ func TestOnExit(t *testing.T) {
 			prototype:       &testStateMachine{},
 			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
 		}
-		state := &testState{name: "exit_test"}
+		state := &testState{Name: "exit_test"}
 
 		OnExit(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
@@ -91,7 +91,7 @@ func TestOnTransition(t *testing.T) {
 			prototype:       &testStateMachine{},
 			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
 		}
-		state := &testState{name: "transition_test"}
+		state := &testState{Name: "transition_test"}
 
 		OnTransition(spec, state, func(ctx context.Context, toState AbstractState, sm *testStateMachine) {})
 
@@ -117,7 +117,7 @@ func TestOnHalt(t *testing.T) {
 			prototype:       &testStateMachine{},
 			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
 		}
-		state := &testState{name: "halt_test"}
+		state := &testState{Name: "halt_test"}
 
 		OnHalt(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
@@ -188,7 +188,7 @@ func TestEventHandlers_handle(t *testing.T) {
 	t.Run("returns nil for non-matching event types", func(t *testing.T) {
 		handlers := &eventHandlers{
 			fs:    []eventHandler{},
-			event: &testEvent{value: 1},
+			event: &testEvent{Value: 1},
 		}
 		env := Environment{
 			machines: make(map[string]AbstractStateMachine),
@@ -214,13 +214,13 @@ func TestEventHandlers_handle(t *testing.T) {
 		
 		handlers := &eventHandlers{
 			fs:    []eventHandler{testHandler},
-			event: &testEvent{value: 1},
+			event: &testEvent{Value: 1},
 		}
 		env := Environment{
 			machines: make(map[string]AbstractStateMachine),
 			queue:    make(map[string][]AbstractEvent),
 		}
-		matchingEvent := &testEvent{value: 1}
+		matchingEvent := &testEvent{Value: 1}
 
 		states, err := handlers.handle(env, "test", matchingEvent)
 
