@@ -30,6 +30,26 @@ func TestSimpleHalt(t *testing.T) {
 	// The simple-halt example should have 3 worlds showing the halt process
 	expected := map[string]any{
 		"worlds": []any{
+			// World 1: Just EntryEvent queued (this comes first now due to deterministic sorting)
+			map[string]any{
+				"invariant_violation": false,
+				"queued_events": []any{
+					map[string]any{
+						"details":        "no fields",
+						"event_name":     "EntryEvent",
+						"target_machine": "StateMachine",
+					},
+				},
+				"state_machines": []any{
+					map[string]any{
+						"id":      "StateMachine",
+						"details": "no fields",
+						"name":    "StateMachine",
+						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
+					},
+				},
+			},
+			// World 2: EntryEvent + ExitEvent + HaltEvent + TransitionEvent queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -56,12 +76,14 @@ func TestSimpleHalt(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
+						"id":      "StateMachine",
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
 					},
 				},
 			},
+			// World 3: EntryEvent + ExitEvent + TransitionEvent queued (no HaltEvent)
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -83,23 +105,7 @@ func TestSimpleHalt(t *testing.T) {
 				},
 				"state_machines": []any{
 					map[string]any{
-						"details": "no fields",
-						"name":    "StateMachine",
-						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
-					},
-				},
-			},
-			map[string]any{
-				"invariant_violation": false,
-				"queued_events": []any{
-					map[string]any{
-						"details":        "no fields",
-						"event_name":     "EntryEvent",
-						"target_machine": "StateMachine",
-					},
-				},
-				"state_machines": []any{
-					map[string]any{
+						"id":      "StateMachine",
 						"details": "no fields",
 						"name":    "StateMachine",
 						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
@@ -110,10 +116,6 @@ func TestSimpleHalt(t *testing.T) {
 	}
 
 	cmpOpts := cmp.Options{
-		cmpopts.IgnoreMapEntries(func(k, v any) bool {
-			key, ok := k.(string)
-			return ok && key == "id"
-		}),
 		// Ignore "summary" key since we only want to test worlds data
 		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)
