@@ -53,7 +53,6 @@ func TestMeetingRoomReservationWithExclusion(t *testing.T) {
 	if !ok {
 		t.Fatalf("Expected count to be a number, got %T", violations["count"])
 	}
-
 	// Since this is WITH exclusion, we expect NO violations
 	if found {
 		t.Errorf("Expected no invariant violations but found %f violations", count)

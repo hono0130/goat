@@ -73,8 +73,4 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 		t.Errorf("Expected execution time to be non-negative, got %f", executionTime)
 	}
 
-	t.Logf("Meeting room reservation WITHOUT exclusion test passed:")
-	t.Logf("  - Total worlds: %f", totalWorlds)
-	t.Logf("  - Invariant violations: %t (count: %f)", found, count)
-	t.Logf("  - Execution time: %fms", executionTime)
 }

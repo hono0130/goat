@@ -6,20 +6,20 @@ import (
 )
 
 func TestEnvironmentClone(t *testing.T) {
-	sm1 := NewTestStateMachine("state1")
-	sm2 := NewTestStateMachine("state2")
+	sm1 := newTestStateMachine(newTestState("state1"))
+	sm2 := newTestStateMachine(newTestState("state2"))
 
-	event1 := &TestEvent{value: 1}
-	event2 := &TestEvent{value: 2}
-	event3 := &TestEvent{value: 3}
+	event1 := &testEvent{Value: 1}
+	event2 := &testEvent{Value: 2}
+	event3 := &testEvent{Value: 3}
 
-	original := NewTestEnvironment(sm1, sm2)
+	original := newTestEnvironment(sm1, sm2)
 	original.queue[sm1.id()] = []AbstractEvent{event1, event2}
 	original.queue[sm2.id()] = []AbstractEvent{event3}
 
 	cloned := original.clone()
 
-	AssertEnvironmentEqual(t, original, cloned)
+	assertEnvironmentEqual(t, original, cloned)
 
 	// Verify state machine pointer addresses are different
 	for id, sm := range original.machines {
@@ -42,10 +42,10 @@ func TestEnvironmentClone(t *testing.T) {
 }
 
 func TestEnvironmentEnqueueEvent(t *testing.T) {
-	sm := NewTestStateMachine("initial")
-	env := NewTestEnvironment(sm)
-	event1 := &TestEvent{value: 1}
-	event2 := &TestEvent{value: 2}
+	sm := newTestStateMachine(newTestState("initial"))
+	env := newTestEnvironment(sm)
+	event1 := &testEvent{Value: 1}
+	event2 := &testEvent{Value: 2}
 	expectedQueue := map[string][]AbstractEvent{
 		sm.id(): {event1, event2},
 	}
@@ -53,7 +53,7 @@ func TestEnvironmentEnqueueEvent(t *testing.T) {
 	env.enqueueEvent(sm, event1)
 	env.enqueueEvent(sm, event2)
 
-	AssertQueueEqual(t, expectedQueue, env.queue)
+	assertQueueEqual(t, expectedQueue, env.queue)
 }
 
 func TestEnvironmentDequeueEvent(t *testing.T) {
@@ -61,7 +61,7 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 		name          string
 		smID          string
 		initialQueue  map[string][]AbstractEvent
-		expectedEvent *TestEvent
+		expectedEvent *testEvent
 		expectedOK    bool
 		expectedQueue map[string][]AbstractEvent
 	}{
@@ -84,12 +84,12 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 			name: "dequeue from queue with events",
 			smID: "test-sm-id",
 			initialQueue: map[string][]AbstractEvent{
-				"test-sm-id": {&TestEvent{value: 1}, &TestEvent{value: 2}, &TestEvent{value: 3}},
+				"test-sm-id": {&testEvent{Value: 1}, &testEvent{Value: 2}, &testEvent{Value: 3}},
 			},
-			expectedEvent: &TestEvent{value: 1},
+			expectedEvent: &testEvent{Value: 1},
 			expectedOK:    true,
 			expectedQueue: map[string][]AbstractEvent{
-				"test-sm-id": {&TestEvent{value: 2}, &TestEvent{value: 3}},
+				"test-sm-id": {&testEvent{Value: 2}, &testEvent{Value: 3}},
 			},
 		},
 	}
@@ -108,8 +108,8 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 				return
 			}
 
-			AssertEventEqual(t, tt.expectedEvent, event.(*TestEvent))
-			AssertQueueEqual(t, tt.expectedQueue, env.queue)
+			assertEventEqual(t, tt.expectedEvent, event.(*testEvent))
+			assertQueueEqual(t, tt.expectedQueue, env.queue)
 
 		})
 	}

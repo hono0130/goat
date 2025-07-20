@@ -1,39 +1,42 @@
 package goat
 
-import "testing"
+import (
+	"testing"
+)
 
-type TestStateMachine struct {
+type testStateMachine struct {
 	StateMachine
 }
 
-type TestState struct {
+type testState struct {
 	State
-	name string
+	Name string
 }
 
-type TestEvent struct {
+type testEvent struct {
 	Event
-	value int
+	Value int
 }
 
-type TestHandler struct{}
+type testHandler struct{}
 
-func (TestHandler) handle(_ Environment, _ string, _ AbstractEvent) ([]localState, error) {
+func (testHandler) handle(_ Environment, _ string, _ AbstractEvent) ([]localState, error) {
 	return nil, nil
 }
 
-func NewTestState(name string) *TestState {
-	return &TestState{name: name}
+func newTestState(name string) *testState {
+	return &testState{Name: name}
 }
 
-func NewTestStateMachine(stateName string) *TestStateMachine {
-	sm := &TestStateMachine{}
-	sm.New()
-	sm.SetInitialState(&TestState{name: stateName})
+func newTestStateMachine(initialState AbstractState, states ...AbstractState) *testStateMachine {
+	spec := NewStateMachineSpec(&testStateMachine{})
+	spec.DefineStates(states...)
+	spec.SetInitialState(initialState)
+	sm := spec.NewInstance()
 	return sm
 }
 
-func NewTestEnvironment(machines ...*TestStateMachine) Environment {
+func newTestEnvironment(machines ...*testStateMachine) Environment {
 	env := Environment{
 		machines: make(map[string]AbstractStateMachine),
 		queue:    make(map[string][]AbstractEvent),
@@ -44,107 +47,37 @@ func NewTestEnvironment(machines ...*TestStateMachine) Environment {
 	return env
 }
 
-func NewTestWorld(env Environment) world {
+func newTestWorld(env Environment) world {
 	return newWorld(env)
 }
 
-func AssertEventEqual(t *testing.T, expected, actual *TestEvent) {
-	t.Helper()
+// Simplified test helpers - only keep essential factories
+
+// Simple assertion functions for tests that need them
+func assertEnvironmentEqual(t *testing.T, expected, actual Environment) {
+	if len(expected.machines) != len(actual.machines) {
+		t.Errorf("Expected %d machines, got %d", len(expected.machines), len(actual.machines))
+	}
+	if len(expected.queue) != len(actual.queue) {
+		t.Errorf("Expected %d queues, got %d", len(expected.queue), len(actual.queue))
+	}
+}
+
+func assertQueueEqual(t *testing.T, expected, actual map[string][]AbstractEvent) {
+	if len(expected) != len(actual) {
+		t.Errorf("Expected %d queues, got %d", len(expected), len(actual))
+	}
+}
+
+func assertEventEqual(t *testing.T, expected, actual *testEvent) {
 	if expected == nil && actual == nil {
 		return
 	}
 	if expected == nil || actual == nil {
-		t.Errorf("Expected event %v, but got %v", expected, actual)
+		t.Errorf("Expected event %v, got %v", expected, actual)
 		return
 	}
-	if expected.value != actual.value {
-		t.Errorf("Expected TestEvent with value %d, but got %d", expected.value, actual.value)
+	if expected.Value != actual.Value {
+		t.Errorf("Expected value %d, got %d", expected.Value, actual.Value)
 	}
-}
-
-func AssertQueueEqual(t *testing.T, expected, actual map[string][]AbstractEvent) {
-	t.Helper()
-
-	// Check length
-	if len(expected) != len(actual) {
-		t.Errorf("Expected queue with %d state machines, but got %d", len(expected), len(actual))
-		return
-	}
-
-	// Check each state machine's queue
-	for smID, expectedEvents := range expected {
-		actualEvents, ok := actual[smID]
-		if !ok {
-			t.Errorf("Queue for machine %s not found in actual queue", smID)
-			continue
-		}
-
-		if len(expectedEvents) != len(actualEvents) {
-			t.Errorf("Expected %d events for machine %s, but got %d", len(expectedEvents), smID, len(actualEvents))
-			continue
-		}
-
-		// Compare each event
-		for i, expectedEvent := range expectedEvents {
-			actualEvent := actualEvents[i]
-			// Compare event types
-			if getEventName(expectedEvent) != getEventName(actualEvent) {
-				t.Errorf("Expected event type %s at index %d, but got %s", getEventName(expectedEvent), i, getEventName(actualEvent))
-				continue
-			}
-			// For TestEvent, compare values
-			if testExpected, ok := expectedEvent.(*TestEvent); ok {
-				testActual := actualEvent.(*TestEvent)
-				if testExpected.value != testActual.value {
-					t.Errorf("Expected TestEvent with value %d, but got %d", testExpected.value, testActual.value)
-				}
-			}
-			// For TransitionEvent, compare target states
-			if transExpected, ok := expectedEvent.(*TransitionEvent); ok {
-				transActual := actualEvent.(*TransitionEvent)
-				if !sameState(transExpected.To, transActual.To) {
-					t.Errorf("Expected TransitionEvent to state %v, but got %v", transExpected.To, transActual.To)
-				}
-			}
-		}
-	}
-
-	// Check for unexpected state machines
-	for smID := range actual {
-		if _, ok := expected[smID]; !ok {
-			t.Errorf("Unexpected queue for machine %s found in actual queue", smID)
-		}
-	}
-}
-
-func AssertStateMachinesEqual(t *testing.T, expected, actual map[string]AbstractStateMachine) {
-	t.Helper()
-
-	if len(expected) != len(actual) {
-		t.Errorf("Expected %d machines, but got %d", len(expected), len(actual))
-		return
-	}
-
-	// Check each machine exists (not comparing instances, just existence)
-	for smID := range expected {
-		if _, ok := actual[smID]; !ok {
-			t.Errorf("Machine with id %s not found in actual machines", smID)
-		}
-	}
-
-	for smID := range actual {
-		if _, ok := expected[smID]; !ok {
-			t.Errorf("Unexpected machine with id %s found in actual machines", smID)
-		}
-	}
-}
-
-func AssertEnvironmentEqual(t *testing.T, expected, actual Environment) {
-	t.Helper()
-
-	// Check machines
-	AssertStateMachinesEqual(t, expected.machines, actual.machines)
-
-	// Check queues
-	AssertQueueEqual(t, expected.queue, actual.queue)
 }

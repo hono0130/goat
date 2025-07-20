@@ -157,7 +157,13 @@ func stepGlobal(w world) ([]world, error) {
 
 	env := w.env
 
+	smIDs := make([]string, 0)
 	for smID := range env.machines {
+		smIDs = append(smIDs, smID)
+	}
+	sort.Strings(smIDs)
+
+	for _, smID := range smIDs {
 		states, err := stepLocal(env, smID)
 		if err != nil {
 			return nil, err
