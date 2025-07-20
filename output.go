@@ -8,6 +8,17 @@ import (
 	"strings"
 )
 
+type KripkeSummary struct {
+	TotalWorlds int `json:"total_worlds"`
+
+	InvariantViolations struct {
+		Found bool `json:"found"`
+		Count int  `json:"count"`
+	} `json:"invariant_violations"`
+
+	ExecutionTimeMs int64 `json:"execution_time_ms"`
+}
+
 func (k *kripke) WriteAsDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "digraph {")
 	for id, wld := range k.worlds {
@@ -156,7 +167,7 @@ type EventJSON struct {
 	Details       string `json:"details"`
 }
 
-func (k *kripke) WriteWorldsAsJSON(w io.Writer) error {
+func (k *kripke) toWorldsData() []WorldJSON {
 	allWorlds := make([]WorldJSON, 0, len(k.worlds))
 	for _, world := range k.worlds {
 		worldJSON := k.worldToJSON(world)
@@ -167,13 +178,7 @@ func (k *kripke) WriteWorldsAsJSON(w io.Writer) error {
 		return compareWorlds(allWorlds[i], allWorlds[j])
 	})
 
-	result := map[string]interface{}{
-		"worlds": allWorlds,
-	}
-
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(result)
+	return allWorlds
 }
 
 func compareWorlds(a, b WorldJSON) bool {
@@ -190,7 +195,7 @@ func compareWorlds(a, b WorldJSON) bool {
 	return string(jsonA) < string(jsonB)
 }
 
-func (k *kripke) worldToJSON(w world) WorldJSON {
+func (*kripke) worldToJSON(w world) WorldJSON {
 	smIDs := make([]string, 0, len(w.env.machines))
 	for smID := range w.env.machines {
 		smIDs = append(smIDs, smID)
@@ -247,4 +252,23 @@ func (k *kripke) worldToJSON(w world) WorldJSON {
 		StateMachines:      stateMachines,
 		QueuedEvents:       queuedEvents,
 	}
+}
+
+func (k *kripke) Summarize(executionTimeMs int64) *KripkeSummary {
+	summary := &KripkeSummary{
+		TotalWorlds:     len(k.worlds),
+		ExecutionTimeMs: executionTimeMs,
+	}
+
+	violationCount := 0
+	for _, world := range k.worlds {
+		if world.invariantViolation {
+			violationCount++
+		}
+	}
+
+	summary.InvariantViolations.Found = violationCount > 0
+	summary.InvariantViolations.Count = violationCount
+
+	return summary
 }

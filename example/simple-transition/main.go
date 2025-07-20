@@ -28,7 +28,7 @@ type StateMachine struct {
 	Mut int
 }
 
-func createSimpleTransitionModel() (*StateMachine, []goat.Option) {
+func createSimpleTransitionModel() []goat.Option {
 	// === StateMachine Spec ===
 	spec := goat.NewStateMachineSpec(&StateMachine{})
 	stateA := &State{StateType: StateA}
@@ -63,12 +63,12 @@ func createSimpleTransitionModel() (*StateMachine, []goat.Option) {
 		),
 	}
 
-	return sm, opts
+	return opts
 }
 
 func main() {
-	_, opts := createSimpleTransitionModel()
-	
+	opts := createSimpleTransitionModel()
+
 	err := goat.Test(opts...)
 	if err != nil {
 		panic(err)

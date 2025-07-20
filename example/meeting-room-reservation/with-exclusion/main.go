@@ -100,7 +100,7 @@ type ClientStateMachine struct {
 	Server     *ServerStateMachine
 }
 
-func createMeetingRoomWithExclusionModel() (*DBStateMachine, *ServerStateMachine, *ClientStateMachine, *ClientStateMachine, []goat.Option) {
+func createMeetingRoomWithExclusionModel() []goat.Option {
 	// === Database Spec ===
 	dbSpec := goat.NewStateMachineSpec(&DBStateMachine{})
 	dbIdle := &State{StateType: DBIdle}
@@ -332,15 +332,15 @@ func createMeetingRoomWithExclusionModel() (*DBStateMachine, *ServerStateMachine
 		),
 	}
 
-	return db, server1, client1, client2, opts
+	return opts
 }
 
 func main() {
 	fmt.Println("Meeting Room Reservation System (With Proper Exclusion Control)")
 	fmt.Println("Simulating: SELECT FOR UPDATE → UPDATE (with locking)")
 
-	_, _, _, _, opts := createMeetingRoomWithExclusionModel()
-	
+	opts := createMeetingRoomWithExclusionModel()
+
 	err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
