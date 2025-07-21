@@ -14,6 +14,8 @@ type testEvent struct {
 	Value int
 }
 
+const testStateMachineID = "testStateMachine"
+
 func newTestState(name string) *testState {
 	return &testState{Name: name}
 }
