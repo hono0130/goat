@@ -22,7 +22,10 @@ func TestEnvironmentClone(t *testing.T) {
 
 	cloned := original.clone()
 
-	assertEnvironmentEqual(t, original, cloned)
+	// Compare environments using cmp
+	if diff := cmp.Diff(original, cloned, cmp.AllowUnexported(Environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{})); diff != "" {
+		t.Errorf("Environment mismatch (-original +cloned):\n%s", diff)
+	}
 
 	// Verify state machine pointer addresses are different
 	for id, sm := range original.machines {
@@ -56,7 +59,9 @@ func TestEnvironmentEnqueueEvent(t *testing.T) {
 	env.enqueueEvent(sm, event1)
 	env.enqueueEvent(sm, event2)
 
-	assertQueueEqual(t, expectedQueue, env.queue)
+	if diff := cmp.Diff(expectedQueue, env.queue, cmp.AllowUnexported(testEvent{}, Event{})); diff != "" {
+		t.Errorf("Queue mismatch (-expected +actual):\n%s", diff)
+	}
 }
 
 func TestEnvironmentDequeueEvent(t *testing.T) {
@@ -111,8 +116,12 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 				return
 			}
 
-			assertEventEqual(t, tt.expectedEvent, event.(*testEvent))
-			assertQueueEqual(t, tt.expectedQueue, env.queue)
+			if diff := cmp.Diff(tt.expectedEvent, event.(*testEvent), cmp.AllowUnexported(testEvent{}, Event{})); diff != "" {
+				t.Errorf("Event mismatch (-expected +actual):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.expectedQueue, env.queue, cmp.AllowUnexported(testEvent{}, Event{})); diff != "" {
+				t.Errorf("Queue mismatch (-expected +actual):\n%s", diff)
+			}
 
 		})
 	}
