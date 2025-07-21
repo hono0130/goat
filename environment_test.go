@@ -1,8 +1,11 @@
 package goat
 
 import (
+	"context"
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestEnvironmentClone(t *testing.T) {
@@ -114,4 +117,122 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 		})
 	}
 
+}
+
+func TestSendTo(t *testing.T) {
+	tests := []struct {
+		name     string
+		setupSMs func() ([]*testStateMachine, *testStateMachine)
+		event    AbstractEvent
+	}{
+		{
+			name: "send event to single state machine",
+			setupSMs: func() ([]*testStateMachine, *testStateMachine) {
+				return []*testStateMachine{newTestStateMachine(newTestState("initial"))}, newTestStateMachine(newTestState("initial"))
+			},
+			event: &testEvent{Value: 42},
+		},
+		{
+			name: "send event to specific state machine in multi-SM environment",
+			setupSMs: func() ([]*testStateMachine, *testStateMachine) {
+				return []*testStateMachine{
+					newTestStateMachine(newTestState("sm1")),
+					newTestStateMachine(newTestState("sm2")),
+					newTestStateMachine(newTestState("sm3")),
+				}, newTestStateMachine(newTestState("sm2"))
+			},
+			event: &testEvent{Value: 123},
+		},
+		{
+			name: "send multiple events to same state machine",
+			setupSMs: func() ([]*testStateMachine, *testStateMachine) {
+				return []*testStateMachine{newTestStateMachine(newTestState("initial"))}, newTestStateMachine(newTestState("initial"))
+			},
+			event: &HaltEvent{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sms, target := tt.setupSMs()
+			env := newTestEnvironment(sms...)
+
+			ctx := context.WithValue(t.Context(), envKey, &env)
+
+			SendTo(ctx, target, tt.event)
+
+			queue := env.queue[target.id()]
+			if len(queue) != 1 {
+				t.Errorf("Expected 1 event in queue, got %d", len(queue))
+			}
+			if !cmp.Equal(queue[len(queue)-1], tt.event) {
+				t.Errorf("Last queued event mismatch: %v", cmp.Diff(tt.event, queue[len(queue)-1]))
+			}
+		})
+	}
+}
+
+func TestGoto(t *testing.T) {
+	tests := []struct {
+		name         string
+		initialState AbstractState
+		targetState  AbstractState
+		wantEvents   []AbstractEvent
+	}{
+		{
+			name:         "transition from initial to target state",
+			initialState: newTestState("initial"),
+			targetState:  newTestState("target"),
+			wantEvents: []AbstractEvent{
+				&ExitEvent{},
+				&TransitionEvent{To: newTestState("target")},
+				&EntryEvent{},
+			},
+		},
+		{
+			name:         "transition to same state",
+			initialState: newTestState("same"),
+			targetState:  newTestState("same"),
+			wantEvents: []AbstractEvent{
+				&ExitEvent{},
+				&TransitionEvent{To: newTestState("same")},
+				&EntryEvent{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sm := newTestStateMachine(tt.initialState, tt.targetState)
+			env := newTestEnvironment(sm)
+
+			ctx := context.WithValue(t.Context(), envKey, &env)
+			ctx = context.WithValue(ctx, smKey, sm)
+
+			Goto(ctx, tt.targetState)
+
+			queue := env.queue[sm.id()]
+			if !cmp.Equal(queue, tt.wantEvents) {
+				t.Errorf("Queue mismatch: %v", cmp.Diff(tt.wantEvents, queue))
+			}
+		})
+	}
+}
+
+func TestHalt(t *testing.T) {
+	t.Run("enqueues HaltEvent to target state machine", func(t *testing.T) {
+		sm := newTestStateMachine(newTestState("initial"))
+		env := newTestEnvironment(sm)
+
+		ctx := context.WithValue(context.Background(), envKey, &env)
+
+		Halt(ctx, sm)
+
+		queue := env.queue[sm.id()]
+		wantEvents := []AbstractEvent{&HaltEvent{}}
+		
+		if !cmp.Equal(queue, wantEvents) {
+			t.Errorf("Queue mismatch: %v", cmp.Diff(wantEvents, queue))
+		}
+	})
 }
