@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type KripkeSummary struct {
+type kripkeSummary struct {
 	TotalWorlds int `json:"total_worlds"`
 
 	InvariantViolations struct {
@@ -20,7 +20,16 @@ type KripkeSummary struct {
 
 func (k *kripke) WriteAsDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "digraph {")
-	for id, wld := range k.worlds {
+	
+	// Sort world IDs for deterministic output
+	var worldIDs []worldID
+	for id := range k.worlds {
+		worldIDs = append(worldIDs, id)
+	}
+	sort.Slice(worldIDs, func(i, j int) bool { return worldIDs[i] < worldIDs[j] })
+	
+	for _, id := range worldIDs {
+		wld := k.worlds[id]
 		_, _ = fmt.Fprintf(w, "  %d [ label=\"%s\" ];\n", id, wld.label())
 		if id == k.initial.id {
 			_, _ = fmt.Fprintf(w, "  %d [ penwidth=5 ];\n", id)
@@ -29,7 +38,17 @@ func (k *kripke) WriteAsDot(w io.Writer) {
 			_, _ = fmt.Fprintf(w, "  %d [ color=red, penwidth=3 ];\n", id)
 		}
 	}
-	for from, tos := range k.accessible {
+	
+	// Sort accessible edges for deterministic output
+	var fromIDs []worldID
+	for from := range k.accessible {
+		fromIDs = append(fromIDs, from)
+	}
+	sort.Slice(fromIDs, func(i, j int) bool { return fromIDs[i] < fromIDs[j] })
+	
+	for _, from := range fromIDs {
+		tos := k.accessible[from]
+		sort.Slice(tos, func(i, j int) bool { return tos[i] < tos[j] })
 		for _, to := range tos {
 			_, _ = fmt.Fprintf(w, "  %d -> %d;\n", from, to)
 		}
@@ -268,8 +287,8 @@ func (*kripke) worldToJSON(w world) WorldJSON {
 	}
 }
 
-func (k *kripke) Summarize(executionTimeMs int64) *KripkeSummary {
-	summary := &KripkeSummary{
+func (k *kripke) Summarize(executionTimeMs int64) *kripkeSummary {
+	summary := &kripkeSummary{
 		TotalWorlds:     len(k.worlds),
 		ExecutionTimeMs: executionTimeMs,
 	}

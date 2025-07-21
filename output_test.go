@@ -3,7 +3,6 @@ package goat
 import (
 	"bytes"
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -11,10 +10,9 @@ import (
 
 func TestKripke_WriteAsDot(t *testing.T) {
 	tests := []struct {
-		name             string
-		setup            func() kripke
-		checkContains    []string
-		checkNotContains []string
+		name  string
+		setup func() kripke
+		want  string
 	}{
 		{
 			name: "simple state machine",
@@ -24,17 +22,20 @@ func TestKripke_WriteAsDot(t *testing.T) {
 				_ = k.Solve()
 				return k
 			},
-			checkContains: []string{
-				"digraph {",
-				"}",
-				"testStateMachine=no fields",
-				"Value:initial",
-				"[ penwidth=5 ]",
-				"EntryEvent",
-			},
-			checkNotContains: []string{
-				"color=red",
-			},
+			want: `digraph {
+  5438153399123815847 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+
+QueuedEvents:" ];
+  12572739617557039328 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+
+QueuedEvents:
+* testStateMachine<<EntryEvent;no fields" ];
+  12572739617557039328 [ penwidth=5 ];
+  12572739617557039328 -> 5438153399123815847;
+}
+`,
 		},
 		{
 			name: "state machine with invariant violation",
@@ -48,15 +49,22 @@ func TestKripke_WriteAsDot(t *testing.T) {
 				_ = k.Solve()
 				return k
 			},
-			checkContains: []string{
-				"digraph {",
-				"}",
-				"testStateMachine=no fields",
-				"Value:initial",
-				"[ penwidth=5 ]",
-				"[ color=red, penwidth=3 ]",
-				"EntryEvent",
-			},
+			want: `digraph {
+  5438153399123815847 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+
+QueuedEvents:" ];
+  5438153399123815847 [ color=red, penwidth=3 ];
+  12572739617557039328 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+
+QueuedEvents:
+* testStateMachine<<EntryEvent;no fields" ];
+  12572739617557039328 [ penwidth=5 ];
+  12572739617557039328 [ color=red, penwidth=3 ];
+  12572739617557039328 -> 5438153399123815847;
+}
+`,
 		},
 		{
 			name: "multiple state machines",
@@ -67,16 +75,38 @@ func TestKripke_WriteAsDot(t *testing.T) {
 				_ = k.Solve()
 				return k
 			},
-			checkContains: []string{
-				"digraph {",
-				"}",
-				"testStateMachine=no fields",
-				"Value:state1",
-				"Value:state2",
-				"[ penwidth=5 ]",
-				"EntryEvent",
-				"->", // Should have transitions
-			},
+			want: `digraph {
+  2996475365393991777 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+
+QueuedEvents:
+* testStateMachine<<EntryEvent;no fields" ];
+  7637389232411419170 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+
+QueuedEvents:
+* testStateMachine<<EntryEvent;no fields
+* testStateMachine<<EntryEvent;no fields" ];
+  7637389232411419170 [ penwidth=5 ];
+  8000304505176841628 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+
+QueuedEvents:" ];
+  12282743545000744225 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+
+QueuedEvents:
+* testStateMachine<<EntryEvent;no fields" ];
+  2996475365393991777 -> 8000304505176841628;
+  7637389232411419170 -> 2996475365393991777;
+  7637389232411419170 -> 12282743545000744225;
+  12282743545000744225 -> 8000304505176841628;
+}
+`,
 		},
 	}
 
@@ -87,16 +117,8 @@ func TestKripke_WriteAsDot(t *testing.T) {
 			k.WriteAsDot(&buf)
 			got := buf.String()
 
-			for _, mustContain := range tt.checkContains {
-				if !strings.Contains(got, mustContain) {
-					t.Errorf("WriteAsDot() output missing required content %q\ngot:\n%s", mustContain, got)
-				}
-			}
-
-			for _, mustNotContain := range tt.checkNotContains {
-				if strings.Contains(got, mustNotContain) {
-					t.Errorf("WriteAsDot() output contains forbidden content %q\ngot:\n%s", mustNotContain, got)
-				}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("WriteAsDot() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -488,7 +510,7 @@ func TestKripke_Summarize(t *testing.T) {
 		name            string
 		setupKripke     func() kripke
 		executionTimeMs int64
-		wantSummary     *KripkeSummary
+		wantSummary     *kripkeSummary
 	}{
 		{
 			name: "kripke with no invariant violations",
@@ -503,7 +525,7 @@ func TestKripke_Summarize(t *testing.T) {
 				return k
 			},
 			executionTimeMs: 150,
-			wantSummary: &KripkeSummary{
+			wantSummary: &kripkeSummary{
 				TotalWorlds:     2, // Actual world count after solving
 				ExecutionTimeMs: 150,
 				InvariantViolations: struct {
@@ -528,7 +550,7 @@ func TestKripke_Summarize(t *testing.T) {
 				return k
 			},
 			executionTimeMs: 250,
-			wantSummary: &KripkeSummary{
+			wantSummary: &kripkeSummary{
 				TotalWorlds:     2, // Actual world count after solving
 				ExecutionTimeMs: 250,
 				InvariantViolations: struct {
@@ -547,7 +569,7 @@ func TestKripke_Summarize(t *testing.T) {
 				return k
 			},
 			executionTimeMs: 0,
-			wantSummary: &KripkeSummary{
+			wantSummary: &kripkeSummary{
 				TotalWorlds:     0,
 				ExecutionTimeMs: 0,
 				InvariantViolations: struct {
@@ -569,7 +591,7 @@ func TestKripke_Summarize(t *testing.T) {
 				return k
 			},
 			executionTimeMs: 500,
-			wantSummary: &KripkeSummary{
+			wantSummary: &kripkeSummary{
 				TotalWorlds:     4, // Actual world count
 				ExecutionTimeMs: 500,
 				InvariantViolations: struct {
