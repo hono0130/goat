@@ -2,6 +2,8 @@ package goat
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestInvariantFor(t *testing.T) {
@@ -70,8 +72,8 @@ func TestInvariantFor(t *testing.T) {
 			invariant := NewInvariant(sm, tt.checkFunc)
 
 			got := invariant.Evaluate(w)
-			if got != tt.wantResult {
-				t.Errorf("Evaluate() = %v, want %v", got, tt.wantResult)
+			if diff := cmp.Diff(tt.wantResult, got); diff != "" {
+				t.Errorf("Evaluate() result mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -101,8 +103,8 @@ func TestBoolInvariant(t *testing.T) {
 			invariant := BoolInvariant(tt.value)
 
 			got := invariant.Evaluate(w)
-			if got != tt.wantResult {
-				t.Errorf("Evaluate() = %v, want %v", got, tt.wantResult)
+			if diff := cmp.Diff(tt.wantResult, got); diff != "" {
+				t.Errorf("Evaluate() result mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

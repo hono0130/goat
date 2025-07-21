@@ -2,15 +2,18 @@ package goat
 
 import (
 	"bytes"
+	"context"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestKripke_WriteAsDot(t *testing.T) {
 	tests := []struct {
-		name string
-		setup func() kripke
-		checkContains []string
+		name             string
+		setup            func() kripke
+		checkContains    []string
 		checkNotContains []string
 	}{
 		{
@@ -83,13 +86,13 @@ func TestKripke_WriteAsDot(t *testing.T) {
 			var buf bytes.Buffer
 			k.WriteAsDot(&buf)
 			got := buf.String()
-			
+
 			for _, mustContain := range tt.checkContains {
 				if !strings.Contains(got, mustContain) {
 					t.Errorf("WriteAsDot() output missing required content %q\ngot:\n%s", mustContain, got)
 				}
 			}
-			
+
 			for _, mustNotContain := range tt.checkNotContains {
 				if strings.Contains(got, mustNotContain) {
 					t.Errorf("WriteAsDot() output contains forbidden content %q\ngot:\n%s", mustNotContain, got)
@@ -101,10 +104,10 @@ func TestKripke_WriteAsDot(t *testing.T) {
 
 func TestKripke_WriteAsLog(t *testing.T) {
 	tests := []struct {
-		name string
-		setup func() kripke
+		name        string
+		setup       func() kripke
 		description string
-		want string
+		want        string
 	}{
 		{
 			name: "no invariant violations",
@@ -119,7 +122,7 @@ func TestKripke_WriteAsLog(t *testing.T) {
 				return k
 			},
 			description: "test invariant",
-			want: "No invariant violations found.\n",
+			want:        "No invariant violations found.\n",
 		},
 		{
 			name: "with invariant violation",
@@ -151,7 +154,7 @@ Path (length = 1):
 			var buf bytes.Buffer
 			k.WriteAsLog(&buf, tt.description)
 			got := buf.String()
-			
+
 			if got != tt.want {
 				t.Errorf("WriteAsLog() output mismatch\ngot:\n%s\nwant:\n%s", got, tt.want)
 			}
@@ -159,93 +162,105 @@ Path (length = 1):
 	}
 }
 
-// func TestKripke_findPathsToViolations(t *testing.T) {
-// 	tests := []struct {
-// 		name        string
-// 		setup       func() kripke
-// 		expectPaths int
-// 		pathLengths []int // Expected length of each path
-// 	}{
-// 		{
-// 			name: "no violations",
-// 			setup: func() kripke {
-// 				sm := newTestStateMachine(newTestState("initial"))
-// 				inv := BoolInvariant(true)
-// 				k, err := kripkeModel(
-// 					WithStateMachines(sm),
-// 					WithInvariants(inv),
-// 				)
-// 				if err != nil {
-// 					panic(err)
-// 				}
-// 				_ = k.Solve()
-// 				return k
-// 			},
-// 			expectPaths: 0,
-// 			pathLengths: []int{},
-// 		},
-// 		{
-// 			name: "single violation",
-// 			setup: func() kripke {
-// 				sm := newTestStateMachine(newTestState("initial"))
-// 				inv := BoolInvariant(false)
-// 				k, err := kripkeModel(
-// 					WithStateMachines(sm),
-// 					WithInvariants(inv),
-// 				)
-// 				if err != nil {
-// 					panic(err)
-// 				}
-// 				_ = k.Solve()
-// 				return k
-// 			},
-// 			expectPaths: 1,
-// 			pathLengths: []int{1}, // Path should have length 1 (initial world is violation)
-// 		},
-// 	}
+func TestKripke_findPathsToViolations(t *testing.T) {
+	tests := []struct {
+		name          string
+		setup         func() kripke
+		expectedPaths [][]worldID
+	}{
+		{
+			name: "no violations",
+			setup: func() kripke {
+				sm := newTestStateMachine(newTestState("initial"))
+				inv := BoolInvariant(true)
+				k, err := kripkeModel(
+					WithStateMachines(sm),
+					WithInvariants(inv),
+				)
+				if err != nil {
+					panic(err)
+				}
+				_ = k.Solve()
+				return k
+			},
+			expectedPaths: nil,
+		},
+		{
+			name: "single violation",
+			setup: func() kripke {
+				sm := newTestStateMachine(newTestState("initial"))
+				inv := BoolInvariant(false)
+				k, err := kripkeModel(
+					WithStateMachines(sm),
+					WithInvariants(inv),
+				)
+				if err != nil {
+					panic(err)
+				}
+				_ = k.Solve()
+				return k
+			},
+			expectedPaths: [][]worldID{{12572739617557039328}},
+		},
+		{
+			name: "violation after transition",
+			setup: func() kripke {
+				// Create a simple state machine with transition that causes violation
+				type testCounter struct {
+					testStateMachine
+					count int
+				}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			k := tt.setup()
-// 			paths := k.findPathsToViolations()
-			
-// 			// Check number of paths
-// 			if len(paths) != tt.expectPaths {
-// 				t.Errorf("Expected %d paths, got %d", tt.expectPaths, len(paths))
-// 			}
-			
-// 			// Check path lengths
-// 			if len(paths) != len(tt.pathLengths) {
-// 				t.Errorf("Expected %d path lengths, got %d paths", len(tt.pathLengths), len(paths))
-// 				return
-// 			}
-			
-// 			for i, expectedLength := range tt.pathLengths {
-// 				if len(paths[i]) != expectedLength {
-// 					t.Errorf("Path %d: expected length %d, got %d", i, expectedLength, len(paths[i]))
-// 				}
-// 			}
-			
-// 			// Verify paths contain valid world IDs
-// 			for i, path := range paths {
-// 				for j, worldID := range path {
-// 					if _, exists := k.worlds[worldID]; !exists {
-// 						t.Errorf("Path %d[%d]: world ID %d does not exist in k.worlds", i, j, worldID)
-// 					}
-// 				}
-				
-// 				// Verify last world in path has invariant violation
-// 				if len(path) > 0 {
-// 					lastWorldID := path[len(path)-1]
-// 					lastWorld := k.worlds[lastWorldID]
-// 					if !lastWorld.invariantViolation {
-// 						t.Errorf("Path %d: last world (ID %d) should have invariant violation", i, lastWorldID)
-// 					}
-// 				}
-// 			}
-// 		})
-// 	}
-// }
+				spec := NewStateMachineSpec(&testCounter{})
+				stateA := newTestState("A")
+				stateB := newTestState("B")
+				spec.DefineStates(stateA, stateB).SetInitialState(stateA)
+
+				// On entry to state A, increment counter and go to B
+				OnEntry(spec, stateA, func(ctx context.Context, sm *testCounter) {
+					sm.count = 1
+					Goto(ctx, stateB)
+				})
+
+				// On entry to state B, increment counter further
+				OnEntry(spec, stateB, func(ctx context.Context, sm *testCounter) {
+					sm.count = 2
+				})
+
+				sm := spec.NewInstance()
+
+				// Invariant that fails when count > 1 (violated in state B)
+				inv := NewInvariant(sm, func(sm *testCounter) bool {
+					return sm.count <= 1
+				})
+
+				k, err := kripkeModel(
+					WithStateMachines(sm),
+					WithInvariants(inv),
+				)
+				if err != nil {
+					panic(err)
+				}
+				_ = k.Solve()
+				return k
+			},
+			expectedPaths: [][]worldID{
+				{7713272153197044482, 9676541489433535402, 14480809118815488961, 15722512986875548181, 8395799135532667686},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k := tt.setup()
+			actualPaths := k.findPathsToViolations()
+
+			if diff := cmp.Diff(tt.expectedPaths, actualPaths); diff != "" {
+				t.Errorf("Violation paths mismatch (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
 
 func TestWorld_label(t *testing.T) {
 	tests := []struct {
@@ -284,9 +299,297 @@ func TestWorld_label(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			w := tt.setup()
 			got := w.label()
-			
+
 			if got != tt.expected {
 				t.Errorf("World.label() output mismatch\ngot:\n%q\nwant:\n%q", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestKripke_toWorldsData(t *testing.T) {
+	tests := []struct {
+		name           string
+		setupKripke    func() kripke
+		expectedWorlds []WorldJSON
+	}{
+		{
+			name: "single state machine creates multiple worlds",
+			setupKripke: func() kripke {
+				sm := newTestStateMachine(newTestState("initial"))
+				k, _ := kripkeModel(WithStateMachines(sm))
+				_ = k.Solve()
+				return k
+			},
+			expectedWorlds: []WorldJSON{
+				{
+					InvariantViolation: false,
+					StateMachines: []StateMachineJSON{
+						{
+							ID:      "testStateMachine",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:initial}",
+							Details: "no fields",
+						},
+					},
+					QueuedEvents: []EventJSON{},
+				},
+				{
+					InvariantViolation: false,
+					StateMachines: []StateMachineJSON{
+						{
+							ID:      "testStateMachine",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:initial}",
+							Details: "no fields",
+						},
+					},
+					QueuedEvents: []EventJSON{
+						{
+							TargetMachine: "testStateMachine",
+							EventName:     "EntryEvent",
+							Details:       "no fields",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple state machines creating multiple worlds",
+			setupKripke: func() kripke {
+				sm1 := newTestStateMachine(newTestState("state1"))
+				sm2 := newTestStateMachine(newTestState("state2"))
+				k, _ := kripkeModel(WithStateMachines(sm1, sm2))
+				_ = k.Solve()
+				return k
+			},
+			expectedWorlds: []WorldJSON{
+				{
+					InvariantViolation: false,
+					StateMachines: []StateMachineJSON{
+						{
+							ID:      "testStateMachine",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state1}",
+							Details: "no fields",
+						},
+						{
+							ID:      "testStateMachine_1",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state2}",
+							Details: "no fields",
+						},
+					},
+					QueuedEvents: []EventJSON{},
+				},
+				{
+					InvariantViolation: false,
+					StateMachines: []StateMachineJSON{
+						{
+							ID:      "testStateMachine",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state1}",
+							Details: "no fields",
+						},
+						{
+							ID:      "testStateMachine_1",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state2}",
+							Details: "no fields",
+						},
+					},
+					QueuedEvents: []EventJSON{
+						{
+							TargetMachine: "testStateMachine",
+							EventName:     "EntryEvent",
+							Details:       "no fields",
+						},
+					},
+				},
+				{
+					InvariantViolation: false,
+					StateMachines: []StateMachineJSON{
+						{
+							ID:      "testStateMachine",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state1}",
+							Details: "no fields",
+						},
+						{
+							ID:      "testStateMachine_1",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state2}",
+							Details: "no fields",
+						},
+					},
+					QueuedEvents: []EventJSON{
+						{
+							TargetMachine: "testStateMachine",
+							EventName:     "EntryEvent",
+							Details:       "no fields",
+						},
+					},
+				},
+				{
+					InvariantViolation: false,
+					StateMachines: []StateMachineJSON{
+						{
+							ID:      "testStateMachine",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state1}",
+							Details: "no fields",
+						},
+						{
+							ID:      "testStateMachine_1",
+							Name:    "testStateMachine",
+							State:   "{Name:Name,Type:string,Value:state2}",
+							Details: "no fields",
+						},
+					},
+					QueuedEvents: []EventJSON{
+						{
+							TargetMachine: "testStateMachine",
+							EventName:     "EntryEvent",
+							Details:       "no fields",
+						},
+						{
+							TargetMachine: "testStateMachine",
+							EventName:     "EntryEvent",
+							Details:       "no fields",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "empty kripke structure",
+			setupKripke: func() kripke {
+				k, _ := kripkeModel()
+				return k
+			},
+			expectedWorlds: []WorldJSON{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k := tt.setupKripke()
+			actualWorlds := k.toWorldsData()
+
+			if diff := cmp.Diff(tt.expectedWorlds, actualWorlds); diff != "" {
+				t.Errorf("Worlds data mismatch (-expected +actual):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestKripke_Summarize(t *testing.T) {
+	tests := []struct {
+		name            string
+		setupKripke     func() kripke
+		executionTimeMs int64
+		wantSummary     *KripkeSummary
+	}{
+		{
+			name: "kripke with no invariant violations",
+			setupKripke: func() kripke {
+				sm := newTestStateMachine(newTestState("initial"))
+				inv := BoolInvariant(true)
+				k, _ := kripkeModel(
+					WithStateMachines(sm),
+					WithInvariants(inv),
+				)
+				_ = k.Solve()
+				return k
+			},
+			executionTimeMs: 150,
+			wantSummary: &KripkeSummary{
+				TotalWorlds:     2, // Actual world count after solving
+				ExecutionTimeMs: 150,
+				InvariantViolations: struct {
+					Found bool `json:"found"`
+					Count int  `json:"count"`
+				}{
+					Found: false,
+					Count: 0,
+				},
+			},
+		},
+		{
+			name: "kripke with invariant violations",
+			setupKripke: func() kripke {
+				sm := newTestStateMachine(newTestState("initial"))
+				inv := BoolInvariant(false)
+				k, _ := kripkeModel(
+					WithStateMachines(sm),
+					WithInvariants(inv),
+				)
+				_ = k.Solve()
+				return k
+			},
+			executionTimeMs: 250,
+			wantSummary: &KripkeSummary{
+				TotalWorlds:     2, // Actual world count after solving
+				ExecutionTimeMs: 250,
+				InvariantViolations: struct {
+					Found bool `json:"found"`
+					Count int  `json:"count"`
+				}{
+					Found: true,
+					Count: 2, // All worlds have violations with BoolInvariant(false)
+				},
+			},
+		},
+		{
+			name: "empty kripke structure",
+			setupKripke: func() kripke {
+				k, _ := kripkeModel()
+				return k
+			},
+			executionTimeMs: 0,
+			wantSummary: &KripkeSummary{
+				TotalWorlds:     0,
+				ExecutionTimeMs: 0,
+				InvariantViolations: struct {
+					Found bool `json:"found"`
+					Count int  `json:"count"`
+				}{
+					Found: false,
+					Count: 0,
+				},
+			},
+		},
+		{
+			name: "multiple worlds without violations",
+			setupKripke: func() kripke {
+				sm1 := newTestStateMachine(newTestState("state1"))
+				sm2 := newTestStateMachine(newTestState("state2"))
+				k, _ := kripkeModel(WithStateMachines(sm1, sm2))
+				_ = k.Solve()
+				return k
+			},
+			executionTimeMs: 500,
+			wantSummary: &KripkeSummary{
+				TotalWorlds:     4, // Actual world count
+				ExecutionTimeMs: 500,
+				InvariantViolations: struct {
+					Found bool `json:"found"`
+					Count int  `json:"count"`
+				}{
+					Found: false,
+					Count: 0, // No violations without invariants
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k := tt.setupKripke()
+			summary := k.Summarize(tt.executionTimeMs)
+
+			if !cmp.Equal(summary, tt.wantSummary) {
+				t.Errorf("Summarize() mismatch: %v", cmp.Diff(tt.wantSummary, summary))
 			}
 		})
 	}

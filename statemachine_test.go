@@ -83,6 +83,7 @@ func TestStateMachineSpec_NewInstance(t *testing.T) {
 		// Should create new instance
 		if instance == nil {
 			t.Error("Instance should not be nil")
+			return
 		}
 
 		// Should have initial state set
@@ -95,7 +96,7 @@ func TestStateMachineSpec_NewInstance(t *testing.T) {
 		if innerSM.EventHandlers != nil {
 			t.Error("Event handlers should be nil initially (built in initialWorld)")
 		}
-		
+
 		// HandlerBuilders should be initialized
 		if innerSM.HandlerBuilders == nil {
 			t.Error("Handler builders should be initialized")
@@ -171,30 +172,14 @@ func TestSameState(t *testing.T) {
 			name: "different state names",
 			s1:   newTestState("test1"),
 			s2:   newTestState("test2"),
-			want: false, // Now Name field is exported so different names are correctly compared
-		},
-		{
-			name: "nil states",
-			s1:   nil,
-			s2:   nil,
-			want: true,
-		},
-		{
-			name: "one nil state",
-			s1:   newTestState("test"),
-			s2:   nil,
 			want: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.s1 == nil || tt.s2 == nil {
-				// Skip nil tests for now since getStateDetails panics on nil
-				return
-			}
-
 			got := sameState(tt.s1, tt.s2)
+
 			if got != tt.want {
 				t.Errorf("sameState() = %v, want %v", got, tt.want)
 			}

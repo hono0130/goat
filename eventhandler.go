@@ -237,7 +237,7 @@ type transitionHandlers struct {
 
 func (h *transitionHandlers) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(&TransitionEvent{}, event) {
-		panic(fmt.Sprintf("event is not a TransitionEvent: %v", event))
+		return nil, nil
 	}
 	lss := make([]localState, 0)
 	for _, f := range h.fs {
@@ -256,7 +256,7 @@ type haltHandlers struct {
 
 func (h *haltHandlers) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(&HaltEvent{}, event) {
-		panic(fmt.Sprintf("event is not a HaltEvent: %v", event))
+		return nil, nil
 	}
 	lss := make([]localState, 0)
 	for _, f := range h.fs {
@@ -275,7 +275,7 @@ type defaultOnTransitionHandler struct{}
 //nolint:unparam // error return required by interface
 func (*defaultOnTransitionHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(&TransitionEvent{}, event) {
-		panic(fmt.Sprintf("event is not a TransitionEvent: %v", event))
+		return nil, nil
 	}
 	ec := env.clone()
 	sm := ec.machines[smID]
@@ -288,7 +288,7 @@ type defaultOnHaltHandler struct{}
 //nolint:unparam // error return required by interface
 func (*defaultOnHaltHandler) handle(env Environment, smID string, event AbstractEvent) ([]localState, error) {
 	if !sameEvent(&HaltEvent{}, event) {
-		panic(fmt.Sprintf("event is not a HaltEvent: %v", event))
+		return nil, nil
 	}
 	ec := env.clone()
 	sm := ec.machines[smID]
