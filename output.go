@@ -168,7 +168,7 @@ func (w world) label() string {
 
 // JSON output structures for debugging and testing
 type worldJSON struct {
-	InvariantViolation bool                `json:"invariant_violation"`
+	InvariantViolation bool               `json:"invariant_violation"`
 	StateMachines      []stateMachineJSON `json:"state_machines"`
 	QueuedEvents       []eventJSON        `json:"queued_events"`
 }
