@@ -239,7 +239,7 @@ func TestHalt(t *testing.T) {
 
 		queue := env.queue[sm.id()]
 		wantEvents := []AbstractEvent{&HaltEvent{}}
-		
+
 		if !cmp.Equal(queue, wantEvents) {
 			t.Errorf("Queue mismatch: %v", cmp.Diff(wantEvents, queue))
 		}

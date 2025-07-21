@@ -256,10 +256,10 @@ func TestEventHandlers_handle(t *testing.T) {
 
 func TestTransitionHandlers_handle(t *testing.T) {
 	tests := []struct {
-		name      string
-		handlers  *transitionHandlers
-		setupEnv  func() (Environment, string, AbstractState)
-		event     AbstractEvent
+		name       string
+		handlers   *transitionHandlers
+		setupEnv   func() (Environment, string, AbstractState)
+		event      AbstractEvent
 		wantStates []localState
 	}{
 		{
@@ -303,11 +303,11 @@ func TestTransitionHandlers_handle(t *testing.T) {
 				sm1 := newTestStateMachine(newTestState("target"))
 				env1 := newTestEnvironment(sm1)
 				sm1.setCurrentState(newTestState("target"))
-				
+
 				sm2 := newTestStateMachine(newTestState("target"))
 				env2 := newTestEnvironment(sm2)
 				sm2.setCurrentState(newTestState("target"))
-				
+
 				return []localState{{env: env1}, {env: env2}}
 			}(),
 		},
@@ -327,7 +327,7 @@ func TestTransitionHandlers_handle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			env, smID, target := tt.setupEnv()
-			
+
 			// Set event based on target if not already set
 			event := tt.event
 			if event == nil && target != nil {
@@ -335,11 +335,11 @@ func TestTransitionHandlers_handle(t *testing.T) {
 			}
 
 			states, err := tt.handlers.handle(env, smID, event)
-			
+
 			if err != nil {
 				t.Fatalf("handle() error = %v", err)
 			}
-			
+
 			// Compare states directly using cmp
 			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, Environment{}, testStateMachine{}, StateMachine{})); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
@@ -350,10 +350,10 @@ func TestTransitionHandlers_handle(t *testing.T) {
 
 func TestHaltHandlers_handle(t *testing.T) {
 	tests := []struct {
-		name      string
-		handlers  *haltHandlers
-		setupEnv  func() (Environment, string)
-		event     AbstractEvent
+		name       string
+		handlers   *haltHandlers
+		setupEnv   func() (Environment, string)
+		event      AbstractEvent
 		wantStates []localState
 	}{
 		{
@@ -397,12 +397,12 @@ func TestHaltHandlers_handle(t *testing.T) {
 				env1 := newTestEnvironment(sm1)
 				innerSM1 := getInnerStateMachine(sm1)
 				innerSM1.halted = true
-				
+
 				sm2 := newTestStateMachine(newTestState("initial"))
 				env2 := newTestEnvironment(sm2)
 				innerSM2 := getInnerStateMachine(sm2)
 				innerSM2.halted = true
-				
+
 				return []localState{{env: env1}, {env: env2}}
 			}(),
 		},
@@ -424,11 +424,11 @@ func TestHaltHandlers_handle(t *testing.T) {
 			env, smID := tt.setupEnv()
 
 			states, err := tt.handlers.handle(env, smID, tt.event)
-			
+
 			if err != nil {
 				t.Fatalf("handle() error = %v", err)
 			}
-			
+
 			// Compare states directly using cmp
 			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, Environment{}, testStateMachine{}, StateMachine{})); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
@@ -482,18 +482,18 @@ func TestEntryHandlers_handle(t *testing.T) {
 			wantStates: func() []localState {
 				sm1 := newTestStateMachine(newTestState("initial"))
 				env1 := newTestEnvironment(sm1)
-				
+
 				sm2 := newTestStateMachine(newTestState("initial"))
 				env2 := newTestEnvironment(sm2)
-				
+
 				sm3 := newTestStateMachine(newTestState("initial"))
 				env3 := newTestEnvironment(sm3)
-				
+
 				return []localState{{env: env1}, {env: env2}, {env: env3}}
 			}(),
 		},
 		{
-			name: "no handlers",
+			name:     "no handlers",
 			handlers: &entryHandlers{fs: []entryHandler{}},
 			setupEnv: func() (Environment, string) {
 				sm := newTestStateMachine(newTestState("initial"))
@@ -567,15 +567,15 @@ func TestExitHandlers_handle(t *testing.T) {
 			wantStates: func() []localState {
 				sm1 := newTestStateMachine(newTestState("initial"))
 				env1 := newTestEnvironment(sm1)
-				
+
 				sm2 := newTestStateMachine(newTestState("initial"))
 				env2 := newTestEnvironment(sm2)
-				
+
 				return []localState{{env: env1}, {env: env2}}
 			}(),
 		},
 		{
-			name: "no handlers",
+			name:     "no handlers",
 			handlers: &exitHandlers{fs: []exitHandler{}},
 			setupEnv: func() (Environment, string) {
 				sm := newTestStateMachine(newTestState("initial"))

@@ -210,30 +210,30 @@ func TestKripke_findPathsToViolations(t *testing.T) {
 					testStateMachine
 					count int
 				}
-				
+
 				spec := NewStateMachineSpec(&testCounter{})
-				stateA := newTestState("A") 
+				stateA := newTestState("A")
 				stateB := newTestState("B")
 				spec.DefineStates(stateA, stateB).SetInitialState(stateA)
-				
+
 				// On entry to state A, increment counter and go to B
 				OnEntry(spec, stateA, func(ctx context.Context, sm *testCounter) {
 					sm.count = 1
 					Goto(ctx, stateB)
 				})
-				
+
 				// On entry to state B, increment counter further
 				OnEntry(spec, stateB, func(ctx context.Context, sm *testCounter) {
 					sm.count = 2
 				})
-				
+
 				sm := spec.NewInstance()
-				
+
 				// Invariant that fails when count > 1 (violated in state B)
 				inv := NewInvariant(sm, func(sm *testCounter) bool {
 					return sm.count <= 1
 				})
-				
+
 				k, err := kripkeModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),

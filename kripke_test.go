@@ -8,6 +8,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
+const testStateMachineID = "testStateMachine"
+
 func TestKripke_Solve(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -25,25 +27,25 @@ func TestKripke_Solve(t *testing.T) {
 			want: func() kripke {
 				// Create the expected kripke structure
 				sm := newTestStateMachine(newTestState("initial"))
-				getInnerStateMachine(sm).smID = "testStateMachine"
+				getInnerStateMachine(sm).smID = testStateMachineID
 
 				// Initial world with EntryEvent in queue
 				initialWorld := newWorld(Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {&EntryEvent{}},
+						testStateMachineID: {&EntryEvent{}},
 					},
 				})
 
 				// World after processing EntryEvent (queue becomes empty)
 				processedWorld := newWorld(Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {},
+						testStateMachineID: {},
 					},
 				})
 
@@ -75,15 +77,15 @@ func TestKripke_Solve(t *testing.T) {
 			},
 			want: func() kripke {
 				sm := newTestStateMachine(newTestState("initial"))
-				getInnerStateMachine(sm).smID = "testStateMachine"
+				getInnerStateMachine(sm).smID = testStateMachineID
 
 				// Initial world with EntryEvent in queue (invariantViolation not set on initial)
 				initialWorld := newWorld(Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {&EntryEvent{}},
+						testStateMachineID: {&EntryEvent{}},
 					},
 				})
 				// k.initial remains unchanged by Solve()
@@ -92,10 +94,10 @@ func TestKripke_Solve(t *testing.T) {
 				// World after processing EntryEvent with invariant violation
 				processedWorld := newWorld(Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {},
+						testStateMachineID: {},
 					},
 				})
 				processedWorld.invariantViolation = true
@@ -237,12 +239,12 @@ func TestInitialWorld(t *testing.T) {
 					machines: map[string]AbstractStateMachine{
 						"testStateMachine": func() AbstractStateMachine {
 							sm := newTestStateMachine(newTestState("initial"))
-							getInnerStateMachine(sm).smID = "testStateMachine"
+							getInnerStateMachine(sm).smID = testStateMachineID
 							return sm
 						}(),
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {&EntryEvent{}},
+						testStateMachineID: {&EntryEvent{}},
 					},
 				},
 				invariantViolation: false,
@@ -259,7 +261,7 @@ func TestInitialWorld(t *testing.T) {
 					machines: map[string]AbstractStateMachine{
 						"testStateMachine": func() AbstractStateMachine {
 							sm := newTestStateMachine(newTestState("state1"))
-							getInnerStateMachine(sm).smID = "testStateMachine"
+							getInnerStateMachine(sm).smID = testStateMachineID
 							return sm
 						}(),
 						"testStateMachine_1": func() AbstractStateMachine {
@@ -341,7 +343,7 @@ func TestStepGlobal(t *testing.T) {
 			setup: func() world {
 				sm := newTestStateMachine(newTestState("initial"))
 				innerSM := getInnerStateMachine(sm)
-				innerSM.smID = "testStateMachine"
+				innerSM.smID = testStateMachineID
 
 				// Add a handler that returns an error
 				innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
@@ -354,10 +356,10 @@ func TestStepGlobal(t *testing.T) {
 
 				env := Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {&EntryEvent{}},
+						testStateMachineID: {&EntryEvent{}},
 					},
 				}
 				return newWorld(env)
@@ -370,15 +372,15 @@ func TestStepGlobal(t *testing.T) {
 			setup: func() world {
 				sm := newTestStateMachine(newTestState("initial"))
 				innerSM := getInnerStateMachine(sm)
-				innerSM.smID = "testStateMachine"
+				innerSM.smID = testStateMachineID
 				innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
 
 				env := Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {}, // Empty queue
+						testStateMachineID: {}, // Empty queue
 					},
 				}
 				return newWorld(env)
@@ -393,15 +395,15 @@ func TestStepGlobal(t *testing.T) {
 			setup: func() world {
 				sm := newTestStateMachine(newTestState("initial"))
 				innerSM := getInnerStateMachine(sm)
-				innerSM.smID = "testStateMachine"
+				innerSM.smID = testStateMachineID
 				innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
 
 				env := Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {&EntryEvent{}},
+						testStateMachineID: {&EntryEvent{}},
 					},
 				}
 				return newWorld(env)
@@ -409,16 +411,16 @@ func TestStepGlobal(t *testing.T) {
 			want: func() []world {
 				sm := newTestStateMachine(newTestState("initial"))
 				innerSM := getInnerStateMachine(sm)
-				innerSM.smID = "testStateMachine"
+				innerSM.smID = testStateMachineID
 				innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
 
 				// Expected world after processing EntryEvent (queue becomes empty)
 				expectedEnv := Environment{
 					machines: map[string]AbstractStateMachine{
-						"testStateMachine": sm,
+						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						"testStateMachine": {}, // Queue becomes empty after processing
+						testStateMachineID: {}, // Queue becomes empty after processing
 					},
 				}
 				return []world{newWorld(expectedEnv)}
