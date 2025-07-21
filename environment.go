@@ -2,7 +2,7 @@ package goat
 
 import "context"
 
-type Environment struct {
+type environment struct {
 	machines map[string]AbstractStateMachine
 	queue    map[string][]AbstractEvent
 }
@@ -12,17 +12,17 @@ type contextKey string
 const envKey contextKey = "environment"
 const smKey contextKey = "statemachine"
 
-func withEnvAndSM(env *Environment, sm AbstractStateMachine) context.Context {
+func withEnvAndSM(env *environment, sm AbstractStateMachine) context.Context {
 	ctx := context.WithValue(context.Background(), envKey, env)
 	ctx = context.WithValue(ctx, smKey, sm)
 	return ctx
 }
 
-func getEnvFromContext(ctx context.Context) *Environment {
-	if env, ok := ctx.Value(envKey).(*Environment); ok {
+func getEnvFromContext(ctx context.Context) *environment {
+	if env, ok := ctx.Value(envKey).(*environment); ok {
 		return env
 	}
-	panic("Environment not found in context")
+	panic("environment not found in context")
 }
 
 func getSMFromContext(ctx context.Context) AbstractStateMachine {
@@ -33,10 +33,10 @@ func getSMFromContext(ctx context.Context) AbstractStateMachine {
 }
 
 type localState struct {
-	env Environment
+	env environment
 }
 
-func (e *Environment) clone() Environment {
+func (e *environment) clone() environment {
 	machines := make(map[string]AbstractStateMachine)
 	for _, sm := range e.machines {
 		smc := cloneStateMachine(sm)
@@ -52,18 +52,18 @@ func (e *Environment) clone() Environment {
 		queue[smID] = evsc
 	}
 
-	ec := Environment{
+	ec := environment{
 		machines: machines,
 		queue:    queue,
 	}
 	return ec
 }
 
-func (e *Environment) enqueueEvent(target AbstractStateMachine, event AbstractEvent) {
+func (e *environment) enqueueEvent(target AbstractStateMachine, event AbstractEvent) {
 	e.queue[target.id()] = append(e.queue[target.id()], event)
 }
 
-func (e *Environment) dequeueEvent(smID string) (AbstractEvent, bool) {
+func (e *environment) dequeueEvent(smID string) (AbstractEvent, bool) {
 	events, ok := e.queue[smID]
 	if !ok {
 		return nil, false
@@ -77,20 +77,62 @@ func (e *Environment) dequeueEvent(smID string) (AbstractEvent, bool) {
 	return event, true
 }
 
+// SendTo sends an event to a specific state machine.
+// This function must be called from within event handlers registered with
+// OnEvent, OnEntry, OnExit, OnTransition, or OnHalt functions.
+//
+// Parameters:
+//   - ctx: Context passed to the event handler
+//   - target: The state machine that should receive the event
+//   - event: The event to send
+//
+// Example:
+//
+//	OnEntry(spec, IdleState{}, func(ctx context.Context, sm *MyStateMachine) {
+//	    SendTo(ctx, otherSM, Event{Name: "NOTIFY"})
+//	})
 func SendTo(ctx context.Context, target AbstractStateMachine, event AbstractEvent) {
 	env := getEnvFromContext(ctx)
 	env.enqueueEvent(target, event)
 }
 
+// Goto triggers a state transition for the current state machine.
+// This function must be called from within event handlers registered with
+// OnEvent, OnEntry, OnExit, OnTransition, or OnHalt functions.
+// It automatically generates the necessary sequence of events (Exit, Transition, Entry).
+//
+// Parameters:
+//   - ctx: Context passed to the event handler
+//   - state: The target state to transition to
+//
+// Example:
+//
+//	OnEvent(spec, IdleState{}, startEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	    Goto(ctx, &ActiveState{Ready: true})
+//	})
 func Goto(ctx context.Context, state AbstractState) {
 	env := getEnvFromContext(ctx)
 	sm := getSMFromContext(ctx)
-	env.enqueueEvent(sm, &ExitEvent{})
-	env.enqueueEvent(sm, &TransitionEvent{To: state})
-	env.enqueueEvent(sm, &EntryEvent{})
+	env.enqueueEvent(sm, &exitEvent{})
+	env.enqueueEvent(sm, &transitionEvent{To: state})
+	env.enqueueEvent(sm, &entryEvent{})
 }
 
+// Halt stops the execution of a specific state machine permanently.
+// This function must be called from within event handlers registered with
+// OnEvent, OnEntry, OnExit, OnTransition, or OnHalt functions.
+// It triggers the haltEvent and any associated cleanup handlers.
+//
+// Parameters:
+//   - ctx: Context passed to the event handler
+//   - target: The state machine to halt
+//
+// Example:
+//
+//	OnEvent(spec, ActiveState{}, errorEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	    Halt(ctx, sm) // Stop this state machine
+//	})
 func Halt(ctx context.Context, target AbstractStateMachine) {
 	env := getEnvFromContext(ctx)
-	env.enqueueEvent(target, &HaltEvent{})
+	env.enqueueEvent(target, &haltEvent{})
 }

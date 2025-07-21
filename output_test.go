@@ -27,13 +27,13 @@ func TestKripke_writeDot(t *testing.T) {
 * testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
 
 QueuedEvents:" ];
-  12572739617557039328 [ label="StateMachines:
+  8682599965454615616 [ label="StateMachines:
 * testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
 
 QueuedEvents:
-* testStateMachine<<EntryEvent;no fields" ];
-  12572739617557039328 [ penwidth=5 ];
-  12572739617557039328 -> 5438153399123815847;
+* testStateMachine<<entryEvent;no fields" ];
+  8682599965454615616 [ penwidth=5 ];
+  8682599965454615616 -> 5438153399123815847;
 }
 `,
 		},
@@ -55,14 +55,14 @@ QueuedEvents:
 
 QueuedEvents:" ];
   5438153399123815847 [ color=red, penwidth=3 ];
-  12572739617557039328 [ label="StateMachines:
+  8682599965454615616 [ label="StateMachines:
 * testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
 
 QueuedEvents:
-* testStateMachine<<EntryEvent;no fields" ];
-  12572739617557039328 [ penwidth=5 ];
-  12572739617557039328 [ color=red, penwidth=3 ];
-  12572739617557039328 -> 5438153399123815847;
+* testStateMachine<<entryEvent;no fields" ];
+  8682599965454615616 [ penwidth=5 ];
+  8682599965454615616 [ color=red, penwidth=3 ];
+  8682599965454615616 -> 5438153399123815847;
 }
 `,
 		},
@@ -76,35 +76,35 @@ QueuedEvents:
 				return k
 			},
 			want: `digraph {
-  2996475365393991777 [ label="StateMachines:
+  1352120299877738753 [ label="StateMachines:
 * testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
 * testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
 
 QueuedEvents:
-* testStateMachine<<EntryEvent;no fields" ];
-  7637389232411419170 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
-
-QueuedEvents:
-* testStateMachine<<EntryEvent;no fields
-* testStateMachine<<EntryEvent;no fields" ];
-  7637389232411419170 [ penwidth=5 ];
+* testStateMachine<<entryEvent;no fields" ];
   8000304505176841628 [ label="StateMachines:
 * testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
 * testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
 
 QueuedEvents:" ];
-  12282743545000744225 [ label="StateMachines:
+  10115204962392696257 [ label="StateMachines:
 * testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
 * testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
 
 QueuedEvents:
-* testStateMachine<<EntryEvent;no fields" ];
-  2996475365393991777 -> 8000304505176841628;
-  7637389232411419170 -> 2996475365393991777;
-  7637389232411419170 -> 12282743545000744225;
-  12282743545000744225 -> 8000304505176841628;
+* testStateMachine<<entryEvent;no fields" ];
+  18043829544564786018 [ label="StateMachines:
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
+* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+
+QueuedEvents:
+* testStateMachine<<entryEvent;no fields
+* testStateMachine<<entryEvent;no fields" ];
+  18043829544564786018 [ penwidth=5 ];
+  1352120299877738753 -> 8000304505176841628;
+  10115204962392696257 -> 8000304505176841628;
+  18043829544564786018 -> 1352120299877738753;
+  18043829544564786018 -> 10115204962392696257;
 }
 `,
 		},
@@ -165,7 +165,7 @@ Path (length = 1):
   StateMachines:
     Name: testStateMachine, Detail: no fields, State: {Name:Name,Type:string,Value:initial}
   QueuedEvents:
-    StateMachine: testStateMachine, Event: EntryEvent, Detail: no fields
+    StateMachine: testStateMachine, Event: entryEvent, Detail: no fields
 `,
 		},
 	}
@@ -222,7 +222,7 @@ func TestKripke_findPathsToViolations(t *testing.T) {
 				_ = k.Solve()
 				return k
 			},
-			expectedPaths: [][]worldID{{12572739617557039328}},
+			expectedPaths: [][]worldID{{8682599965454615616}},
 		},
 		{
 			name: "violation after transition",
@@ -267,7 +267,7 @@ func TestKripke_findPathsToViolations(t *testing.T) {
 				return k
 			},
 			expectedPaths: [][]worldID{
-				{7713272153197044482, 9676541489433535402, 14480809118815488961, 15722512986875548181, 8395799135532667686},
+				{5790322525083387874, 15591947093441390666, 10703074720578030081, 15159594575768829045, 8395799135532667686},
 			},
 		},
 	}
@@ -296,7 +296,7 @@ func TestWorld_label(t *testing.T) {
 				sm := newTestStateMachine(newTestState("test"))
 				return initialWorld(sm)
 			},
-			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:test}\n\nQueuedEvents:\n* testStateMachine<<EntryEvent;no fields",
+			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:test}\n\nQueuedEvents:\n* testStateMachine<<entryEvent;no fields",
 		},
 		{
 			name: "single state machine with initial state",
@@ -304,7 +304,7 @@ func TestWorld_label(t *testing.T) {
 				sm := newTestStateMachine(newTestState("initial"))
 				return initialWorld(sm)
 			},
-			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}\n\nQueuedEvents:\n* testStateMachine<<EntryEvent;no fields",
+			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}\n\nQueuedEvents:\n* testStateMachine<<entryEvent;no fields",
 		},
 		{
 			name: "multiple state machines",
@@ -313,7 +313,7 @@ func TestWorld_label(t *testing.T) {
 				sm2 := newTestStateMachine(newTestState("state2"))
 				return initialWorld(sm1, sm2)
 			},
-			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}\n* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}\n\nQueuedEvents:\n* testStateMachine<<EntryEvent;no fields\n* testStateMachine<<EntryEvent;no fields",
+			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}\n* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}\n\nQueuedEvents:\n* testStateMachine<<entryEvent;no fields\n* testStateMachine<<entryEvent;no fields",
 		},
 	}
 
@@ -369,7 +369,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 					QueuedEvents: []EventJSON{
 						{
 							TargetMachine: "testStateMachine",
-							EventName:     "EntryEvent",
+							EventName:     "entryEvent",
 							Details:       "no fields",
 						},
 					},
@@ -423,7 +423,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 					QueuedEvents: []EventJSON{
 						{
 							TargetMachine: "testStateMachine",
-							EventName:     "EntryEvent",
+							EventName:     "entryEvent",
 							Details:       "no fields",
 						},
 					},
@@ -447,7 +447,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 					QueuedEvents: []EventJSON{
 						{
 							TargetMachine: "testStateMachine",
-							EventName:     "EntryEvent",
+							EventName:     "entryEvent",
 							Details:       "no fields",
 						},
 					},
@@ -471,12 +471,12 @@ func TestKripke_worldsToJSON(t *testing.T) {
 					QueuedEvents: []EventJSON{
 						{
 							TargetMachine: "testStateMachine",
-							EventName:     "EntryEvent",
+							EventName:     "entryEvent",
 							Details:       "no fields",
 						},
 						{
 							TargetMachine: "testStateMachine",
-							EventName:     "EntryEvent",
+							EventName:     "entryEvent",
 							Details:       "no fields",
 						},
 					},

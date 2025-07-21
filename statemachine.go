@@ -4,19 +4,23 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 const noFieldsMessage = "no fields"
 
-type handlerBuilder func(smID string) Handler
+type handlerBuilder func(smID string) handler
 
 type handlerBuilderInfo struct {
 	event   AbstractEvent
 	builder handlerBuilder
 }
 
+// StateMachineSpec defines the specification for a state machine type.
+// It serves as a template for creating multiple instances of the same
+// state machine with consistent behavior and state definitions.
+//
+// Use NewStateMachineSpec to create a specification, then configure it
+// with DefineStates and SetInitialState before creating instances.
 type StateMachineSpec[T AbstractStateMachine] struct {
 	prototype       T
 	states          []AbstractState
@@ -24,6 +28,20 @@ type StateMachineSpec[T AbstractStateMachine] struct {
 	handlerBuilders map[AbstractState][]handlerBuilderInfo
 }
 
+// NewStateMachineSpec creates a new state machine specification with
+// the given prototype. The prototype defines the structure and behavior
+// that all instances created from this spec will share.
+//
+// Parameters:
+//   - prototype: An instance of the state machine type to use as template
+//
+// Returns a specification that can be configured with states and handlers.
+//
+// Example:
+//
+//	spec := NewStateMachineSpec(&MyStateMachine{})
+//	spec.DefineStates(StateA{}, StateB{}).
+//	     SetInitialState(StateA{})
 func NewStateMachineSpec[T AbstractStateMachine](prototype T) *StateMachineSpec[T] {
 	return &StateMachineSpec[T]{
 		prototype:       prototype,
@@ -31,6 +49,17 @@ func NewStateMachineSpec[T AbstractStateMachine](prototype T) *StateMachineSpec[
 	}
 }
 
+// DefineStates sets the valid states for this state machine specification.
+// It configures all provided states and sets up default handlers for each.
+//
+// Parameters:
+//   - states: All valid states that this state machine can be in
+//
+// Returns the spec for method chaining.
+//
+// Example:
+//
+//	spec.DefineStates(IdleState{}, ActiveState{}, ErrorState{})
 func (spec *StateMachineSpec[T]) DefineStates(states ...AbstractState) *StateMachineSpec[T] {
 	spec.states = states
 	for _, state := range states {
@@ -39,29 +68,50 @@ func (spec *StateMachineSpec[T]) DefineStates(states ...AbstractState) *StateMac
 	return spec
 }
 
+// SetInitialState defines which state new instances will start in.
+// The provided state must be one of the states defined in DefineStates.
+//
+// Parameters:
+//   - state: The state that new instances should start in
+//
+// Returns the spec for method chaining.
+//
+// Example:
+//
+//	spec.SetInitialState(IdleState{})
 func (spec *StateMachineSpec[T]) SetInitialState(state AbstractState) *StateMachineSpec[T] {
 	spec.initialState = state
 	return spec
 }
 
 func (spec *StateMachineSpec[T]) setDefaultHandlerBuilders(state AbstractState) {
-	transitionBuilder := func(smID string) Handler {
+	transitionBuilder := func(smID string) handler {
 		return &defaultOnTransitionHandler{}
 	}
 	spec.handlerBuilders[state] = append(spec.handlerBuilders[state], handlerBuilderInfo{
-		event:   &TransitionEvent{},
+		event:   &transitionEvent{},
 		builder: transitionBuilder,
 	})
 
-	haltBuilder := func(smID string) Handler {
+	haltBuilder := func(smID string) handler {
 		return &defaultOnHaltHandler{}
 	}
 	spec.handlerBuilders[state] = append(spec.handlerBuilders[state], handlerBuilderInfo{
-		event:   &HaltEvent{},
+		event:   &haltEvent{},
 		builder: haltBuilder,
 	})
 }
 
+// NewInstance creates a new state machine instance based on this specification.
+// Each instance is independent and starts in the initial state defined by
+// SetInitialState with all handlers configured.
+//
+// Returns a fully configured state machine instance ready for use.
+//
+// Example:
+//
+//	instance1 := spec.NewInstance()
+//	instance2 := spec.NewInstance() // Independent instance
 func (spec *StateMachineSpec[T]) NewInstance() T {
 	instance := cloneStateMachine(spec.prototype).(T)
 	innerSM := getInnerStateMachine(instance)
@@ -79,10 +129,31 @@ func (spec *StateMachineSpec[T]) NewInstance() T {
 	return instance
 }
 
+// AbstractState is the base interface for all states in the state machine.
+// States represent discrete conditions or modes that a state machine can be in.
+//
+// Implementations should embed the State struct to satisfy this interface.
+//
+// Example:
+//
+//	type IdleState struct {
+//	    State
+//	    Timeout int
+//	}
 type AbstractState interface {
 	isState() bool
 }
 
+// State is the base struct that should be embedded in all state implementations.
+// It provides the required methods to satisfy the AbstractState interface
+// and ensures states are properly copyable for the state machine system.
+//
+// Example:
+//
+//	type MyState struct {
+//	    State
+//	    CustomField int
+//	}
 type State struct {
 	// this is needed to make State copyable
 	_ rune
@@ -108,6 +179,24 @@ func sameState(s1, s2 AbstractState) bool {
 	return getStateDetails(s1) == getStateDetails(s2)
 }
 
+// AbstractStateMachine is the base interface for all state machines.
+// State machines encapsulate behavior and state transitions in response to events.
+//
+// Implementations must embed the StateMachine struct. Instances are typically
+// created through NewStateMachineSpec and its methods for proper configuration.
+//
+// Example:
+//
+//	type MyStateMachine struct {
+//	    StateMachine
+//	    CustomData string
+//	}
+//
+//	// Create via specification
+//	spec := NewStateMachineSpec(&MyStateMachine{})
+//	spec.DefineStates(IdleState{}, ActiveState{}).
+//	     SetInitialState(IdleState{})
+//	instance := spec.NewInstance()
 type AbstractStateMachine interface {
 	isStateMachine() bool
 	currentState() AbstractState
@@ -116,6 +205,19 @@ type AbstractStateMachine interface {
 	SetInitialState(state AbstractState)
 }
 
+// StateMachine provides the core infrastructure for state machine behavior.
+// It must be embedded in concrete state machine implementations to provide
+// state management, event handling, and transition capabilities.
+//
+// Do not instantiate directly; instead embed in your state machine types
+// and use NewStateMachineSpec to create properly configured instances.
+//
+// Example:
+//
+//	type MyStateMachine struct {
+//	    StateMachine
+//	    Data string
+//	}
 type StateMachine struct {
 	smID            string
 	EventHandlers   map[AbstractState][]handlerInfo
@@ -158,11 +260,6 @@ func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
 	return smc.Addr().Interface().(AbstractStateMachine)
 }
 
-func (sm *StateMachine) New(_ ...AbstractState) {
-	sm.smID = uuid.New().String()
-	sm.EventHandlers = make(map[AbstractState][]handlerInfo)
-}
-
 func (*StateMachine) isStateMachine() bool {
 	return true
 }
@@ -182,6 +279,17 @@ func (sm *StateMachine) id() string {
 	return sm.smID
 }
 
+// SetInitialState sets the starting state for this state machine instance.
+// This can only be called once per instance, typically during initialization.
+//
+// Parameters:
+//   - state: The state this state machine should start in
+//
+// Panics if the initial state has already been set.
+//
+// Example:
+//
+//	sm.SetInitialState(&IdleState{})
 func (sm *StateMachine) SetInitialState(state AbstractState) {
 	if sm.State != nil {
 		panic("initial state already set")

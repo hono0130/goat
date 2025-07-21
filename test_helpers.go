@@ -28,8 +28,8 @@ func newTestStateMachine(initialState AbstractState, states ...AbstractState) *t
 	return sm
 }
 
-func newTestEnvironment(machines ...*testStateMachine) Environment {
-	env := Environment{
+func newTestEnvironment(machines ...*testStateMachine) environment {
+	env := environment{
 		machines: make(map[string]AbstractStateMachine),
 		queue:    make(map[string][]AbstractEvent),
 	}
@@ -39,6 +39,6 @@ func newTestEnvironment(machines ...*testStateMachine) Environment {
 	return env
 }
 
-func newTestWorld(env Environment) world {
+func newTestWorld(env environment) world {
 	return newWorld(env)
 }

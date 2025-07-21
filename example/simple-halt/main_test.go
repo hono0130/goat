@@ -30,13 +30,13 @@ func TestSimpleHalt(t *testing.T) {
 	// The simple-halt example should have 3 worlds showing the halt process
 	expected := map[string]any{
 		"worlds": []any{
-			// World 1: Just EntryEvent queued (this comes first now due to deterministic sorting)
+			// World 1: Just entryEvent queued (this comes first now due to deterministic sorting)
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -49,28 +49,28 @@ func TestSimpleHalt(t *testing.T) {
 					},
 				},
 			},
-			// World 2: EntryEvent + ExitEvent + HaltEvent + TransitionEvent queued
+			// World 2: entryEvent + exitEvent + haltEvent + transitionEvent queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "ExitEvent",
+						"event_name":     "exitEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "HaltEvent",
+						"event_name":     "haltEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
-						"event_name":     "TransitionEvent",
+						"event_name":     "transitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -83,23 +83,23 @@ func TestSimpleHalt(t *testing.T) {
 					},
 				},
 			},
-			// World 3: EntryEvent + ExitEvent + TransitionEvent queued (no HaltEvent)
+			// World 3: entryEvent + exitEvent + transitionEvent queued (no haltEvent)
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "ExitEvent",
+						"event_name":     "exitEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
-						"event_name":     "TransitionEvent",
+						"event_name":     "transitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},

@@ -8,6 +8,21 @@ import (
 	"time"
 )
 
+// Test performs model checking on state machines with the provided options.
+// It creates a Kripke model, explores all reachable states, checks invariants,
+// and outputs results to stdout.
+//
+// Parameters:
+//   - opts: Configuration options including state machines and invariants
+//
+// Returns an error if model creation, solving, or invariant checking fails.
+//
+// Example:
+//
+//	err := Test(
+//	    WithStateMachines(serverSM, clientSM),
+//	    WithInvariants(safetyInvariant),
+//	)
 func Test(opts ...Option) error {
 	kripke, err := kripkeModel(opts...)
 	if err != nil {
@@ -35,18 +50,56 @@ func Test(opts ...Option) error {
 	return nil
 }
 
+// WithStateMachines configures the test with the specified state machines.
+// These state machines will be included in the model checking process.
+//
+// Parameters:
+//   - sms: The state machines to include in the test
+//
+// Returns an Option that can be passed to Test() or Debug().
+//
+// Example:
+//
+//	WithStateMachines(serverSM, clientSM, proxysSM)
 func WithStateMachines(sms ...AbstractStateMachine) Option {
 	return optionFunc(func(o *options) {
 		o.sms = sms
 	})
 }
 
+// WithInvariants configures the test with the specified invariants.
+// These invariants will be checked during model exploration to detect
+// violations of system properties.
+//
+// Parameters:
+//   - is: The invariants to check during testing
+//
+// Returns an Option that can be passed to Test() or Debug().
+//
+// Example:
+//
+//	WithInvariants(exclusionInvariant, livenessInvariant)
 func WithInvariants(is ...Invariant) Option {
 	return optionFunc(func(o *options) {
 		o.invariants = is
 	})
 }
 
+// Debug performs model checking and outputs detailed JSON results.
+// Unlike Test(), this function provides comprehensive debugging information
+// including all explored worlds and their states in JSON format.
+//
+// Parameters:
+//   - w: Writer to output the JSON results to
+//   - opts: Configuration options including state machines and invariants
+//
+// Returns an error if model creation, solving, or JSON encoding fails.
+//
+// Example:
+//
+//	var buf bytes.Buffer
+//	err := Debug(&buf, WithStateMachines(sm), WithInvariants(inv))
+//	fmt.Println(buf.String()) // JSON output
 func Debug(w io.Writer, opts ...Option) error {
 	kripke, err := kripkeModel(opts...)
 	if err != nil {

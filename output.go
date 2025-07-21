@@ -20,14 +20,14 @@ type kripkeSummary struct {
 
 func (k *kripke) writeDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "digraph {")
-	
+
 	// Sort world IDs for deterministic output
 	var worldIDs []worldID
 	for id := range k.worlds {
 		worldIDs = append(worldIDs, id)
 	}
 	sort.Slice(worldIDs, func(i, j int) bool { return worldIDs[i] < worldIDs[j] })
-	
+
 	for _, id := range worldIDs {
 		wld := k.worlds[id]
 		_, _ = fmt.Fprintf(w, "  %d [ label=\"%s\" ];\n", id, wld.label())
@@ -38,14 +38,14 @@ func (k *kripke) writeDot(w io.Writer) {
 			_, _ = fmt.Fprintf(w, "  %d [ color=red, penwidth=3 ];\n", id)
 		}
 	}
-	
+
 	// Sort accessible edges for deterministic output
 	var fromIDs []worldID
 	for from := range k.accessible {
 		fromIDs = append(fromIDs, from)
 	}
 	sort.Slice(fromIDs, func(i, j int) bool { return fromIDs[i] < fromIDs[j] })
-	
+
 	for _, from := range fromIDs {
 		tos := k.accessible[from]
 		sort.Slice(tos, func(i, j int) bool { return tos[i] < tos[j] })

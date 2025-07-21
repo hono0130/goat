@@ -28,22 +28,22 @@ func (ws worlds) insert(w world) {
 }
 
 type world struct {
-	// id is identifier of the world calculated by the hash of the Environment and the counters.
+	// id is identifier of the world calculated by the hash of the environment and the counters.
 	id worldID
-	// env means "env". env is the Environment of the world in a certain state.
-	env Environment
+	// env means "env". env is the environment of the world in a certain state.
+	env environment
 	// invariantViolation indicates if this world violates any invariants
 	invariantViolation bool
 }
 
-func newWorld(env Environment) world {
+func newWorld(env environment) world {
 	return world{
 		id:  id(env),
 		env: env,
 	}
 }
 
-func id(env Environment) worldID {
+func id(env environment) worldID {
 	strs := make([]string, 0)
 	smIDs := make([]string, 0)
 	for smID := range env.machines {
@@ -104,11 +104,11 @@ func initialWorld(sms ...AbstractStateMachine) world {
 		innerSM.HandlerBuilders = nil
 
 		machines[finalID] = sm
-		queue[finalID] = []AbstractEvent{&EntryEvent{}}
+		queue[finalID] = []AbstractEvent{&entryEvent{}}
 		nameCounts[baseName]++
 	}
 
-	env := Environment{
+	env := environment{
 		machines: machines,
 		queue:    queue,
 	}
@@ -116,7 +116,7 @@ func initialWorld(sms ...AbstractStateMachine) world {
 	return newWorld(env)
 }
 
-func stepLocal(env Environment, smID string) ([]localState, error) {
+func stepLocal(env environment, smID string) ([]localState, error) {
 	ec := env.clone()
 	event, ok := ec.dequeueEvent(smID)
 	if !ok {
@@ -238,6 +238,19 @@ type options struct {
 	invariants []Invariant
 }
 
+// Option is a configuration option for model checking operations.
+// Options are used with Test() and Debug() functions to configure
+// state machines, invariants, and other testing parameters.
+//
+// Use the provided helper functions like WithStateMachines() and
+// WithInvariants() to create options.
+//
+// Example:
+//
+//	Test(
+//	    WithStateMachines(sm1, sm2),
+//	    WithInvariants(invariant1),
+//	)
 type Option interface {
 	apply(*options)
 }
