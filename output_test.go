@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestKripke_WriteAsDot(t *testing.T) {
+func TestKripke_writeDot(t *testing.T) {
 	tests := []struct {
 		name  string
 		setup func() kripke
@@ -114,17 +114,17 @@ QueuedEvents:
 		t.Run(tt.name, func(t *testing.T) {
 			k := tt.setup()
 			var buf bytes.Buffer
-			k.WriteAsDot(&buf)
+			k.writeDot(&buf)
 			got := buf.String()
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("WriteAsDot() mismatch (-want +got):\n%s", diff)
+				t.Errorf("writeDot() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
-func TestKripke_WriteAsLog(t *testing.T) {
+func TestKripke_writeLog(t *testing.T) {
 	tests := []struct {
 		name        string
 		setup       func() kripke
@@ -174,11 +174,11 @@ Path (length = 1):
 		t.Run(tt.name, func(t *testing.T) {
 			k := tt.setup()
 			var buf bytes.Buffer
-			k.WriteAsLog(&buf, tt.description)
+			k.writeLog(&buf, tt.description)
 			got := buf.String()
 
 			if got != tt.want {
-				t.Errorf("WriteAsLog() output mismatch\ngot:\n%s\nwant:\n%s", got, tt.want)
+				t.Errorf("writeLog() output mismatch\ngot:\n%s\nwant:\n%s", got, tt.want)
 			}
 		})
 	}
@@ -329,7 +329,7 @@ func TestWorld_label(t *testing.T) {
 	}
 }
 
-func TestKripke_toWorldsData(t *testing.T) {
+func TestKripke_worldsToJSON(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupKripke    func() kripke
@@ -496,7 +496,7 @@ func TestKripke_toWorldsData(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			k := tt.setupKripke()
-			actualWorlds := k.toWorldsData()
+			actualWorlds := k.worldsToJSON()
 
 			if diff := cmp.Diff(tt.expectedWorlds, actualWorlds); diff != "" {
 				t.Errorf("Worlds data mismatch (-expected +actual):\n%s", diff)
@@ -505,7 +505,7 @@ func TestKripke_toWorldsData(t *testing.T) {
 	}
 }
 
-func TestKripke_Summarize(t *testing.T) {
+func TestKripke_summarize(t *testing.T) {
 	tests := []struct {
 		name            string
 		setupKripke     func() kripke
@@ -608,10 +608,10 @@ func TestKripke_Summarize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			k := tt.setupKripke()
-			summary := k.Summarize(tt.executionTimeMs)
+			summary := k.summarize(tt.executionTimeMs)
 
 			if !cmp.Equal(summary, tt.wantSummary) {
-				t.Errorf("Summarize() mismatch: %v", cmp.Diff(tt.wantSummary, summary))
+				t.Errorf("summarize() mismatch: %v", cmp.Diff(tt.wantSummary, summary))
 			}
 		})
 	}

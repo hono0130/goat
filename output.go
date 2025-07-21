@@ -18,7 +18,7 @@ type kripkeSummary struct {
 	ExecutionTimeMs int64 `json:"execution_time_ms"`
 }
 
-func (k *kripke) WriteAsDot(w io.Writer) {
+func (k *kripke) writeDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "digraph {")
 	
 	// Sort world IDs for deterministic output
@@ -56,7 +56,7 @@ func (k *kripke) WriteAsDot(w io.Writer) {
 	_, _ = fmt.Fprintln(w, "}")
 }
 
-func (k *kripke) WriteAsLog(w io.Writer, invariantDescription string) {
+func (k *kripke) writeLog(w io.Writer, invariantDescription string) {
 	paths := k.findPathsToViolations()
 
 	if len(paths) == 0 {
@@ -186,7 +186,7 @@ type EventJSON struct {
 	Details       string `json:"details"`
 }
 
-func (k *kripke) toWorldsData() []WorldJSON {
+func (k *kripke) worldsToJSON() []WorldJSON {
 	allWorlds := make([]WorldJSON, 0, len(k.worlds))
 	for _, world := range k.worlds {
 		worldJSON := k.worldToJSON(world)
@@ -287,7 +287,7 @@ func (*kripke) worldToJSON(w world) WorldJSON {
 	}
 }
 
-func (k *kripke) Summarize(executionTimeMs int64) *kripkeSummary {
+func (k *kripke) summarize(executionTimeMs int64) *kripkeSummary {
 	summary := &kripkeSummary{
 		TotalWorlds:     len(k.worlds),
 		ExecutionTimeMs: executionTimeMs,

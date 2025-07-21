@@ -8,26 +8,21 @@ import (
 	"time"
 )
 
-// Test creates a Kripke model, solves it, and writes the log output.
-// This is a convenience function that combines kripkeModel, Solve, and WriteAsLog.
 func Test(opts ...Option) error {
-	// Create Kripke model with provided options
 	kripke, err := kripkeModel(opts...)
 	if err != nil {
 		return err
 	}
 
-	// Solve the model to explore all reachable states with timing
 	start := time.Now()
 	if err := kripke.Solve(); err != nil {
 		return err
 	}
 	executionTime := time.Since(start).Milliseconds()
 
-	kripke.WriteAsLog(os.Stdout, "invariant violation")
+	kripke.writeLog(os.Stdout, "invariant violation")
 
-	// Print summary
-	summary := kripke.Summarize(executionTime)
+	summary := kripke.summarize(executionTime)
 	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
 	_, _ = fmt.Fprintf(os.Stdout, "Total Worlds: %d\n", summary.TotalWorlds)
 	if summary.InvariantViolations.Found {
@@ -64,8 +59,8 @@ func Debug(w io.Writer, opts ...Option) error {
 	}
 	executionTime := time.Since(start).Milliseconds()
 
-	worlds := kripke.toWorldsData()
-	summary := kripke.Summarize(executionTime)
+	worlds := kripke.worldsToJSON()
+	summary := kripke.summarize(executionTime)
 
 	result := map[string]any{
 		"worlds":  worlds,
