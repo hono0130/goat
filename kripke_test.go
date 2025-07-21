@@ -8,8 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-const testStateMachineID = "testStateMachine"
-
 func TestKripke_Solve(t *testing.T) {
 	tests := []struct {
 		name    string
