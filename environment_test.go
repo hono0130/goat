@@ -23,8 +23,8 @@ func TestEnvironmentClone(t *testing.T) {
 	cloned := original.clone()
 
 	// Compare environments using cmp
-	if diff := cmp.Diff(original, cloned, cmp.AllowUnexported(Environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{})); diff != "" {
-		t.Errorf("Environment mismatch (-original +cloned):\n%s", diff)
+	if diff := cmp.Diff(original, cloned, cmp.AllowUnexported(environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{})); diff != "" {
+		t.Errorf("environment mismatch (-original +cloned):\n%s", diff)
 	}
 
 	// Verify state machine pointer addresses are different
@@ -104,7 +104,7 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			env := Environment{
+			env := environment{
 				queue: tt.initialQueue,
 			}
 
@@ -157,7 +157,7 @@ func TestSendTo(t *testing.T) {
 			setupSMs: func() ([]*testStateMachine, *testStateMachine) {
 				return []*testStateMachine{newTestStateMachine(newTestState("initial"))}, newTestStateMachine(newTestState("initial"))
 			},
-			event: &HaltEvent{},
+			event: &haltEvent{},
 		},
 	}
 
@@ -193,9 +193,9 @@ func TestGoto(t *testing.T) {
 			initialState: newTestState("initial"),
 			targetState:  newTestState("target"),
 			wantEvents: []AbstractEvent{
-				&ExitEvent{},
-				&TransitionEvent{To: newTestState("target")},
-				&EntryEvent{},
+				&exitEvent{},
+				&transitionEvent{To: newTestState("target")},
+				&entryEvent{},
 			},
 		},
 		{
@@ -203,9 +203,9 @@ func TestGoto(t *testing.T) {
 			initialState: newTestState("same"),
 			targetState:  newTestState("same"),
 			wantEvents: []AbstractEvent{
-				&ExitEvent{},
-				&TransitionEvent{To: newTestState("same")},
-				&EntryEvent{},
+				&exitEvent{},
+				&transitionEvent{To: newTestState("same")},
+				&entryEvent{},
 			},
 		},
 	}
@@ -229,7 +229,7 @@ func TestGoto(t *testing.T) {
 }
 
 func TestHalt(t *testing.T) {
-	t.Run("enqueues HaltEvent to target state machine", func(t *testing.T) {
+	t.Run("enqueues haltEvent to target state machine", func(t *testing.T) {
 		sm := newTestStateMachine(newTestState("initial"))
 		env := newTestEnvironment(sm)
 
@@ -238,7 +238,7 @@ func TestHalt(t *testing.T) {
 		Halt(ctx, sm)
 
 		queue := env.queue[sm.id()]
-		wantEvents := []AbstractEvent{&HaltEvent{}}
+		wantEvents := []AbstractEvent{&haltEvent{}}
 
 		if !cmp.Equal(queue, wantEvents) {
 			t.Errorf("Queue mismatch: %v", cmp.Diff(wantEvents, queue))

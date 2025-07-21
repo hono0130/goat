@@ -24,20 +24,20 @@ func TestCloneEvent(t *testing.T) {
 			original: &testEvent{Value: 42},
 		},
 		{
-			name:     "EntryEvent",
-			original: &EntryEvent{},
+			name:     "entryEvent",
+			original: &entryEvent{},
 		},
 		{
-			name:     "ExitEvent",
-			original: &ExitEvent{},
+			name:     "exitEvent",
+			original: &exitEvent{},
 		},
 		{
-			name:     "HaltEvent",
-			original: &HaltEvent{},
+			name:     "haltEvent",
+			original: &haltEvent{},
 		},
 		{
-			name:     "TransitionEvent",
-			original: &TransitionEvent{To: &testState{Name: "target"}},
+			name:     "transitionEvent",
+			original: &transitionEvent{To: &testState{Name: "target"}},
 		},
 		{
 			name:     "testEventWithPointer",
@@ -80,15 +80,15 @@ func TestSameEvent(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "same EntryEvent types",
-			event1:   &EntryEvent{},
-			event2:   &EntryEvent{},
+			name:     "same entryEvent types",
+			event1:   &entryEvent{},
+			event2:   &entryEvent{},
 			expected: true,
 		},
 		{
 			name:     "different types",
 			event1:   &testEvent{},
-			event2:   &EntryEvent{},
+			event2:   &entryEvent{},
 			expected: false,
 		},
 	}
@@ -115,24 +115,24 @@ func TestGetEventName(t *testing.T) {
 			expected: "testEvent",
 		},
 		{
-			name:     "EntryEvent",
-			event:    &EntryEvent{},
-			expected: "EntryEvent",
+			name:     "entryEvent",
+			event:    &entryEvent{},
+			expected: "entryEvent",
 		},
 		{
-			name:     "ExitEvent",
-			event:    &ExitEvent{},
-			expected: "ExitEvent",
+			name:     "exitEvent",
+			event:    &exitEvent{},
+			expected: "exitEvent",
 		},
 		{
-			name:     "TransitionEvent",
-			event:    &TransitionEvent{},
-			expected: "TransitionEvent",
+			name:     "transitionEvent",
+			event:    &transitionEvent{},
+			expected: "transitionEvent",
 		},
 		{
-			name:     "HaltEvent",
-			event:    &HaltEvent{},
-			expected: "HaltEvent",
+			name:     "haltEvent",
+			event:    &haltEvent{},
+			expected: "haltEvent",
 		},
 	}
 
@@ -158,13 +158,13 @@ func TestGetEventDetails(t *testing.T) {
 			expected: "{Name:Value,Type:int,Value:42}",
 		},
 		{
-			name:     "EntryEvent no fields",
-			event:    &EntryEvent{},
+			name:     "entryEvent no fields",
+			event:    &entryEvent{},
 			expected: noFieldsMessage,
 		},
 		{
-			name:     "TransitionEvent with To state",
-			event:    &TransitionEvent{To: &testState{Name: "target"}},
+			name:     "transitionEvent with To state",
+			event:    &transitionEvent{To: &testState{Name: "target"}},
 			expected: "{Name:To,Type:goat.AbstractState,Value:&{{0} target}}",
 		},
 		{

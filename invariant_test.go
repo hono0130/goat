@@ -53,7 +53,7 @@ func TestInvariantFor(t *testing.T) {
 			setup: func() (*testStateMachine, world) {
 				sm := newTestStateMachine(newTestState("initial"))
 				// Create world without this state machine
-				emptyEnv := Environment{
+				emptyEnv := environment{
 					machines: make(map[string]AbstractStateMachine),
 					queue:    make(map[string][]AbstractEvent),
 				}

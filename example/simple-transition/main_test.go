@@ -34,7 +34,7 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -52,17 +52,17 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "ExitEvent",
+						"event_name":     "exitEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
-						"event_name":     "TransitionEvent",
+						"event_name":     "transitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -80,12 +80,12 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
-						"event_name":     "TransitionEvent",
+						"event_name":     "transitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -103,7 +103,7 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -121,17 +121,17 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "ExitEvent",
+						"event_name":     "exitEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} C}}",
-						"event_name":     "TransitionEvent",
+						"event_name":     "transitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -149,12 +149,12 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 					map[string]any{
 						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} C}}",
-						"event_name":     "TransitionEvent",
+						"event_name":     "transitionEvent",
 						"target_machine": "StateMachine",
 					},
 				},
@@ -172,7 +172,7 @@ func TestSimpleTransition(t *testing.T) {
 				"queued_events": []any{
 					map[string]any{
 						"details":        "no fields",
-						"event_name":     "EntryEvent",
+						"event_name":     "entryEvent",
 						"target_machine": "StateMachine",
 					},
 				},

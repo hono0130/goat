@@ -6,10 +6,26 @@ import (
 	"strings"
 )
 
+// AbstractEvent is the base interface for all events in the state machine.
+// Events trigger state transitions and handler executions, representing
+// things that happen to or within the state machine.
+//
+// Most users will work with the built-in event types (entryEvent, exitEvent, etc.)
+// or create simple custom events for specific scenarios.
 type AbstractEvent interface {
 	isEvent() bool
 }
 
+// Event is the base struct that should be embedded in all event implementations.
+// It provides the required methods to satisfy the AbstractEvent interface
+// and ensures events are properly copyable for the state machine system.
+//
+// Example:
+//
+//	type MyCustomEvent struct {
+//	    Event
+//	    Payload string
+//	}
 type Event struct {
 	// this is needed to make Event copyable
 	_ rune
@@ -19,32 +35,22 @@ func (*Event) isEvent() bool {
 	return true
 }
 
-type (
-	// EntryEvent is an event that is triggered
-	// when a state machine enters a state.
-	EntryEvent struct {
-		Event
-	}
+type entryEvent struct {
+	Event
+}
 
-	// ExitEvent is an event that is triggered
-	// when a state machine exits a state.
-	ExitEvent struct {
-		Event
-	}
+type exitEvent struct {
+	Event
+}
 
-	// TransitionEvent is an event that is triggered
-	// when a state machine transitions from one state to another.
-	TransitionEvent struct {
-		Event
-		To AbstractState
-	}
+type transitionEvent struct {
+	Event
+	To AbstractState
+}
 
-	// HaltEvent is an event that is triggered
-	// when a state machine halts.
-	HaltEvent struct {
-		Event
-	}
-)
+type haltEvent struct {
+	Event
+}
 
 // WARNING: cloneEvent performs shallow copy, so nested pointers are shared
 // This is a potential bug - modifications to nested structs will affect both instances
