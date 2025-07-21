@@ -167,27 +167,27 @@ func (w world) label() string {
 }
 
 // JSON output structures for debugging and testing
-type WorldJSON struct {
-	InvariantViolation bool               `json:"invariant_violation"`
-	StateMachines      []StateMachineJSON `json:"state_machines"`
-	QueuedEvents       []EventJSON        `json:"queued_events"`
+type worldJSON struct {
+	InvariantViolation bool                `json:"invariant_violation"`
+	StateMachines      []stateMachineJSON `json:"state_machines"`
+	QueuedEvents       []eventJSON        `json:"queued_events"`
 }
 
-type StateMachineJSON struct {
+type stateMachineJSON struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
 	State   string `json:"state"`
 	Details string `json:"details"`
 }
 
-type EventJSON struct {
+type eventJSON struct {
 	TargetMachine string `json:"target_machine"`
 	EventName     string `json:"event_name"`
 	Details       string `json:"details"`
 }
 
-func (k *kripke) worldsToJSON() []WorldJSON {
-	allWorlds := make([]WorldJSON, 0, len(k.worlds))
+func (k *kripke) worldsToJSON() []worldJSON {
+	allWorlds := make([]worldJSON, 0, len(k.worlds))
 	for _, world := range k.worlds {
 		worldJSON := k.worldToJSON(world)
 		allWorlds = append(allWorlds, worldJSON)
@@ -200,7 +200,7 @@ func (k *kripke) worldsToJSON() []WorldJSON {
 	return allWorlds
 }
 
-func compareWorlds(a, b WorldJSON) bool {
+func compareWorlds(a, b worldJSON) bool {
 	// First compare by invariant violation (false < true)
 	if a.InvariantViolation != b.InvariantViolation {
 		return !a.InvariantViolation && b.InvariantViolation
@@ -237,17 +237,17 @@ func compareWorlds(a, b WorldJSON) bool {
 	return len(a.QueuedEvents) < len(b.QueuedEvents)
 }
 
-func (*kripke) worldToJSON(w world) WorldJSON {
+func (*kripke) worldToJSON(w world) worldJSON {
 	smIDs := make([]string, 0, len(w.env.machines))
 	for smID := range w.env.machines {
 		smIDs = append(smIDs, smID)
 	}
 	sort.Strings(smIDs)
 
-	stateMachines := make([]StateMachineJSON, 0, len(smIDs))
+	stateMachines := make([]stateMachineJSON, 0, len(smIDs))
 	for _, smID := range smIDs {
 		sm := w.env.machines[smID]
-		stateMachines = append(stateMachines, StateMachineJSON{
+		stateMachines = append(stateMachines, stateMachineJSON{
 			ID:      smID,
 			Name:    getStateMachineName(sm),
 			State:   getStateDetails(sm.currentState()),
@@ -256,11 +256,11 @@ func (*kripke) worldToJSON(w world) WorldJSON {
 	}
 
 	// Collect queued events
-	queuedEvents := make([]EventJSON, 0)
+	queuedEvents := make([]eventJSON, 0)
 	for _, smID := range smIDs {
 		if events, ok := w.env.queue[smID]; ok {
 			for _, event := range events {
-				queuedEvents = append(queuedEvents, EventJSON{
+				queuedEvents = append(queuedEvents, eventJSON{
 					TargetMachine: getStateMachineName(w.env.machines[smID]),
 					EventName:     getEventName(event),
 					Details:       getEventDetails(event),
@@ -280,7 +280,7 @@ func (*kripke) worldToJSON(w world) WorldJSON {
 		return queuedEvents[i].Details < queuedEvents[j].Details
 	})
 
-	return WorldJSON{
+	return worldJSON{
 		InvariantViolation: w.invariantViolation,
 		StateMachines:      stateMachines,
 		QueuedEvents:       queuedEvents,

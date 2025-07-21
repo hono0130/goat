@@ -333,7 +333,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 	tests := []struct {
 		name           string
 		setupKripke    func() kripke
-		expectedWorlds []WorldJSON
+		expectedWorlds []worldJSON
 	}{
 		{
 			name: "single state machine creates multiple worlds",
@@ -343,10 +343,10 @@ func TestKripke_worldsToJSON(t *testing.T) {
 				_ = k.Solve()
 				return k
 			},
-			expectedWorlds: []WorldJSON{
+			expectedWorlds: []worldJSON{
 				{
 					InvariantViolation: false,
-					StateMachines: []StateMachineJSON{
+					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
 							Name:    "testStateMachine",
@@ -354,11 +354,11 @@ func TestKripke_worldsToJSON(t *testing.T) {
 							Details: "no fields",
 						},
 					},
-					QueuedEvents: []EventJSON{},
+					QueuedEvents: []eventJSON{},
 				},
 				{
 					InvariantViolation: false,
-					StateMachines: []StateMachineJSON{
+					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
 							Name:    "testStateMachine",
@@ -366,7 +366,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 							Details: "no fields",
 						},
 					},
-					QueuedEvents: []EventJSON{
+					QueuedEvents: []eventJSON{
 						{
 							TargetMachine: "testStateMachine",
 							EventName:     "entryEvent",
@@ -385,10 +385,10 @@ func TestKripke_worldsToJSON(t *testing.T) {
 				_ = k.Solve()
 				return k
 			},
-			expectedWorlds: []WorldJSON{
+			expectedWorlds: []worldJSON{
 				{
 					InvariantViolation: false,
-					StateMachines: []StateMachineJSON{
+					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
 							Name:    "testStateMachine",
@@ -402,11 +402,11 @@ func TestKripke_worldsToJSON(t *testing.T) {
 							Details: "no fields",
 						},
 					},
-					QueuedEvents: []EventJSON{},
+					QueuedEvents: []eventJSON{},
 				},
 				{
 					InvariantViolation: false,
-					StateMachines: []StateMachineJSON{
+					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
 							Name:    "testStateMachine",
@@ -420,7 +420,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 							Details: "no fields",
 						},
 					},
-					QueuedEvents: []EventJSON{
+					QueuedEvents: []eventJSON{
 						{
 							TargetMachine: "testStateMachine",
 							EventName:     "entryEvent",
@@ -430,7 +430,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 				},
 				{
 					InvariantViolation: false,
-					StateMachines: []StateMachineJSON{
+					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
 							Name:    "testStateMachine",
@@ -444,7 +444,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 							Details: "no fields",
 						},
 					},
-					QueuedEvents: []EventJSON{
+					QueuedEvents: []eventJSON{
 						{
 							TargetMachine: "testStateMachine",
 							EventName:     "entryEvent",
@@ -454,7 +454,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 				},
 				{
 					InvariantViolation: false,
-					StateMachines: []StateMachineJSON{
+					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
 							Name:    "testStateMachine",
@@ -468,7 +468,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 							Details: "no fields",
 						},
 					},
-					QueuedEvents: []EventJSON{
+					QueuedEvents: []eventJSON{
 						{
 							TargetMachine: "testStateMachine",
 							EventName:     "entryEvent",
@@ -489,7 +489,7 @@ func TestKripke_worldsToJSON(t *testing.T) {
 				k, _ := kripkeModel()
 				return k
 			},
-			expectedWorlds: []WorldJSON{},
+			expectedWorlds: []worldJSON{},
 		},
 	}
 
