@@ -30,7 +30,7 @@ func (ws worlds) insert(w world) {
 type world struct {
 	// id is identifier of the world calculated by the hash of the environment and the counters.
 	id worldID
-	// env means "env". env is the environment of the world in a certain state.
+	// env is the environment of the world in a certain state.
 	env environment
 	// invariantViolation indicates if this world violates any invariants
 	invariantViolation bool
