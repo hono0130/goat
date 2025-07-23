@@ -19,10 +19,12 @@ type kripkeSummary struct {
 }
 
 func (k *kripke) writeDot(w io.Writer) {
-	_, _ = fmt.Fprintln(w, "digraph {")
+	var sb strings.Builder
 
-	// Sort world IDs for deterministic output
-	var worldIDs []worldID
+	sb.WriteString("digraph {\n")
+
+	// ---------- Nodes ----------
+	worldIDs := make([]worldID, 0, len(k.worlds))
 	for id := range k.worlds {
 		worldIDs = append(worldIDs, id)
 	}
@@ -30,17 +32,25 @@ func (k *kripke) writeDot(w io.Writer) {
 
 	for _, id := range worldIDs {
 		wld := k.worlds[id]
-		_, _ = fmt.Fprintf(w, "  %d [ label=\"%s\" ];\n", id, wld.label())
+		sb.WriteString("  ")
+		sb.WriteString(fmt.Sprintf("%d", id))
+		sb.WriteString(` [ label="`)
+		sb.WriteString(wld.label())
+		sb.WriteString("\" ];\n")
 		if id == k.initial.id {
-			_, _ = fmt.Fprintf(w, "  %d [ penwidth=5 ];\n", id)
+			sb.WriteString("  ")
+			sb.WriteString(fmt.Sprintf("%d", id))
+			sb.WriteString(" [ penwidth=5 ];\n")
 		}
 		if wld.invariantViolation {
-			_, _ = fmt.Fprintf(w, "  %d [ color=red, penwidth=3 ];\n", id)
+			sb.WriteString("  ")
+			sb.WriteString(fmt.Sprintf("%d", id))
+			sb.WriteString(" [ color=red, penwidth=3 ];\n")
 		}
 	}
 
-	// Sort accessible edges for deterministic output
-	var fromIDs []worldID
+	// ---------- Edges ----------
+	fromIDs := make([]worldID, 0, len(k.accessible))
 	for from := range k.accessible {
 		fromIDs = append(fromIDs, from)
 	}
@@ -49,49 +59,81 @@ func (k *kripke) writeDot(w io.Writer) {
 	for _, from := range fromIDs {
 		tos := k.accessible[from]
 		sort.Slice(tos, func(i, j int) bool { return tos[i] < tos[j] })
+		fromStr := fmt.Sprintf("%d", from)
 		for _, to := range tos {
-			_, _ = fmt.Fprintf(w, "  %d -> %d;\n", from, to)
+			sb.WriteString("  ")
+			sb.WriteString(fromStr)
+			sb.WriteString(" -> ")
+			sb.WriteString(fmt.Sprintf("%d", to))
+			sb.WriteString(";\n")
 		}
 	}
-	_, _ = fmt.Fprintln(w, "}")
+	sb.WriteString("}\n")
+
+	// ------------ Output ------------
+	_, _ = io.WriteString(w, sb.String())
 }
 
 func (k *kripke) writeLog(w io.Writer, invariantDescription string) {
+	var sb strings.Builder
 	paths := k.findPathsToViolations()
 
 	if len(paths) == 0 {
-		_, _ = fmt.Fprintln(w, "No invariant violations found.")
+		sb.WriteString("No invariant violations found.\n")
+		_, _ = io.WriteString(w, sb.String())
 		return
 	}
 
 	for i, path := range paths {
 		if i > 0 {
-			_, _ = fmt.Fprintln(w, "")
+			sb.WriteString("\n")
 		}
 
-		_, _ = fmt.Fprintf(w, "InvariantError:  %s   ✘\n", invariantDescription)
-		_, _ = fmt.Fprintf(w, "Path (length = %d):\n", len(path))
+		sb.WriteString("InvariantError:  ")
+		sb.WriteString(invariantDescription)
+		sb.WriteString("   ✘\n")
+		sb.WriteString("Path (length = ")
+		sb.WriteString(fmt.Sprintf("%d", len(path)))
+		sb.WriteString("):\n")
 
 		for j, worldID := range path {
 			world := k.worlds[worldID]
 
 			if j == len(path)-1 && world.invariantViolation {
-				_, _ = fmt.Fprintf(w, "  [%d] <-- violation here\n", j)
+				sb.WriteString("  [")
+				sb.WriteString(fmt.Sprintf("%d", j))
+				sb.WriteString("] <-- violation here\n")
 			} else {
-				_, _ = fmt.Fprintf(w, "  [%d]\n", j)
+				sb.WriteString("  [")
+				sb.WriteString(fmt.Sprintf("%d", j))
+				sb.WriteString("]\n")
 			}
-			_, _ = fmt.Fprintf(w, "  StateMachines:\n")
+			sb.WriteString("  StateMachines:\n")
 			for _, sm := range world.env.machines {
-				_, _ = fmt.Fprintf(w, "    Name: %s, Detail: %s, State: %s\n", getStateMachineName(sm), getStateMachineDetails(sm), getStateDetails(sm.currentState()))
+				sb.WriteString("    Name: ")
+				sb.WriteString(getStateMachineName(sm))
+				sb.WriteString(", Detail: ")
+				sb.WriteString(getStateMachineDetails(sm))
+				sb.WriteString(", State: ")
+				sb.WriteString(getStateDetails(sm.currentState()))
+				sb.WriteString("\n")
 			}
-			_, _ = fmt.Fprintf(w, "  QueuedEvents:\n")
+			sb.WriteString("  QueuedEvents:\n")
 			for smID, events := range world.env.queue {
 				for _, event := range events {
-					_, _ = fmt.Fprintf(w, "    StateMachine: %s, Event: %s, Detail: %s\n", getStateMachineName(world.env.machines[smID]), getEventName(event), getEventDetails(event))
+					sb.WriteString("    StateMachine: ")
+					sb.WriteString(getStateMachineName(world.env.machines[smID]))
+					sb.WriteString(", Event: ")
+					sb.WriteString(getEventName(event))
+					sb.WriteString(", Detail: ")
+					sb.WriteString(getEventDetails(event))
+					sb.WriteString("\n")
 				}
 			}
 		}
 	}
+
+	_, _ = io.WriteString(w, sb.String())
 }
 
 func (k *kripke) findPathsToViolations() [][]worldID {
