@@ -7,26 +7,26 @@ type environment struct {
 	queue    map[string][]AbstractEvent
 }
 
-type contextKey string
-
-const envKey contextKey = "environment"
-const smKey contextKey = "statemachine"
+type (
+	envKey struct{}
+	smKey struct{}
+)
 
 func withEnvAndSM(env *environment, sm AbstractStateMachine) context.Context {
-	ctx := context.WithValue(context.Background(), envKey, env)
-	ctx = context.WithValue(ctx, smKey, sm)
+	ctx := context.WithValue(context.Background(), envKey{}, env)
+	ctx = context.WithValue(ctx, smKey{}, sm)
 	return ctx
 }
 
 func getEnvFromContext(ctx context.Context) *environment {
-	if env, ok := ctx.Value(envKey).(*environment); ok {
+	if env, ok := ctx.Value(envKey{}).(*environment); ok {
 		return env
 	}
 	panic("environment not found in context")
 }
 
 func getSMFromContext(ctx context.Context) AbstractStateMachine {
-	if sm, ok := ctx.Value(smKey).(AbstractStateMachine); ok {
+	if sm, ok := ctx.Value(smKey{}).(AbstractStateMachine); ok {
 		return sm
 	}
 	panic("StateMachine not found in context")
@@ -88,8 +88,8 @@ func (e *environment) dequeueEvent(smID string) (AbstractEvent, bool) {
 //
 // Example:
 //
-//	OnEntry(spec, IdleState{}, func(ctx context.Context, sm *MyStateMachine) {
-//	    SendTo(ctx, otherSM, Event{Name: "NOTIFY"})
+//	goat.OnEntry(spec, IdleState{}, func(ctx context.Context, sm *MyStateMachine) {
+//	    goat.SendTo(ctx, otherSM, Event{Name: "NOTIFY"})
 //	})
 func SendTo(ctx context.Context, target AbstractStateMachine, event AbstractEvent) {
 	env := getEnvFromContext(ctx)
@@ -107,8 +107,8 @@ func SendTo(ctx context.Context, target AbstractStateMachine, event AbstractEven
 //
 // Example:
 //
-//	OnEvent(spec, IdleState{}, startEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
-//	    Goto(ctx, &ActiveState{Ready: true})
+//	goat.OnEvent(spec, IdleState{}, startEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	    goat.Goto(ctx, &ActiveState{Ready: true})
 //	})
 func Goto(ctx context.Context, state AbstractState) {
 	env := getEnvFromContext(ctx)
@@ -129,8 +129,8 @@ func Goto(ctx context.Context, state AbstractState) {
 //
 // Example:
 //
-//	OnEvent(spec, ActiveState{}, errorEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
-//	    Halt(ctx, sm) // Stop this state machine
+//	goat.OnEvent(spec, ActiveState{}, errorEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	    goat.Halt(ctx, sm) // Stop this state machine
 //	})
 func Halt(ctx context.Context, target AbstractStateMachine) {
 	env := getEnvFromContext(ctx)

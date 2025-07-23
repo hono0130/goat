@@ -166,7 +166,7 @@ func TestSendTo(t *testing.T) {
 			sms, target := tt.setupSMs()
 			env := newTestEnvironment(sms...)
 
-			ctx := context.WithValue(t.Context(), envKey, &env)
+			ctx := context.WithValue(t.Context(), envKey{}, &env)
 
 			SendTo(ctx, target, tt.event)
 
@@ -215,8 +215,8 @@ func TestGoto(t *testing.T) {
 			sm := newTestStateMachine(tt.initialState, tt.targetState)
 			env := newTestEnvironment(sm)
 
-			ctx := context.WithValue(t.Context(), envKey, &env)
-			ctx = context.WithValue(ctx, smKey, sm)
+			ctx := context.WithValue(t.Context(), envKey{}, &env)
+			ctx = context.WithValue(ctx, smKey{}, sm)
 
 			Goto(ctx, tt.targetState)
 
@@ -233,7 +233,7 @@ func TestHalt(t *testing.T) {
 		sm := newTestStateMachine(newTestState("initial"))
 		env := newTestEnvironment(sm)
 
-		ctx := context.WithValue(context.Background(), envKey, &env)
+		ctx := context.WithValue(context.Background(), envKey{}, &env)
 
 		Halt(ctx, sm)
 
