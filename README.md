@@ -38,7 +38,7 @@ func main() {
     stateA := &State{Name: "A"}
     stateB := &State{Name: "B"}
     
-    // Define the states and set initial state
+    // Define the states that the StateMachine can take and set initial state
     spec.
         DefineStates(stateA, stateB).
         SetInitialState(stateA)

@@ -42,9 +42,9 @@ type handler interface {
 //
 // Example:
 //
-//	OnEvent(spec, IdleState{}, Event{Name: "START"}, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	goat.OnEvent(spec, IdleState{}, Event{Name: "START"}, func(ctx context.Context, event Event, sm *MyStateMachine) {
 //	    // Handle start event
-//	    Goto(ctx, &ActiveState{})
+//	    goat.Goto(ctx, &ActiveState{})
 //	})
 func OnEvent[T AbstractEvent, SM AbstractStateMachine](
 	spec *StateMachineSpec[SM],
@@ -76,7 +76,7 @@ func OnEvent[T AbstractEvent, SM AbstractStateMachine](
 //
 // Example:
 //
-//	OnEntry(spec, ActiveState{}, func(ctx context.Context, sm *MyStateMachine) {
+//	goat.OnEntry(spec, ActiveState{}, func(ctx context.Context, sm *MyStateMachine) {
 //	    // Perform initialization when entering active state
 //	    sm.StartTime = time.Now()
 //	})
@@ -108,7 +108,7 @@ func OnEntry[SM AbstractStateMachine](
 //
 // Example:
 //
-//	OnExit(spec, ActiveState{}, func(ctx context.Context, sm *MyStateMachine) {
+//	goat.OnExit(spec, ActiveState{}, func(ctx context.Context, sm *MyStateMachine) {
 //	    // Perform cleanup when exiting active state
 //	    sm.cleanup()
 //	})
@@ -140,7 +140,7 @@ func OnExit[SM AbstractStateMachine](
 //
 // Example:
 //
-//	OnTransition(spec, IdleState{}, func(ctx context.Context, toState AbstractState, sm *MyStateMachine) {
+//	goat.OnTransition(spec, IdleState{}, func(ctx context.Context, toState AbstractState, sm *MyStateMachine) {
 //	    // Log transition from idle to any other state
 //	    log.Printf("Transitioning from Idle to %T", toState)
 //	})
@@ -172,7 +172,7 @@ func OnTransition[SM AbstractStateMachine](
 //
 // Example:
 //
-//	OnHalt(spec, ActiveState{}, func(ctx context.Context, sm *MyStateMachine) {
+//	goat.OnHalt(spec, ActiveState{}, func(ctx context.Context, sm *MyStateMachine) {
 //	    // Perform final cleanup before halting
 //	    sm.saveState()
 //	})
