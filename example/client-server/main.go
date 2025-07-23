@@ -92,7 +92,9 @@ func createClientServerModel() []goat.Option {
 	serverInit := &ServerState{ServerState: ServerStateInit}
 	serverRunning := &ServerState{ServerState: ServerStateRunning}
 
-	serverSpec.DefineStates(serverInit, serverRunning).SetInitialState(serverInit)
+	serverSpec.
+		DefineStates(serverInit, serverRunning).
+		SetInitialState(serverInit)
 
 	goat.OnEntry(serverSpec, serverInit, func(ctx context.Context, server *Server) {
 		goat.Goto(ctx, serverRunning)
@@ -129,7 +131,9 @@ func createClientServerModel() []goat.Option {
 	clientIdle := &ClientState{ClientState: ClientStateIdle}
 	clientWaiting := &ClientState{ClientState: ClientStateWaiting}
 
-	clientSpec.DefineStates(clientIdle, clientWaiting).SetInitialState(clientIdle)
+	clientSpec.
+		DefineStates(clientIdle, clientWaiting).
+		SetInitialState(clientIdle)
 
 	// Define the default handlers for the idle state using new type-safe API
 	goat.OnEntry(clientSpec, clientIdle, func(ctx context.Context, client *Client) {
@@ -142,10 +146,6 @@ func createClientServerModel() []goat.Option {
 		goat.Goto(ctx, clientWaiting)
 	})
 
-	goat.OnEntry(clientSpec, clientIdle, func(ctx context.Context, client *Client) {
-		client.Mut = 100000
-		goat.Goto(ctx, clientWaiting)
-	})
 
 	// Define the default handlers for the waiting state using new type-safe API
 	goat.OnEvent(clientSpec, clientWaiting, &eCheckMenuExistenceResponse{},
