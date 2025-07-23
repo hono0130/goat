@@ -38,7 +38,10 @@ func main() {
     stateA := &State{Name: "A"}
     stateB := &State{Name: "B"}
     
-    spec.DefineStates(stateA, stateB).SetInitialState(stateA)
+    // Define the states and set initial state
+    spec.
+        DefineStates(stateA, stateB).
+        SetInitialState(stateA)
     
     // Define behavior
     goat.OnEntry(spec, stateA, func(ctx context.Context, sm *MyStateMachine) {
