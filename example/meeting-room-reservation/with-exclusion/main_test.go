@@ -37,7 +37,6 @@ func TestMeetingRoomReservationWithExclusion(t *testing.T) {
 		},
 	}
 
-	// Use IgnoreFields to ignore execution_time_ms which varies between runs
 	ignoreOpts := cmpopts.IgnoreMapEntries(func(k string, _ any) bool {
 		return k == "execution_time_ms"
 	})

@@ -42,7 +42,6 @@ func TestInvariantFor(t *testing.T) {
 				return sm, newTestWorld(newTestEnvironment(sm))
 			},
 			checkFunc: func(sm *testStateMachine) bool {
-				// Access the embedded StateMachine
 				currentState := sm.currentState().(*testState)
 				return currentState.Name == "initial"
 			},
@@ -52,7 +51,6 @@ func TestInvariantFor(t *testing.T) {
 			name: "non-existent state machine",
 			setup: func() (*testStateMachine, world) {
 				sm := newTestStateMachine(newTestState("initial"))
-				// Create world without this state machine
 				emptyEnv := environment{
 					machines: make(map[string]AbstractStateMachine),
 					queue:    make(map[string][]AbstractEvent),

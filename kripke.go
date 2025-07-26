@@ -28,11 +28,8 @@ func (ws worlds) insert(w world) {
 }
 
 type world struct {
-	// id is identifier of the world calculated by the hash of the environment and the counters.
 	id worldID
-	// env is the environment of the world in a certain state.
 	env environment
-	// invariantViolation indicates if this world violates any invariants
 	invariantViolation bool
 }
 
@@ -79,10 +76,8 @@ func initialWorld(sms ...AbstractStateMachine) world {
 
 		var finalID string
 		if count == 0 {
-			// First instance: no suffix
 			finalID = baseName
 		} else {
-			// Subsequent instances: add suffix starting from _1
 			finalID = baseName + "_" + strconv.Itoa(count)
 		}
 
@@ -90,7 +85,6 @@ func initialWorld(sms ...AbstractStateMachine) world {
 		innerSM := getInnerStateMachine(sm)
 		innerSM.smID = finalID
 
-		// Build EventHandlers with the correct ID
 		innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
 		for state, builders := range innerSM.HandlerBuilders {
 			for _, builderInfo := range builders {

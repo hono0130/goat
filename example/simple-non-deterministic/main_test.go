@@ -29,7 +29,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 
 	expected := map[string]any{
 		"worlds": []any{
-			// World 1: A state, entryEvent queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -48,7 +47,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 2: A state, entryEvent + exitEvent + transitionEvent(B) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -77,7 +75,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 3: A state, entryEvent + exitEvent + transitionEvent(C) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -106,7 +103,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 4: A state, entryEvent + transitionEvent(B) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -130,7 +126,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 5: A state, entryEvent + transitionEvent(C) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -154,7 +149,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 6: B state, entryEvent queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -173,7 +167,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 7: B state, entryEvent + exitEvent + transitionEvent(A) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -202,7 +195,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 8: B state, entryEvent + exitEvent + transitionEvent(C) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -231,7 +223,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 9: B state, entryEvent + transitionEvent(A) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -255,7 +246,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 10: B state, entryEvent + transitionEvent(C) queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -279,7 +269,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 11: C state, no events queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events":       []any{},
@@ -292,7 +281,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 					},
 				},
 			},
-			// World 12: C state, entryEvent queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -315,7 +303,6 @@ func TestSimpleNonDeterministic(t *testing.T) {
 	}
 
 	cmpOpts := cmp.Options{
-		// Ignore "summary" key since we only want to test worlds data
 		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)
 			return ok && key == "summary"

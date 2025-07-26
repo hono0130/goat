@@ -135,7 +135,6 @@ func createClientServerModel() []goat.Option {
 		DefineStates(clientIdle, clientWaiting).
 		SetInitialState(clientIdle)
 
-	// Define the default handlers for the idle state using new type-safe API
 	goat.OnEntry(clientSpec, clientIdle, func(ctx context.Context, client *Client) {
 		reqCtx := Context{RequestID: randomRequestID()}
 		goat.SendTo(ctx, client.Server, &eCheckMenuExistenceRequest{
@@ -146,8 +145,6 @@ func createClientServerModel() []goat.Option {
 		goat.Goto(ctx, clientWaiting)
 	})
 
-
-	// Define the default handlers for the waiting state using new type-safe API
 	goat.OnEvent(clientSpec, clientWaiting, &eCheckMenuExistenceResponse{},
 		func(ctx context.Context, event *eCheckMenuExistenceResponse, client *Client) {
 			if event.Err {

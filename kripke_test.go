@@ -23,11 +23,9 @@ func TestKripke_Solve(t *testing.T) {
 				return k
 			},
 			want: func() kripke {
-				// Create the expected kripke structure
 				sm := newTestStateMachine(newTestState("initial"))
 				getInnerStateMachine(sm).smID = testStateMachineID
 
-				// Initial world with entryEvent in queue
 				initialWorld := newWorld(environment{
 					machines: map[string]AbstractStateMachine{
 						testStateMachineID: sm,
@@ -37,7 +35,6 @@ func TestKripke_Solve(t *testing.T) {
 					},
 				})
 
-				// World after processing entryEvent (queue becomes empty)
 				processedWorld := newWorld(environment{
 					machines: map[string]AbstractStateMachine{
 						testStateMachineID: sm,
@@ -77,7 +74,6 @@ func TestKripke_Solve(t *testing.T) {
 				sm := newTestStateMachine(newTestState("initial"))
 				getInnerStateMachine(sm).smID = testStateMachineID
 
-				// Initial world with entryEvent in queue (invariantViolation not set on initial)
 				initialWorld := newWorld(environment{
 					machines: map[string]AbstractStateMachine{
 						testStateMachineID: sm,
@@ -86,10 +82,8 @@ func TestKripke_Solve(t *testing.T) {
 						testStateMachineID: {&entryEvent{}},
 					},
 				})
-				// k.initial remains unchanged by Solve()
 				initialWorld.invariantViolation = false
 
-				// World after processing entryEvent with invariant violation
 				processedWorld := newWorld(environment{
 					machines: map[string]AbstractStateMachine{
 						testStateMachineID: sm,
@@ -100,16 +94,15 @@ func TestKripke_Solve(t *testing.T) {
 				})
 				processedWorld.invariantViolation = true
 
-				// Copy initial world for worlds map (this one gets marked with violation)
 				initialWorldInMap := initialWorld
 				initialWorldInMap.invariantViolation = true
 
 				return kripke{
 					worlds: worlds{
-						initialWorld.id:   initialWorldInMap, // This one has violation
+						initialWorld.id:   initialWorldInMap,
 						processedWorld.id: processedWorld,
 					},
-					initial: initialWorld, // This one stays without violation
+					initial: initialWorld,
 					accessible: map[worldID][]worldID{
 						initialWorld.id:   {processedWorld.id},
 						processedWorld.id: {},
@@ -142,7 +135,6 @@ func TestKripke_Solve(t *testing.T) {
 				}
 			}
 
-			// Verify that initial world is explored
 			if !k.worlds.member(k.initial) {
 				t.Error("Initial world should be in explored worlds")
 			}
@@ -303,16 +295,13 @@ func TestInitialWorld(t *testing.T) {
 				t.Errorf("initialWorld() mismatch (-want +got):\n%s", diff)
 			}
 
-			// Additional verification for EventHandlers and HandlerBuilders
 			for smID, sm := range got.env.machines {
 				innerSM := getInnerStateMachine(sm)
 
-				// HandlerBuilders should be nil after initialization
 				if innerSM.HandlerBuilders != nil {
 					t.Errorf("StateMachine %q: HandlerBuilders should be nil after initialization, got %v", smID, innerSM.HandlerBuilders)
 				}
 
-				// EventHandlers should be initialized (not nil map)
 				if innerSM.EventHandlers == nil {
 					t.Errorf("StateMachine %q: EventHandlers should be initialized, got nil", smID)
 				}
@@ -321,7 +310,6 @@ func TestInitialWorld(t *testing.T) {
 	}
 }
 
-// Test helper to create a handler that returns an error
 type errorHandler struct{}
 
 func (errorHandler) handle(_ environment, _ string, _ AbstractEvent) ([]localState, error) {
@@ -343,7 +331,6 @@ func TestStepGlobal(t *testing.T) {
 				innerSM := getInnerStateMachine(sm)
 				innerSM.smID = testStateMachineID
 
-				// Add a handler that returns an error
 				innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
 				innerSM.EventHandlers[sm.currentState()] = []handlerInfo{
 					{
@@ -378,13 +365,13 @@ func TestStepGlobal(t *testing.T) {
 						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						testStateMachineID: {}, // Empty queue
+						testStateMachineID: {},
 					},
 				}
 				return newWorld(env)
 			},
 			want: func() []world {
-				return []world{} // Empty slice when no events to process
+				return []world{}
 			},
 			wantErr: false,
 		},
@@ -412,13 +399,12 @@ func TestStepGlobal(t *testing.T) {
 				innerSM.smID = testStateMachineID
 				innerSM.EventHandlers = make(map[AbstractState][]handlerInfo)
 
-				// Expected world after processing entryEvent (queue becomes empty)
 				expectedEnv := environment{
 					machines: map[string]AbstractStateMachine{
 						testStateMachineID: sm,
 					},
 					queue: map[string][]AbstractEvent{
-						testStateMachineID: {}, // Queue becomes empty after processing
+						testStateMachineID: {},
 					},
 				}
 				return []world{newWorld(expectedEnv)}

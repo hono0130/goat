@@ -179,7 +179,6 @@ func (w world) label() string {
 	for _, sm := range w.env.machines {
 		smIDs = append(smIDs, sm.id())
 	}
-	// StateMachine名でソート（UUIDではなく）
 	sort.Slice(smIDs, func(i, j int) bool {
 		nameI := getStateMachineName(w.env.machines[smIDs[i]])
 		nameJ := getStateMachineName(w.env.machines[smIDs[j]])
@@ -190,7 +189,7 @@ func (w world) label() string {
 	})
 	for _, name := range smIDs {
 		sm := w.env.machines[name]
-		strs = append(strs, fmt.Sprintf("* %s=%s;%s", getStateMachineName(sm), getStateMachineDetails(sm), getStateDetails(sm.currentState())))
+		strs = append(strs, fmt.Sprintf("%s = %s; State: %s", getStateMachineName(sm), getStateMachineDetails(sm), getStateDetails(sm.currentState())))
 	}
 
 	strs = append(strs, "\nQueuedEvents:")
@@ -202,13 +201,16 @@ func (w world) label() string {
 	for _, smID := range smIDs {
 		for _, e := range w.env.queue[smID] {
 			sm := w.env.machines[smID]
-			strs = append(strs, fmt.Sprintf("* %s<<%s;%s", getStateMachineName(sm), getEventName(e), getEventDetails(e)))
+			if getEventDetails(e) == noFieldsMessage {
+				strs = append(strs, fmt.Sprintf("%s << %s;", getStateMachineName(sm), getEventName(e)))
+			} else {
+				strs = append(strs, fmt.Sprintf("%s << %s; %s", getStateMachineName(sm), getEventName(e), getEventDetails(e)))
+			}
 		}
 	}
 	return strings.Join(strs, "\n")
 }
 
-// JSON output structures for debugging and testing
 type worldJSON struct {
 	InvariantViolation bool               `json:"invariant_violation"`
 	StateMachines      []stateMachineJSON `json:"state_machines"`
@@ -243,12 +245,10 @@ func (k *kripke) worldsToJSON() []worldJSON {
 }
 
 func compareWorlds(a, b worldJSON) bool {
-	// First compare by invariant violation (false < true)
 	if a.InvariantViolation != b.InvariantViolation {
 		return !a.InvariantViolation && b.InvariantViolation
 	}
 
-	// Compare by state machines
 	for i := 0; i < len(a.StateMachines) && i < len(b.StateMachines); i++ {
 		if a.StateMachines[i].ID != b.StateMachines[i].ID {
 			return a.StateMachines[i].ID < b.StateMachines[i].ID
@@ -264,7 +264,6 @@ func compareWorlds(a, b worldJSON) bool {
 		return len(a.StateMachines) < len(b.StateMachines)
 	}
 
-	// Compare by queued events
 	for i := 0; i < len(a.QueuedEvents) && i < len(b.QueuedEvents); i++ {
 		if a.QueuedEvents[i].TargetMachine != b.QueuedEvents[i].TargetMachine {
 			return a.QueuedEvents[i].TargetMachine < b.QueuedEvents[i].TargetMachine
@@ -297,7 +296,6 @@ func (*kripke) worldToJSON(w world) worldJSON {
 		})
 	}
 
-	// Collect queued events
 	queuedEvents := make([]eventJSON, 0)
 	for _, smID := range smIDs {
 		if events, ok := w.env.queue[smID]; ok {
@@ -311,7 +309,6 @@ func (*kripke) worldToJSON(w world) worldJSON {
 		}
 	}
 
-	// Sort queued events deterministically by target machine, then event name, then details
 	sort.Slice(queuedEvents, func(i, j int) bool {
 		if queuedEvents[i].TargetMachine != queuedEvents[j].TargetMachine {
 			return queuedEvents[i].TargetMachine < queuedEvents[j].TargetMachine

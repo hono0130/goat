@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/goatx/goat"
 )
@@ -88,7 +87,7 @@ type ServerStateMachine struct {
 type DBStateMachine struct {
 	goat.StateMachine
 	Reservations []Reservation
-	LockedRooms  map[int]int // Map of room ID to client ID that locked it
+	LockedRooms  map[int]int
 }
 
 type ClientStateMachine struct {
@@ -105,10 +104,8 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 
 	dbSpec.DefineStates(dbIdle).SetInitialState(dbIdle)
 
-	// DBのハンドラーをSpecに登録
 	goat.OnEvent(dbSpec, dbIdle, &DBSelectEvent{},
 		func(ctx context.Context, event *DBSelectEvent, db *DBStateMachine) {
-			// Check if room is already reserved
 			isReserved := false
 			for _, res := range db.Reservations {
 				if res.RoomID == event.RoomID {
@@ -117,10 +114,8 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 				}
 			}
 
-			// Try to acquire lock on the room
 			isLocked := false
 			if _, exists := db.LockedRooms[event.RoomID]; !exists {
-				// Room is not locked, acquire lock
 				db.LockedRooms[event.RoomID] = event.ClientID
 				isLocked = true
 			}
@@ -137,7 +132,6 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 
 	goat.OnEvent(dbSpec, dbIdle, &DBUpdateEvent{},
 		func(ctx context.Context, event *DBUpdateEvent, db *DBStateMachine) {
-			// Check if this client has the lock
 			hasLock := false
 			if clientID, exists := db.LockedRooms[event.RoomID]; exists && clientID == event.ClientID {
 				hasLock = true
@@ -145,7 +139,6 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 
 			succeeded := false
 			if hasLock {
-				// Room is available, make reservation
 				db.Reservations = append(db.Reservations, Reservation{
 					RoomID:   event.RoomID,
 					ClientID: event.ClientID,
@@ -173,7 +166,6 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 		func(ctx context.Context, event *ReservationRequestEvent, server *ServerStateMachine) {
 			server.CurrentRequest = event
 
-			// First, SELECT FOR UPDATE to check and lock the room
 			selectEvent := &DBSelectEvent{
 				RoomID:   event.RoomID,
 				ClientID: event.ClientID,
@@ -191,9 +183,7 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 				return
 			}
 
-			// Only proceed if we got the lock
 			if event.IsLocked {
-				// Only update if room is not already reserved
 				if !event.IsReserved {
 					updateEvent := &DBUpdateEvent{
 						RoomID:   server.CurrentRequest.RoomID,
@@ -203,7 +193,6 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 
 					goat.SendTo(ctx, server.DB, updateEvent)
 				} else {
-					// Room is already reserved, send failure to client
 					resultEvent := &ReservationResultEvent{
 						RoomID:    server.CurrentRequest.RoomID,
 						ClientID:  server.CurrentRequest.ClientID,
@@ -215,7 +204,6 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 					goat.Goto(ctx, serverIdle)
 				}
 			} else {
-				// Failed to get lock, send failure to client
 				resultEvent := &ReservationResultEvent{
 					RoomID:    server.CurrentRequest.RoomID,
 					ClientID:  server.CurrentRequest.ClientID,
@@ -308,7 +296,6 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 	opts := []goat.Option{
 		goat.WithStateMachines(server1, server2, db, client1, client2),
 		goat.WithInvariants(
-			// Invariant: A room should not be reserved by multiple clients
 			goat.NewInvariant(db, func(db *DBStateMachine) bool {
 				roomClients := make(map[int]map[int]bool)
 				for _, res := range db.Reservations {
@@ -333,9 +320,6 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 }
 
 func main() {
-	fmt.Println("Meeting Room Reservation System (With Proper Exclusion Control)")
-	fmt.Println("Simulating: SELECT FOR UPDATE → UPDATE (with locking)")
-
 	opts := createMeetingRoomWithExclusionModel()
 	err := goat.Test(opts...)
 	if err != nil {

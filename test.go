@@ -124,3 +124,37 @@ func Debug(w io.Writer, opts ...Option) error {
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(result)
 }
+
+// WriteDot performs model checking and outputs the state graph in DOT format.
+// The output can be used with Graphviz to visualize the state space and
+// identify paths to invariant violations.
+//
+// Parameters:
+//   - w: Writer to output the DOT graph to
+//   - opts: Configuration options including state machines and invariants
+//
+// Returns an error if model creation or solving fails.
+//
+// Example:
+//
+//	var file *os.File
+//	file, err := os.Create("model.dot")
+//	if err != nil {
+//	    return err
+//	}
+//	defer file.Close()
+//	err = WriteDot(file, WithStateMachines(sm), WithInvariants(inv))
+func WriteDot(w io.Writer, opts ...Option) error {
+	kripke, err := kripkeModel(opts...)
+	if err != nil {
+		return err
+	}
+
+	if err := kripke.Solve(); err != nil {
+		return err
+	}
+
+	kripke.writeDot(w)
+	return nil
+}
+

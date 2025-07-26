@@ -1,735 +1,394 @@
 digraph {
-  13270253407067552092 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+  138821825980334719 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  2247962776001720974 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:" ];
-  17125896953682703864 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << exitEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  401141514058476269 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  12769714975550661387 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  1825290065984990417 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
-  2262960506717737900 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Server << exitEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  2355430626164671222 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  10378374158286532696 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
+  3197521592316798409 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  14212440989798735894 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  3258851996226203688 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
-  8486588794742251180 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} idle}}
+Client << entryEvent;" ];
+  3312302133326675589 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
-  15122693326645042174 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  3396331165331157002 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  10955894306196126151 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  4213686886374431953 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  10876107949981524887 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  4302610984728894949 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields" ];
-  5187350663121645513 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
+  4360015657508549988 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  5705623756962212968 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Server << entryEvent;" ];
+  4360015657508549988 [ penwidth=5 ];
+  4862022627315240773 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  3300986927501279113 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
+  5953861120366630302 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  15110575041944990624 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} idle}}
+Client << entryEvent;" ];
+  6042018300661336143 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
-  6842691507350894006 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  6206824213487838900 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  11452641978432877080 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  6567461229433201766 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields" ];
-  8746478067205758173 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
+  6710426639386497095 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  8397106907137771349 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  6772727286654135739 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  17652835453177848270 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << entryEvent;
+Server << exitEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;" ];
+  6906079918079896203 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  11890760094202140744 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Server << exitEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  6964014102507799921 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields" ];
-  10537112193798594021 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  7132660984072337619 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Server<<EntryEvent;no fields" ];
-  13192956556468708367 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
+  7791175246178380023 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  8734661350681615393 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << entryEvent;" ];
+  9290656168165749569 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  211061964053525124 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << entryEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;" ];
+  9419280898220082355 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  211061964053525124 [ penwidth=5 ];
-  12314001054103867893 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
+  9420132927983824569 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  5452006740664250399 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
+  9528014578725449293 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  13784089048001872793 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
+  10567139723654883687 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
-  1322334742235163554 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  11301831815238885342 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  14812280586208068906 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
+  12145328724428173728 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  9066339266546853647 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  12581240219791156593 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  10161259420846093175 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  13055225600620996571 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
-  10308985220681304723 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  13341425111306987599 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
-  16749168848575532870 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  13515414778991870773 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
-  13584878084079810891 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << exitEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  13535066360782721927 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  14435260971899473801 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  5077989532565790589 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  210067483861618308 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  15315371389232750232 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  893520073484879615 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Server << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} running}}
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  13691579057332464584 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:" ];
-  8149422518027469917 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+  13949449678765974108 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  18006358455175890090 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
+  14400896213131815931 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
-  13351448607128347162 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
+  16587860134009348011 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} idle}}
-* Client<<EntryEvent;no fields" ];
-  344059908541629558 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
+Client << exitEvent;
+Client << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
+Client << entryEvent;
+Client << eCheckMenuExistenceResponse; {Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
+  17025216394432687957 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:idle}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:running}
 
 QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  1472368915786791961 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
+Client << entryEvent;
+Server << entryEvent;" ];
+  17297247673954225950 [ label="StateMachines:
+Client = {Name:Mut,Type:int,Value:0}; State: {Name:ClientState,Type:main.ClientStateType,Value:waiting}
+Server = no fields; State: {Name:ServerState,Type:main.ServerStateType,Value:init}
 
 QueuedEvents:
-* Client<<EntryEvent;no fields" ];
-  8752088510527979939 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}" ];
-  9587142439539259641 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  16809059191800785343 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  3307045744808947021 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  3903326857509442521 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  1500819247428234147 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} idle}}
-* Client<<EntryEvent;no fields" ];
-  6639275849536547480 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  4823420575276161572 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields" ];
-  15509740200332399126 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  3647997737966989367 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields" ];
-  605191910585482995 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  6545387235486447365 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  5069490606919258307 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  1342801765549785958 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  10722972359809729903 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields" ];
-  17501030929582093306 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  3673053236264188461 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  5345002523413864115 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Server<<EntryEvent;no fields" ];
-  479401847043962201 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  3186864522525344724 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  12965783330895835580 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<ExitEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  5979951301113841190 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  9696375896023040598 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}" ];
-  6008298869067041065 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Client<<eCheckMenuExistenceResponse;{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}" ];
-  8629286697148946859 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  730568226979449146 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Server<<EntryEvent;no fields" ];
-  8293373576128815019 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:waiting}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  11194126566019234932 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:100000};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields" ];
-  10230736243355240728 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:running}
-
-QueuedEvents:
-* Client<<ExitEvent;no fields
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<EntryEvent;no fields" ];
-  5517723499732083984 [ label="StateMachines:
-* Client={Name:Mut,Type:int,Value:0};{Name:ClientState,Type:main.ClientStateType,Value:idle}
-* Server=no fields;{Name:ServerState,Type:main.ServerStateType,Value:init}
-
-QueuedEvents:
-* Client<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} waiting}}
-* Client<<EntryEvent;no fields
-* Server<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} running}}
-* Server<<EntryEvent;no fields
-* Server<<eCheckMenuExistenceRequest;{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
-  15315371389232750232 -> 10955894306196126151;
-  15315371389232750232 -> 479401847043962201;
-  10955894306196126151 -> 17125896953682703864;
-  6842691507350894006 -> 10378374158286532696;
-  11452641978432877080 -> 3647997737966989367;
-  8397106907137771349 -> 1342801765549785958;
-  8397106907137771349 -> 12965783330895835580;
-  3903326857509442521 -> 3673053236264188461;
-  3903326857509442521 -> 5705623756962212968;
-  13784089048001872793 -> 893520073484879615;
-  13584878084079810891 -> 6842691507350894006;
-  13584878084079810891 -> 8149422518027469917;
-  8629286697148946859 -> 1322334742235163554;
-  8629286697148946859 -> 15122693326645042174;
-  605191910585482995 -> 11194126566019234932;
-  605191910585482995 -> 8746478067205758173;
-  8746478067205758173 -> 10876107949981524887;
-  8746478067205758173 -> 210067483861618308;
-  17125896953682703864 -> 6545387235486447365;
-  8752088510527979939 -> 15110575041944990624;
-  16749168848575532870 -> 10161259420846093175;
-  10722972359809729903 -> 11890760094202140744;
-  10876107949981524887 -> 11452641978432877080;
-  1342801765549785958 -> 479401847043962201;
-  1342801765549785958 -> 16809059191800785343;
-  10537112193798594021 -> 893520073484879615;
-  10378374158286532696 -> 5979951301113841190;
-  6008298869067041065 -> 18006358455175890090;
-  12769714975550661387 -> 16749168848575532870;
-  3647997737966989367 -> 2247962776001720974;
-  211061964053525124 -> 5069490606919258307;
-  211061964053525124 -> 13270253407067552092;
-  211061964053525124 -> 344059908541629558;
-  5345002523413864115 -> 14812280586208068906;
-  3307045744808947021 -> 17652835453177848270;
-  3307045744808947021 -> 12314001054103867893;
-  9066339266546853647 -> 10537112193798594021;
-  8149422518027469917 -> 10378374158286532696;
-  8149422518027469917 -> 3300986927501279113;
-  10161259420846093175 -> 9696375896023040598;
-  8293373576128815019 -> 2262960506717737900;
-  8293373576128815019 -> 5077989532565790589;
-  8734661350681615393 -> 1322334742235163554;
-  8734661350681615393 -> 605191910585482995;
-  479401847043962201 -> 17125896953682703864;
-  479401847043962201 -> 6639275849536547480;
-  17501030929582093306 -> 10230736243355240728;
-  17501030929582093306 -> 3307045744808947021;
-  10230736243355240728 -> 4823420575276161572;
-  10230736243355240728 -> 12314001054103867893;
-  4823420575276161572 -> 10722972359809729903;
-  10308985220681304723 -> 13351448607128347162;
-  13351448607128347162 -> 1500819247428234147;
-  5705623756962212968 -> 15509740200332399126;
-  5705623756962212968 -> 8149422518027469917;
-  1500819247428234147 -> 1472368915786791961;
-  5517723499732083984 -> 13584878084079810891;
-  5517723499732083984 -> 5705623756962212968;
-  14812280586208068906 -> 2262960506717737900;
-  11194126566019234932 -> 8293373576128815019;
-  11194126566019234932 -> 210067483861618308;
-  11890760094202140744 -> 893520073484879615;
-  12965783330895835580 -> 17501030929582093306;
-  12965783330895835580 -> 16809059191800785343;
-  9696375896023040598 -> 893520073484879615;
-  8486588794742251180 -> 8752088510527979939;
-  1472368915786791961 -> 3673053236264188461;
-  1472368915786791961 -> 10876107949981524887;
-  14212440989798735894 -> 6008298869067041065;
-  3186864522525344724 -> 10537112193798594021;
-  3186864522525344724 -> 11890760094202140744;
-  5452006740664250399 -> 1472368915786791961;
-  5452006740664250399 -> 3903326857509442521;
-  5452006740664250399 -> 8746478067205758173;
-  3673053236264188461 -> 15509740200332399126;
-  3673053236264188461 -> 14212440989798735894;
-  3673053236264188461 -> 12769714975550661387;
-  3673053236264188461 -> 8486588794742251180;
-  2262960506717737900 -> 730568226979449146;
-  210067483861618308 -> 5077989532565790589;
-  210067483861618308 -> 11452641978432877080;
-  9587142439539259641 -> 15315371389232750232;
-  9587142439539259641 -> 1342801765549785958;
-  5979951301113841190 -> 13784089048001872793;
-  5979951301113841190 -> 9696375896023040598;
-  5979951301113841190 -> 10308985220681304723;
-  13192956556468708367 -> 3903326857509442521;
-  13192956556468708367 -> 5517723499732083984;
-  3300986927501279113 -> 5979951301113841190;
-  3300986927501279113 -> 18006358455175890090;
-  3300986927501279113 -> 10161259420846093175;
-  3300986927501279113 -> 15110575041944990624;
-  5077989532565790589 -> 730568226979449146;
-  5077989532565790589 -> 3647997737966989367;
-  344059908541629558 -> 8734661350681615393;
-  344059908541629558 -> 8629286697148946859;
-  14435260971899473801 -> 8293373576128815019;
-  14435260971899473801 -> 14812280586208068906;
-  6639275849536547480 -> 6545387235486447365;
-  6639275849536547480 -> 17652835453177848270;
-  18006358455175890090 -> 13784089048001872793;
-  1322334742235163554 -> 14435260971899473801;
-  1322334742235163554 -> 11194126566019234932;
-  5069490606919258307 -> 5187350663121645513;
-  5069490606919258307 -> 8397106907137771349;
-  5069490606919258307 -> 8734661350681615393;
-  15122693326645042174 -> 14435260971899473801;
-  15122693326645042174 -> 5345002523413864115;
-  730568226979449146 -> 2247962776001720974;
-  13270253407067552092 -> 8397106907137771349;
-  13270253407067552092 -> 9587142439539259641;
-  15110575041944990624 -> 10308985220681304723;
-  12314001054103867893 -> 3186864522525344724;
-  12314001054103867893 -> 10722972359809729903;
-  6545387235486447365 -> 9066339266546853647;
-  5187350663121645513 -> 13192956556468708367;
-  5187350663121645513 -> 605191910585482995;
-  5187350663121645513 -> 5452006740664250399;
-  15509740200332399126 -> 6008298869067041065;
-  15509740200332399126 -> 16749168848575532870;
-  15509740200332399126 -> 8752088510527979939;
-  15509740200332399126 -> 3300986927501279113;
-  16809059191800785343 -> 6639275849536547480;
-  16809059191800785343 -> 3307045744808947021;
-  17652835453177848270 -> 9066339266546853647;
-  17652835453177848270 -> 3186864522525344724;
+Server << entryEvent;
+Server << eCheckMenuExistenceRequest; {Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}" ];
+  138821825980334719 -> 401141514058476269;
+  138821825980334719 -> 6906079918079896203;
+  401141514058476269 -> 4213686886374431953;
+  401141514058476269 -> 6710426639386497095;
+  1825290065984990417 -> 13055225600620996571;
+  2355430626164671222 -> 13691579057332464584;
+  3197521592316798409 -> 9528014578725449293;
+  3197521592316798409 -> 12581240219791156593;
+  3197521592316798409 -> 13949449678765974108;
+  3197521592316798409 -> 14400896213131815931;
+  3258851996226203688 -> 7791175246178380023;
+  3312302133326675589 -> 6710426639386497095;
+  3312302133326675589 -> 10567139723654883687;
+  3396331165331157002 -> 12145328724428173728;
+  3396331165331157002 -> 13515414778991870773;
+  4213686886374431953 -> 13055225600620996571;
+  4213686886374431953 -> 13341425111306987599;
+  4302610984728894949 -> 14400896213131815931;
+  4360015657508549988 -> 3396331165331157002;
+  4360015657508549988 -> 6772727286654135739;
+  4862022627315240773 -> 9419280898220082355;
+  5953861120366630302 -> 3258851996226203688;
+  6042018300661336143 -> 6964014102507799921;
+  6206824213487838900 -> 6906079918079896203;
+  6206824213487838900 -> 17297247673954225950;
+  6567461229433201766 -> 2355430626164671222;
+  6710426639386497095 -> 3197521592316798409;
+  6710426639386497095 -> 13341425111306987599;
+  6772727286654135739 -> 9290656168165749569;
+  6772727286654135739 -> 13515414778991870773;
+  6906079918079896203 -> 1825290065984990417;
+  6906079918079896203 -> 4213686886374431953;
+  6964014102507799921 -> 2355430626164671222;
+  6964014102507799921 -> 9419280898220082355;
+  6964014102507799921 -> 9420132927983824569;
+  7132660984072337619 -> 9420132927983824569;
+  7791175246178380023 -> 10567139723654883687;
+  9290656168165749569 -> 13535066360782721927;
+  9290656168165749569 -> 17025216394432687957;
+  9419280898220082355 -> 5953861120366630302;
+  9420132927983824569 -> 13691579057332464584;
+  9528014578725449293 -> 7132660984072337619;
+  10567139723654883687 -> 3197521592316798409;
+  10567139723654883687 -> 4302610984728894949;
+  10567139723654883687 -> 11301831815238885342;
+  10567139723654883687 -> 16587860134009348011;
+  11301831815238885342 -> 13949449678765974108;
+  12145328724428173728 -> 138821825980334719;
+  12145328724428173728 -> 6206824213487838900;
+  12581240219791156593 -> 4862022627315240773;
+  12581240219791156593 -> 6567461229433201766;
+  12581240219791156593 -> 6964014102507799921;
+  12581240219791156593 -> 7132660984072337619;
+  13055225600620996571 -> 6042018300661336143;
+  13341425111306987599 -> 6042018300661336143;
+  13341425111306987599 -> 12581240219791156593;
+  13515414778991870773 -> 138821825980334719;
+  13515414778991870773 -> 13535066360782721927;
+  13535066360782721927 -> 401141514058476269;
+  13535066360782721927 -> 3312302133326675589;
+  13949449678765974108 -> 6567461229433201766;
+  14400896213131815931 -> 4862022627315240773;
+  16587860134009348011 -> 9528014578725449293;
+  17025216394432687957 -> 3312302133326675589;
+  17025216394432687957 -> 7791175246178380023;
+  17297247673954225950 -> 1825290065984990417;
 }

@@ -22,12 +22,10 @@ func TestEnvironmentClone(t *testing.T) {
 
 	cloned := original.clone()
 
-	// Compare environments using cmp
 	if diff := cmp.Diff(original, cloned, cmp.AllowUnexported(environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{})); diff != "" {
 		t.Errorf("environment mismatch (-original +cloned):\n%s", diff)
 	}
 
-	// Verify state machine pointer addresses are different
 	for id, sm := range original.machines {
 		clonedSm := cloned.machines[id]
 		if reflect.ValueOf(sm).Pointer() == reflect.ValueOf(clonedSm).Pointer() {
@@ -35,7 +33,6 @@ func TestEnvironmentClone(t *testing.T) {
 		}
 	}
 
-	// Verify event pointer addresses are different
 	for smID, events := range original.queue {
 		clonedEvents := cloned.queue[smID]
 		for i, event := range events {

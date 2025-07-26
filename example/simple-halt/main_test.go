@@ -27,10 +27,8 @@ func TestSimpleHalt(t *testing.T) {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
 
-	// The simple-halt example should have 3 worlds showing the halt process
 	expected := map[string]any{
 		"worlds": []any{
-			// World 1: Just entryEvent queued (this comes first now due to deterministic sorting)
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -49,7 +47,6 @@ func TestSimpleHalt(t *testing.T) {
 					},
 				},
 			},
-			// World 2: entryEvent + exitEvent + haltEvent + transitionEvent queued
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -83,7 +80,6 @@ func TestSimpleHalt(t *testing.T) {
 					},
 				},
 			},
-			// World 3: entryEvent + exitEvent + transitionEvent queued (no haltEvent)
 			map[string]any{
 				"invariant_violation": false,
 				"queued_events": []any{
@@ -116,7 +112,6 @@ func TestSimpleHalt(t *testing.T) {
 	}
 
 	cmpOpts := cmp.Options{
-		// Ignore "summary" key since we only want to test worlds data
 		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)
 			return ok && key == "summary"

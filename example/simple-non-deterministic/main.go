@@ -31,18 +31,16 @@ func createSimpleNonDeterministicModel() []goat.Option {
 	// === StateMachine Spec ===
 	spec := goat.NewStateMachineSpec(&StateMachine{})
 
-	// StateMachineが取る状態を定義
 	stateA := &State{StateType: StateA}
 	stateB := &State{StateType: StateB}
 	stateC := &State{StateType: StateC}
 
-	// StateMachineを初期化
 	spec.DefineStates(stateA, stateB, stateC).SetInitialState(stateA)
 
-	// 状態Aにおける処理
-	// 状態Aに遷移した際に以下の処理を非決定的に実行
-	// 1. 状態Bに遷移
-	// 2. 状態Cに遷移
+	// Processing in state A
+	// When transitioning to state A, execute the following non-deterministically:
+	// 1. Transition to state B
+	// 2. Transition to state C
 	goat.OnEntry(spec, stateA, func(ctx context.Context, machine *StateMachine) {
 		goat.Goto(ctx, stateB)
 	})
@@ -50,10 +48,10 @@ func createSimpleNonDeterministicModel() []goat.Option {
 		goat.Goto(ctx, stateC)
 	})
 
-	// 状態Bにおける処理
-	// 状態Bに遷移した際に以下の処理を非決定的に実行
-	// 1. 状態Cに遷移
-	// 2. 状態Aに遷移
+	// Processing in state B
+	// When transitioning to state B, execute the following non-deterministically:
+	// 1. Transition to state C
+	// 2. Transition to state A
 	goat.OnEntry(spec, stateB, func(ctx context.Context, machine *StateMachine) {
 		goat.Goto(ctx, stateC)
 	})

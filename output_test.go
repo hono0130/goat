@@ -24,14 +24,14 @@ func TestKripke_writeDot(t *testing.T) {
 			},
 			want: `digraph {
   5438153399123815847 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:initial}
 
 QueuedEvents:" ];
   8682599965454615616 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:initial}
 
 QueuedEvents:
-* testStateMachine<<entryEvent;no fields" ];
+testStateMachine << entryEvent;" ];
   8682599965454615616 [ penwidth=5 ];
   8682599965454615616 -> 5438153399123815847;
 }
@@ -51,15 +51,15 @@ QueuedEvents:
 			},
 			want: `digraph {
   5438153399123815847 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:initial}
 
 QueuedEvents:" ];
   5438153399123815847 [ color=red, penwidth=3 ];
   8682599965454615616 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:initial}
 
 QueuedEvents:
-* testStateMachine<<entryEvent;no fields" ];
+testStateMachine << entryEvent;" ];
   8682599965454615616 [ penwidth=5 ];
   8682599965454615616 [ color=red, penwidth=3 ];
   8682599965454615616 -> 5438153399123815847;
@@ -77,29 +77,29 @@ QueuedEvents:
 			},
 			want: `digraph {
   1352120299877738753 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state1}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state2}
 
 QueuedEvents:
-* testStateMachine<<entryEvent;no fields" ];
+testStateMachine << entryEvent;" ];
   8000304505176841628 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state1}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state2}
 
 QueuedEvents:" ];
   10115204962392696257 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state1}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state2}
 
 QueuedEvents:
-* testStateMachine<<entryEvent;no fields" ];
+testStateMachine << entryEvent;" ];
   18043829544564786018 [ label="StateMachines:
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}
-* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state1}
+testStateMachine = no fields; State: {Name:Name,Type:string,Value:state2}
 
 QueuedEvents:
-* testStateMachine<<entryEvent;no fields
-* testStateMachine<<entryEvent;no fields" ];
+testStateMachine << entryEvent;
+testStateMachine << entryEvent;" ];
   18043829544564786018 [ penwidth=5 ];
   1352120299877738753 -> 8000304505176841628;
   10115204962392696257 -> 8000304505176841628;
@@ -227,7 +227,6 @@ func TestKripke_findPathsToViolations(t *testing.T) {
 		{
 			name: "violation after transition",
 			setup: func() kripke {
-				// Create a simple state machine with transition that causes violation
 				type testCounter struct {
 					testStateMachine
 					count int
@@ -238,20 +237,17 @@ func TestKripke_findPathsToViolations(t *testing.T) {
 				stateB := newTestState("B")
 				spec.DefineStates(stateA, stateB).SetInitialState(stateA)
 
-				// On entry to state A, increment counter and go to B
 				OnEntry(spec, stateA, func(ctx context.Context, sm *testCounter) {
 					sm.count = 1
 					Goto(ctx, stateB)
 				})
 
-				// On entry to state B, increment counter further
 				OnEntry(spec, stateB, func(ctx context.Context, sm *testCounter) {
 					sm.count = 2
 				})
 
 				sm := spec.NewInstance()
 
-				// Invariant that fails when count > 1 (violated in state B)
 				inv := NewInvariant(sm, func(sm *testCounter) bool {
 					return sm.count <= 1
 				})
@@ -296,7 +292,7 @@ func TestWorld_label(t *testing.T) {
 				sm := newTestStateMachine(newTestState("test"))
 				return initialWorld(sm)
 			},
-			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:test}\n\nQueuedEvents:\n* testStateMachine<<entryEvent;no fields",
+			expected: "StateMachines:\ntestStateMachine = no fields; State: {Name:Name,Type:string,Value:test}\n\nQueuedEvents:\ntestStateMachine << entryEvent;",
 		},
 		{
 			name: "single state machine with initial state",
@@ -304,7 +300,7 @@ func TestWorld_label(t *testing.T) {
 				sm := newTestStateMachine(newTestState("initial"))
 				return initialWorld(sm)
 			},
-			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:initial}\n\nQueuedEvents:\n* testStateMachine<<entryEvent;no fields",
+			expected: "StateMachines:\ntestStateMachine = no fields; State: {Name:Name,Type:string,Value:initial}\n\nQueuedEvents:\ntestStateMachine << entryEvent;",
 		},
 		{
 			name: "multiple state machines",
@@ -313,7 +309,7 @@ func TestWorld_label(t *testing.T) {
 				sm2 := newTestStateMachine(newTestState("state2"))
 				return initialWorld(sm1, sm2)
 			},
-			expected: "StateMachines:\n* testStateMachine=no fields;{Name:Name,Type:string,Value:state1}\n* testStateMachine=no fields;{Name:Name,Type:string,Value:state2}\n\nQueuedEvents:\n* testStateMachine<<entryEvent;no fields\n* testStateMachine<<entryEvent;no fields",
+			expected: "StateMachines:\ntestStateMachine = no fields; State: {Name:Name,Type:string,Value:state1}\ntestStateMachine = no fields; State: {Name:Name,Type:string,Value:state2}\n\nQueuedEvents:\ntestStateMachine << entryEvent;\ntestStateMachine << entryEvent;",
 		},
 	}
 
@@ -526,7 +522,7 @@ func TestKripke_summarize(t *testing.T) {
 			},
 			executionTimeMs: 150,
 			wantSummary: &kripkeSummary{
-				TotalWorlds:     2, // Actual world count after solving
+				TotalWorlds:     2,
 				ExecutionTimeMs: 150,
 				InvariantViolations: struct {
 					Found bool `json:"found"`
@@ -551,14 +547,14 @@ func TestKripke_summarize(t *testing.T) {
 			},
 			executionTimeMs: 250,
 			wantSummary: &kripkeSummary{
-				TotalWorlds:     2, // Actual world count after solving
+				TotalWorlds:     2,
 				ExecutionTimeMs: 250,
 				InvariantViolations: struct {
 					Found bool `json:"found"`
 					Count int  `json:"count"`
 				}{
 					Found: true,
-					Count: 2, // All worlds have violations with BoolInvariant(false)
+					Count: 2,
 				},
 			},
 		},
@@ -592,14 +588,14 @@ func TestKripke_summarize(t *testing.T) {
 			},
 			executionTimeMs: 500,
 			wantSummary: &kripkeSummary{
-				TotalWorlds:     4, // Actual world count
+				TotalWorlds:     4,
 				ExecutionTimeMs: 500,
 				InvariantViolations: struct {
 					Found bool `json:"found"`
 					Count int  `json:"count"`
 				}{
 					Found: false,
-					Count: 0, // No violations without invariants
+					Count: 0,
 				},
 			},
 		},

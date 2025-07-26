@@ -49,12 +49,10 @@ func TestCloneEvent(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cloned := cloneEvent(tt.original)
 
-			// Verify pointer addresses are different
 			if reflect.ValueOf(tt.original).Pointer() == reflect.ValueOf(cloned).Pointer() {
 				t.Errorf("Expected different pointer addresses, but got the same: %p", tt.original)
 			}
 
-			// Verify types are the same
 			if reflect.TypeOf(tt.original) != reflect.TypeOf(cloned) {
 				t.Errorf("Expected same type, but got different: %T vs %T", tt.original, cloned)
 			}

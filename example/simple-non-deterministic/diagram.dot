@@ -1,87 +1,87 @@
 digraph {
-  17964288042359039285 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
+  987794805182658016 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:B}
 
 QueuedEvents:
-* StateMachine<<EntryEvent;no fields" ];
-  6082823301770540954 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
-
-QueuedEvents:
-* StateMachine<<ExitEvent;no fields
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
-* StateMachine<<EntryEvent;no fields" ];
-  7640619707847766127 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
-
-QueuedEvents:
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} A}}
-* StateMachine<<EntryEvent;no fields" ];
-  3108951696325647426 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
-
-QueuedEvents:
-* StateMachine<<ExitEvent;no fields
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
-* StateMachine<<EntryEvent;no fields" ];
-  8391995857098703778 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:C}
-
-QueuedEvents:
-* StateMachine<<EntryEvent;no fields" ];
-  7139566126375982976 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
-
-QueuedEvents:
-* StateMachine<<ExitEvent;no fields
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} A}}
-* StateMachine<<EntryEvent;no fields" ];
-  6346312002851470401 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:B}
-
-QueuedEvents:
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
-* StateMachine<<EntryEvent;no fields" ];
-  17512442101710683052 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
-
-QueuedEvents:
-* StateMachine<<EntryEvent;no fields" ];
-  17512442101710683052 [ penwidth=5 ];
-  3884178862275712841 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
-
-QueuedEvents:
-* StateMachine<<ExitEvent;no fields
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
-* StateMachine<<EntryEvent;no fields" ];
-  12562971346113468414 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
-
-QueuedEvents:
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} C}}
-* StateMachine<<EntryEvent;no fields" ];
-  17194766139364348873 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:C}
+StateMachine << exitEvent;
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} A}}
+StateMachine << entryEvent;" ];
+  2575511341864644269 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:C}
 
 QueuedEvents:" ];
-  13338479987040355845 [ label="StateMachines:
-* StateMachine=no fields;{Name:StateType,Type:main.StateType,Value:A}
+  5097618433102130894 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:A}
 
 QueuedEvents:
-* StateMachine<<TransitionEvent;{Name:To,Type:goat.AbstractState,Value:&{{0} B}}
-* StateMachine<<EntryEvent;no fields" ];
-  12562971346113468414 -> 8391995857098703778;
-  3108951696325647426 -> 13338479987040355845;
-  13338479987040355845 -> 17964288042359039285;
-  17964288042359039285 -> 6082823301770540954;
-  17964288042359039285 -> 7139566126375982976;
-  7640619707847766127 -> 17512442101710683052;
-  6082823301770540954 -> 6346312002851470401;
-  6346312002851470401 -> 8391995857098703778;
-  17512442101710683052 -> 3108951696325647426;
-  17512442101710683052 -> 3884178862275712841;
-  3884178862275712841 -> 12562971346113468414;
-  8391995857098703778 -> 17194766139364348873;
-  7139566126375982976 -> 7640619707847766127;
+StateMachine << exitEvent;
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+StateMachine << entryEvent;" ];
+  5527857267847071282 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:C}
+
+QueuedEvents:
+StateMachine << entryEvent;" ];
+  5627962369265483989 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+StateMachine << exitEvent;
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+StateMachine << entryEvent;" ];
+  6054779806285993961 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+StateMachine << entryEvent;" ];
+  6322186062374911897 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+StateMachine << entryEvent;" ];
+  7616493767371207623 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} A}}
+StateMachine << entryEvent;" ];
+  9959765463187636756 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+StateMachine << entryEvent;" ];
+  9959765463187636756 [ penwidth=5 ];
+  14011300246296273222 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+StateMachine << entryEvent;" ];
+  14786808887223160653 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:A}
+
+QueuedEvents:
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} B}}
+StateMachine << entryEvent;" ];
+  18132631349523233274 [ label="StateMachines:
+StateMachine = no fields; State: {Name:StateType,Type:main.StateType,Value:B}
+
+QueuedEvents:
+StateMachine << exitEvent;
+StateMachine << transitionEvent; {Name:To,Type:goat.AbstractState,Value:&{{0} C}}
+StateMachine << entryEvent;" ];
+  987794805182658016 -> 7616493767371207623;
+  5097618433102130894 -> 14786808887223160653;
+  5527857267847071282 -> 2575511341864644269;
+  5627962369265483989 -> 14011300246296273222;
+  6054779806285993961 -> 987794805182658016;
+  6054779806285993961 -> 18132631349523233274;
+  6322186062374911897 -> 5527857267847071282;
+  7616493767371207623 -> 9959765463187636756;
+  9959765463187636756 -> 5097618433102130894;
+  9959765463187636756 -> 5627962369265483989;
+  14011300246296273222 -> 5527857267847071282;
+  14786808887223160653 -> 6054779806285993961;
+  18132631349523233274 -> 6322186062374911897;
 }

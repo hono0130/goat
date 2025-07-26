@@ -28,7 +28,6 @@ func TestClientServer(t *testing.T) {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
 
-	// Load expected worlds from JSON file
 	expectedWorldsData, err := os.ReadFile("expected_worlds.json")
 	if err != nil {
 		t.Fatalf("Failed to read expected worlds file: %v", err)
@@ -40,7 +39,6 @@ func TestClientServer(t *testing.T) {
 	}
 
 	cmpOpts := cmp.Options{
-		// Ignore "summary" key since we only want to test worlds data
 		cmpopts.IgnoreMapEntries(func(k, v any) bool {
 			key, ok := k.(string)
 			return ok && key == "summary"

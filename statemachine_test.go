@@ -31,16 +31,13 @@ func TestStateMachineSpec_DefineStates(t *testing.T) {
 
 		result := spec.DefineStates(state1, state2)
 
-		// Should return self for chaining
 		if result != spec {
 			t.Error("DefineStates should return self for method chaining")
 		}
 
-		// Should store states
 		if !cmp.Equal(spec.states, []AbstractState{state1, state2}) {
 			t.Errorf("States mismatch:\n%s", cmp.Diff([]AbstractState{state1, state2}, spec.states))
 		}
-		// Should add default handlers for each state
 		for _, state := range []AbstractState{state1, state2} {
 			builders := spec.handlerBuilders[state]
 			if len(builders) != 2 {
@@ -59,12 +56,10 @@ func TestStateMachineSpec_SetInitialState(t *testing.T) {
 
 		result := spec.SetInitialState(initialState)
 
-		// Should return self for chaining
 		if result != spec {
 			t.Error("SetInitialState should return self for method chaining")
 		}
 
-		// Should store initial state
 		if spec.initialState != initialState {
 			t.Error("Initial state should be stored")
 		}
@@ -80,29 +75,24 @@ func TestStateMachineSpec_NewInstance(t *testing.T) {
 
 		instance := spec.NewInstance()
 
-		// Should create new instance
 		if instance == nil {
 			t.Error("Instance should not be nil")
 			return
 		}
 
-		// Should have initial state set
 		if !cmp.Equal(instance.currentState(), initialState) {
 			t.Errorf("Initial state mismatch:\n%s", cmp.Diff(initialState, instance.currentState()))
 		}
 
-		// EventHandlers should be nil (built lazily in initialWorld)
 		innerSM := getInnerStateMachine(instance)
 		if innerSM.EventHandlers != nil {
 			t.Error("Event handlers should be nil initially (built in initialWorld)")
 		}
 
-		// HandlerBuilders should be initialized
 		if innerSM.HandlerBuilders == nil {
 			t.Error("Handler builders should be initialized")
 		}
 
-		// Should not be halted initially
 		if innerSM.halted {
 			t.Error("Instance should not be halted initially")
 		}
@@ -126,27 +116,22 @@ func TestCloneStateMachine(t *testing.T) {
 
 		cloned := cloneStateMachine(original)
 
-		// Should not be the same instance
 		if cloned == original {
 			t.Error("Cloned state machine should not be the same instance")
 		}
 
-		// Should have same ID (cloneStateMachine does a shallow copy of fields)
 		if cloned.id() != original.id() {
 			t.Error("Cloned state machine should have same ID (shallow copy)")
 		}
 
-		// Should have same state type but different instance
 		if cloned.currentState() == original.currentState() {
 			t.Error("Cloned state should be different instance")
 		}
 
-		// But states should be equivalent
 		if !cmp.Equal(cloned.currentState(), original.currentState()) {
 			t.Errorf("Cloned state mismatch:\n%s", cmp.Diff(original.currentState(), cloned.currentState()))
 		}
 
-		// Should have event handlers cloned
 		originalInner := getInnerStateMachine(original)
 		clonedInner := getInnerStateMachine(cloned)
 		if len(originalInner.EventHandlers) != len(clonedInner.EventHandlers) {
@@ -229,12 +214,10 @@ func TestCloneState(t *testing.T) {
 		original := newTestState("original")
 		cloned := cloneState(original)
 
-		// Should not be the same instance
 		if cloned == original {
 			t.Error("Cloned state should not be the same instance")
 		}
 
-		// Should be equivalent
 		if !cmp.Equal(cloned, original) {
 			t.Errorf("Cloned state mismatch:\n%s", cmp.Diff(original, cloned))
 		}

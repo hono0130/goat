@@ -18,7 +18,6 @@ func TestOnEvent(t *testing.T) {
 
 		OnEvent(spec, state, event, func(ctx context.Context, e *testEvent, sm *testStateMachine) {})
 
-		// Validate that handler builder was registered for the correct state
 		builders, exists := spec.handlerBuilders[state]
 		if !exists {
 			t.Error("Handler builder should be registered for the specified state")
@@ -45,7 +44,6 @@ func TestOnEntry(t *testing.T) {
 
 		OnEntry(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
-		// Validate that handler builder was registered for the correct state
 		builders, exists := spec.handlerBuilders[state]
 		if !exists {
 			t.Error("Handler builder should be registered for the specified state")
@@ -71,7 +69,6 @@ func TestOnExit(t *testing.T) {
 
 		OnExit(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
-		// Validate that handler builder was registered for the correct state
 		builders, exists := spec.handlerBuilders[state]
 		if !exists {
 			t.Error("Handler builder should be registered for the specified state")
@@ -97,7 +94,6 @@ func TestOnTransition(t *testing.T) {
 
 		OnTransition(spec, state, func(ctx context.Context, toState AbstractState, sm *testStateMachine) {})
 
-		// Validate that handler builder was registered for the correct state
 		builders, exists := spec.handlerBuilders[state]
 		if !exists {
 			t.Error("Handler builder should be registered for the specified state")
@@ -123,7 +119,6 @@ func TestOnHalt(t *testing.T) {
 
 		OnHalt(spec, state, func(ctx context.Context, sm *testStateMachine) {})
 
-		// Validate that handler builder was registered for the correct state
 		builders, exists := spec.handlerBuilders[state]
 		if !exists {
 			t.Error("Handler builder should be registered for the specified state")
@@ -246,7 +241,6 @@ func TestEventHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			// Compare states directly using cmp
 			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{})); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
@@ -340,7 +334,6 @@ func TestTransitionHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			// Compare states directly using cmp
 			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
@@ -429,7 +422,6 @@ func TestHaltHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			// Compare states directly using cmp
 			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
@@ -515,7 +507,6 @@ func TestEntryHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			// Compare states directly using cmp
 			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
@@ -597,7 +588,6 @@ func TestExitHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			// Compare states directly using cmp
 			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
