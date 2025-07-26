@@ -19,9 +19,9 @@ import (
 //
 // Example:
 //
-//	err := Test(
-//	    WithStateMachines(serverSM, clientSM),
-//	    WithInvariants(safetyInvariant),
+//	err := goat.Test(
+//	    goat.WithStateMachines(serverSM, clientSM),
+//	    goat.WithInvariants(safetyInvariant),
 //	)
 func Test(opts ...Option) error {
 	kripke, err := kripkeModel(opts...)
@@ -60,7 +60,7 @@ func Test(opts ...Option) error {
 //
 // Example:
 //
-//	WithStateMachines(serverSM, clientSM, proxysSM)
+//	goat.WithStateMachines(serverSM, clientSM, proxysSM)
 func WithStateMachines(sms ...AbstractStateMachine) Option {
 	return optionFunc(func(o *options) {
 		o.sms = sms
@@ -78,7 +78,7 @@ func WithStateMachines(sms ...AbstractStateMachine) Option {
 //
 // Example:
 //
-//	WithInvariants(exclusionInvariant, livenessInvariant)
+//	goat.WithInvariants(exclusionInvariant, livenessInvariant)
 func WithInvariants(is ...Invariant) Option {
 	return optionFunc(func(o *options) {
 		o.invariants = is
@@ -98,7 +98,7 @@ func WithInvariants(is ...Invariant) Option {
 // Example:
 //
 //	var buf bytes.Buffer
-//	err := Debug(&buf, WithStateMachines(sm), WithInvariants(inv))
+//	err := goat.Debug(&buf, goat.WithStateMachines(sm), goat.WithInvariants(inv))
 //	fmt.Println(buf.String()) // JSON output
 func Debug(w io.Writer, opts ...Option) error {
 	kripke, err := kripkeModel(opts...)
@@ -143,7 +143,7 @@ func Debug(w io.Writer, opts ...Option) error {
 //	    return err
 //	}
 //	defer file.Close()
-//	err = WriteDot(file, WithStateMachines(sm), WithInvariants(inv))
+//	err = goat.WriteDot(file, goat.WithStateMachines(sm), goat.WithInvariants(inv))
 func WriteDot(w io.Writer, opts ...Option) error {
 	kripke, err := kripkeModel(opts...)
 	if err != nil {
@@ -157,4 +157,3 @@ func WriteDot(w io.Writer, opts ...Option) error {
 	kripke.writeDot(w)
 	return nil
 }
-

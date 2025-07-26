@@ -35,22 +35,22 @@ func main() {
     spec := goat.NewStateMachineSpec(&MyStateMachine{})
     stateA := &State{Name: "A"}
     stateB := &State{Name: "B"}
-    
+
     // Define the states that the StateMachine can take and set initial state
     spec.
         DefineStates(stateA, stateB).
         SetInitialState(stateA)
-    
+
     // Define behavior
     goat.OnEntry(spec, stateA, func(ctx context.Context, sm *MyStateMachine) {
         sm.Counter = 1
         goat.Goto(ctx, stateB)
     })
-    
+
     goat.OnEntry(spec, stateB, func(ctx context.Context, sm *MyStateMachine) {
         sm.Counter = 2
     })
-    
+
     // Create instance and run model checking
     sm := spec.NewInstance()
     err := goat.Test(
@@ -70,7 +70,7 @@ func main() {
 ## Key Functions
 
 - **`NewStateMachineSpec()`** - Create a state machine specification
-- **`OnEntry()`, `OnEvent()`, `OnExit()`** - Register event handlers for different lifecycle events
+- **`OnEntry()`, `OnEvent()`, `OnExit()`** - Register event handlers for each lifecycle events
 - **`Goto()`** - Trigger state transitions
 - **`SendTo()`** - Send events between state machines
 - **`Test()`** - Run model checking with invariant verification
@@ -89,8 +89,7 @@ The `example/` directory contains several complete examples:
 - **`simple-non-deterministic/`** - Non-deterministic behavior modeling
 
 Run any example:
+
 ```bash
 go run ./example/simple-transition
 ```
-
-## License

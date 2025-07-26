@@ -75,8 +75,6 @@ type (
 type (
 	Client struct {
 		goat.StateMachine // [MUST] Embed the StateMachine struct.
-		// Mut is example of mutable field
-		Mut int
 		// server is the server that the client is connected to
 		Server *Server
 	}

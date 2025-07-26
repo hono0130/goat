@@ -39,7 +39,7 @@ type StateMachineSpec[T AbstractStateMachine] struct {
 //
 // Example:
 //
-//	spec := NewStateMachineSpec(&MyStateMachine{})
+//	spec := goat.NewStateMachineSpec(&MyStateMachine{})
 //	spec.DefineStates(StateA{}, StateB{}).
 //	     SetInitialState(StateA{})
 func NewStateMachineSpec[T AbstractStateMachine](prototype T) *StateMachineSpec[T] {
@@ -137,7 +137,7 @@ func (spec *StateMachineSpec[T]) NewInstance() T {
 // Example:
 //
 //	type IdleState struct {
-//	    State
+//	    goat.State
 //	    Timeout int
 //	}
 type AbstractState interface {
@@ -151,7 +151,7 @@ type AbstractState interface {
 // Example:
 //
 //	type MyState struct {
-//	    State
+//	    goat.State
 //	    CustomField int
 //	}
 type State struct {
@@ -188,12 +188,12 @@ func sameState(s1, s2 AbstractState) bool {
 // Example:
 //
 //	type MyStateMachine struct {
-//	    StateMachine
+//	    goat.StateMachine
 //	    CustomData string
 //	}
 //
 //	// Create via specification
-//	spec := NewStateMachineSpec(&MyStateMachine{})
+//	spec := goat.NewStateMachineSpec(&MyStateMachine{})
 //	spec.DefineStates(IdleState{}, ActiveState{}).
 //	     SetInitialState(IdleState{})
 //	instance := spec.NewInstance()
@@ -215,7 +215,7 @@ type AbstractStateMachine interface {
 // Example:
 //
 //	type MyStateMachine struct {
-//	    StateMachine
+//	    goat.StateMachine
 //	    Data string
 //	}
 type StateMachine struct {

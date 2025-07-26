@@ -27,8 +27,8 @@ func (f invariantFunc) Evaluate(w world) bool {
 //
 // Example:
 //
-//	alwaysPass := BoolInvariant(true)
-//	alwaysFail := BoolInvariant(false)
+//	alwaysPass := goat.BoolInvariant(true)
+//	alwaysFail := goat.BoolInvariant(false)
 func BoolInvariant(b bool) Invariant {
 	return invariantFunc(func(w world) bool {
 		return b
@@ -47,7 +47,7 @@ func BoolInvariant(b bool) Invariant {
 //
 // Example:
 //
-//	serverInv := NewInvariant(serverSM, func(sm *ServerStateMachine) bool {
+//	serverInv := goat.NewInvariant(serverSM, func(sm *ServerStateMachine) bool {
 //	    return sm.ConnectionCount <= sm.MaxConnections
 //	})
 func NewInvariant[T AbstractStateMachine](sm T, check func(T) bool) Invariant {

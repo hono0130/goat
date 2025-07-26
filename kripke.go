@@ -28,8 +28,8 @@ func (ws worlds) insert(w world) {
 }
 
 type world struct {
-	id worldID
-	env environment
+	id                 worldID
+	env                environment
 	invariantViolation bool
 }
 
@@ -241,9 +241,9 @@ type options struct {
 //
 // Example:
 //
-//	Test(
-//	    WithStateMachines(sm1, sm2),
-//	    WithInvariants(invariant1),
+//	goat.Test(
+//	    goat.WithStateMachines(sm1, sm2),
+//	    goat.WithInvariants(invariant1),
 //	)
 type Option interface {
 	apply(*options)

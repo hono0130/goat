@@ -9,7 +9,7 @@ type environment struct {
 
 type (
 	envKey struct{}
-	smKey struct{}
+	smKey  struct{}
 )
 
 func withEnvAndSM(env *environment, sm AbstractStateMachine) context.Context {
