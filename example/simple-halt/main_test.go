@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"os"
 	"testing"
 
 	"github.com/goatx/goat"
@@ -20,95 +20,19 @@ func TestSimpleHalt(t *testing.T) {
 		t.Fatalf("Debug failed: %v", err)
 	}
 
-	fmt.Println(buf.String())
-
 	var data map[string]any
 	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
 
-	expected := map[string]any{
-		"worlds": []any{
-			map[string]any{
-				"invariant_violation": false,
-				"queued_events": []any{
-					map[string]any{
-						"details":        "no fields",
-						"event_name":     "entryEvent",
-						"target_machine": "StateMachine",
-					},
-				},
-				"state_machines": []any{
-					map[string]any{
-						"id":      "StateMachine",
-						"details": "no fields",
-						"name":    "StateMachine",
-						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
-					},
-				},
-			},
-			map[string]any{
-				"invariant_violation": false,
-				"queued_events": []any{
-					map[string]any{
-						"details":        "no fields",
-						"event_name":     "entryEvent",
-						"target_machine": "StateMachine",
-					},
-					map[string]any{
-						"details":        "no fields",
-						"event_name":     "exitEvent",
-						"target_machine": "StateMachine",
-					},
-					map[string]any{
-						"details":        "no fields",
-						"event_name":     "haltEvent",
-						"target_machine": "StateMachine",
-					},
-					map[string]any{
-						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
-						"event_name":     "transitionEvent",
-						"target_machine": "StateMachine",
-					},
-				},
-				"state_machines": []any{
-					map[string]any{
-						"id":      "StateMachine",
-						"details": "no fields",
-						"name":    "StateMachine",
-						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
-					},
-				},
-			},
-			map[string]any{
-				"invariant_violation": false,
-				"queued_events": []any{
-					map[string]any{
-						"details":        "no fields",
-						"event_name":     "entryEvent",
-						"target_machine": "StateMachine",
-					},
-					map[string]any{
-						"details":        "no fields",
-						"event_name":     "exitEvent",
-						"target_machine": "StateMachine",
-					},
-					map[string]any{
-						"details":        "{Name:To,Type:goat.AbstractState,Value:&{{0} B}}",
-						"event_name":     "transitionEvent",
-						"target_machine": "StateMachine",
-					},
-				},
-				"state_machines": []any{
-					map[string]any{
-						"id":      "StateMachine",
-						"details": "no fields",
-						"name":    "StateMachine",
-						"state":   "{Name:StateType,Type:main.StateType,Value:A}",
-					},
-				},
-			},
-		},
+	expectedWorldsData, err := os.ReadFile("expected_worlds.json")
+	if err != nil {
+		t.Fatalf("Failed to read expected worlds file: %v", err)
+	}
+
+	var expectedWorlds any
+	if err := json.Unmarshal(expectedWorldsData, &expectedWorlds); err != nil {
+		t.Fatalf("Failed to parse expected worlds JSON: %v", err)
 	}
 
 	cmpOpts := cmp.Options{
@@ -118,7 +42,7 @@ func TestSimpleHalt(t *testing.T) {
 		}),
 	}
 
-	if diff := cmp.Diff(expected, data, cmpOpts...); diff != "" {
-		t.Errorf("JSON data mismatch (-expected +actual):\n%s", diff)
+	if diff := cmp.Diff(expectedWorlds, data["worlds"], cmpOpts...); diff != "" {
+		t.Errorf("Worlds mismatch (-expected +actual):\n%s", diff)
 	}
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -20,8 +19,6 @@ func TestClientServer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Debug failed: %v", err)
 	}
-
-	fmt.Println(buf.String())
 
 	var data map[string]any
 	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/goatx/goat"
 )
@@ -42,7 +41,6 @@ func createSimpleHaltModel() []goat.Option {
 	})
 
 	goat.OnEntry(spec, stateB, func(ctx context.Context, machine *StateMachine) {
-		fmt.Println("This should not be printed since the state machine is halted in state A.")
 		goat.Goto(ctx, stateA)
 	})
 

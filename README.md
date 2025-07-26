@@ -1,7 +1,5 @@
 # goat
 
-**Go-Oriented Architecture Testing**
-
 A Go library for model checking concurrent systems using state machines. goat helps you verify the correctness of distributed systems by exhaustively exploring all possible states and checking invariants.
 
 ## Installation
