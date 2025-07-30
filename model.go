@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type kripke struct {
+type model struct {
 	worlds     worlds
 	initial    world
 	accessible map[worldID][]worldID
@@ -172,14 +172,14 @@ func stepGlobal(w world) ([]world, error) {
 	return ws, nil
 }
 
-func kripkeModel(opts ...Option) (kripke, error) {
+func newModel(opts ...Option) (model, error) {
 	os := newOptions(opts...)
 	if len(os.sms) == 0 {
-		return kripke{}, fmt.Errorf("no state machines provided")
+		return model{}, fmt.Errorf("no state machines provided")
 	}
 
 	initial := initialWorld(os.sms...)
-	return kripke{
+	return model{
 		initial:    initial,
 		worlds:     make(worlds),
 		accessible: make(map[worldID][]worldID),
@@ -187,17 +187,17 @@ func kripkeModel(opts ...Option) (kripke, error) {
 	}, nil
 }
 
-func (k *kripke) Solve() error {
-	k.worlds.insert(k.initial)
-	stack := []world{k.initial}
+func (m *model) Solve() error {
+	m.worlds.insert(m.initial)
+	stack := []world{m.initial}
 
 	for len(stack) > 0 {
 		current := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		if !k.evaluateInvariants(current) {
+		if !m.evaluateInvariants(current) {
 			current.invariantViolation = true
-			k.worlds[current.id] = current
+			m.worlds[current.id] = current
 		}
 
 		acc := make([]worldID, 0)
@@ -207,19 +207,19 @@ func (k *kripke) Solve() error {
 		}
 		for _, next := range nexts {
 			acc = append(acc, next.id)
-			if !k.worlds.member(next) {
-				k.worlds.insert(next)
+			if !m.worlds.member(next) {
+				m.worlds.insert(next)
 				stack = append(stack, next)
 			}
 		}
-		k.accessible[current.id] = acc
+		m.accessible[current.id] = acc
 	}
 
 	return nil
 }
 
-func (k *kripke) evaluateInvariants(w world) bool {
-	for _, invariant := range k.invariants {
+func (m *model) evaluateInvariants(w world) bool {
+	for _, invariant := range m.invariants {
 		if !invariant.Evaluate(w) {
 			return false
 		}

@@ -24,20 +24,20 @@ import (
 //	    goat.WithInvariants(safetyInvariant),
 //	)
 func Test(opts ...Option) error {
-	kripke, err := kripkeModel(opts...)
+	model, err := newModel(opts...)
 	if err != nil {
 		return err
 	}
 
 	start := time.Now()
-	if err := kripke.Solve(); err != nil {
+	if err := model.Solve(); err != nil {
 		return err
 	}
 	executionTime := time.Since(start).Milliseconds()
 
-	kripke.writeLog(os.Stdout, "invariant violation")
+	model.writeLog(os.Stdout, "invariant violation")
 
-	summary := kripke.summarize(executionTime)
+	summary := model.summarize(executionTime)
 	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
 	_, _ = fmt.Fprintf(os.Stdout, "Total Worlds: %d\n", summary.TotalWorlds)
 	if summary.InvariantViolations.Found {
@@ -101,19 +101,19 @@ func WithInvariants(is ...Invariant) Option {
 //	err := goat.Debug(&buf, goat.WithStateMachines(sm), goat.WithInvariants(inv))
 //	fmt.Println(buf.String()) // JSON output
 func Debug(w io.Writer, opts ...Option) error {
-	kripke, err := kripkeModel(opts...)
+	model, err := newModel(opts...)
 	if err != nil {
 		return err
 	}
 
 	start := time.Now()
-	if err := kripke.Solve(); err != nil {
+	if err := model.Solve(); err != nil {
 		return err
 	}
 	executionTime := time.Since(start).Milliseconds()
 
-	worlds := kripke.worldsToJSON()
-	summary := kripke.summarize(executionTime)
+	worlds := model.worldsToJSON()
+	summary := model.summarize(executionTime)
 
 	result := map[string]any{
 		"worlds":  worlds,
@@ -145,15 +145,15 @@ func Debug(w io.Writer, opts ...Option) error {
 //	defer file.Close()
 //	err = goat.WriteDot(file, goat.WithStateMachines(sm), goat.WithInvariants(inv))
 func WriteDot(w io.Writer, opts ...Option) error {
-	kripke, err := kripkeModel(opts...)
+	model, err := newModel(opts...)
 	if err != nil {
 		return err
 	}
 
-	if err := kripke.Solve(); err != nil {
+	if err := model.Solve(); err != nil {
 		return err
 	}
 
-	kripke.writeDot(w)
+	model.writeDot(w)
 	return nil
 }

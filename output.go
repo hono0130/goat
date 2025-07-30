@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type kripkeSummary struct {
+type modelSummary struct {
 	TotalWorlds int `json:"total_worlds"`
 
 	InvariantViolations struct {
@@ -18,26 +18,26 @@ type kripkeSummary struct {
 	ExecutionTimeMs int64 `json:"execution_time_ms"`
 }
 
-func (k *kripke) writeDot(w io.Writer) {
+func (m *model) writeDot(w io.Writer) {
 	var sb strings.Builder
 
 	sb.WriteString("digraph {\n")
 
 	// ---------- Nodes ----------
-	worldIDs := make([]worldID, 0, len(k.worlds))
-	for id := range k.worlds {
+	worldIDs := make([]worldID, 0, len(m.worlds))
+	for id := range m.worlds {
 		worldIDs = append(worldIDs, id)
 	}
 	sort.Slice(worldIDs, func(i, j int) bool { return worldIDs[i] < worldIDs[j] })
 
 	for _, id := range worldIDs {
-		wld := k.worlds[id]
+		wld := m.worlds[id]
 		sb.WriteString("  ")
 		sb.WriteString(fmt.Sprintf("%d", id))
 		sb.WriteString(` [ label="`)
 		sb.WriteString(wld.label())
 		sb.WriteString("\" ];\n")
-		if id == k.initial.id {
+		if id == m.initial.id {
 			sb.WriteString("  ")
 			sb.WriteString(fmt.Sprintf("%d", id))
 			sb.WriteString(" [ penwidth=5 ];\n")
@@ -50,14 +50,14 @@ func (k *kripke) writeDot(w io.Writer) {
 	}
 
 	// ---------- Edges ----------
-	fromIDs := make([]worldID, 0, len(k.accessible))
-	for from := range k.accessible {
+	fromIDs := make([]worldID, 0, len(m.accessible))
+	for from := range m.accessible {
 		fromIDs = append(fromIDs, from)
 	}
 	sort.Slice(fromIDs, func(i, j int) bool { return fromIDs[i] < fromIDs[j] })
 
 	for _, from := range fromIDs {
-		tos := k.accessible[from]
+		tos := m.accessible[from]
 		sort.Slice(tos, func(i, j int) bool { return tos[i] < tos[j] })
 		fromStr := fmt.Sprintf("%d", from)
 		for _, to := range tos {
@@ -74,9 +74,9 @@ func (k *kripke) writeDot(w io.Writer) {
 	_, _ = io.WriteString(w, sb.String())
 }
 
-func (k *kripke) writeLog(w io.Writer, invariantDescription string) {
+func (m *model) writeLog(w io.Writer, invariantDescription string) {
 	var sb strings.Builder
-	paths := k.findPathsToViolations()
+	paths := m.findPathsToViolations()
 
 	if len(paths) == 0 {
 		sb.WriteString("No invariant violations found.\n")
@@ -97,7 +97,7 @@ func (k *kripke) writeLog(w io.Writer, invariantDescription string) {
 		sb.WriteString("):\n")
 
 		for j, worldID := range path {
-			world := k.worlds[worldID]
+			world := m.worlds[worldID]
 
 			if j == len(path)-1 && world.invariantViolation {
 				sb.WriteString("  [")
@@ -136,12 +136,12 @@ func (k *kripke) writeLog(w io.Writer, invariantDescription string) {
 	_, _ = io.WriteString(w, sb.String())
 }
 
-func (k *kripke) findPathsToViolations() [][]worldID {
+func (m *model) findPathsToViolations() [][]worldID {
 	var paths [][]worldID
 
 	visited := make(map[worldID]bool)
 
-	queue := [][]worldID{{k.initial.id}}
+	queue := [][]worldID{{m.initial.id}}
 
 	for len(queue) > 0 {
 		path := queue[0]
@@ -154,12 +154,12 @@ func (k *kripke) findPathsToViolations() [][]worldID {
 		}
 		visited[currentID] = true
 
-		if k.worlds[currentID].invariantViolation {
+		if m.worlds[currentID].invariantViolation {
 			paths = append(paths, path)
 			continue
 		}
 
-		for _, nextID := range k.accessible[currentID] {
+		for _, nextID := range m.accessible[currentID] {
 			if !visited[nextID] {
 				newPath := make([]worldID, len(path)+1)
 				copy(newPath, path)
@@ -230,10 +230,10 @@ type eventJSON struct {
 	Details       string `json:"details"`
 }
 
-func (k *kripke) worldsToJSON() []worldJSON {
-	allWorlds := make([]worldJSON, 0, len(k.worlds))
-	for _, world := range k.worlds {
-		worldJSON := k.worldToJSON(world)
+func (m *model) worldsToJSON() []worldJSON {
+	allWorlds := make([]worldJSON, 0, len(m.worlds))
+	for _, world := range m.worlds {
+		worldJSON := m.worldToJSON(world)
 		allWorlds = append(allWorlds, worldJSON)
 	}
 
@@ -278,7 +278,7 @@ func compareWorlds(a, b worldJSON) bool {
 	return len(a.QueuedEvents) < len(b.QueuedEvents)
 }
 
-func (*kripke) worldToJSON(w world) worldJSON {
+func (*model) worldToJSON(w world) worldJSON {
 	smIDs := make([]string, 0, len(w.env.machines))
 	for smID := range w.env.machines {
 		smIDs = append(smIDs, smID)
@@ -326,14 +326,14 @@ func (*kripke) worldToJSON(w world) worldJSON {
 	}
 }
 
-func (k *kripke) summarize(executionTimeMs int64) *kripkeSummary {
-	summary := &kripkeSummary{
-		TotalWorlds:     len(k.worlds),
+func (m *model) summarize(executionTimeMs int64) *modelSummary {
+	summary := &modelSummary{
+		TotalWorlds:     len(m.worlds),
 		ExecutionTimeMs: executionTimeMs,
 	}
 
 	violationCount := 0
-	for _, world := range k.worlds {
+	for _, world := range m.worlds {
 		if world.invariantViolation {
 			violationCount++
 		}

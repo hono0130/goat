@@ -8,19 +8,19 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestKripke_writeDot(t *testing.T) {
+func TestModel_writeDot(t *testing.T) {
 	tests := []struct {
 		name  string
-		setup func() kripke
+		setup func() model
 		want  string
 	}{
 		{
 			name: "simple state machine",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				k, _ := kripkeModel(WithStateMachines(sm))
-				_ = k.Solve()
-				return k
+				m, _ := newModel(WithStateMachines(sm))
+				_ = m.Solve()
+				return m
 			},
 			want: `digraph {
   5438153399123815847 [ label="StateMachines:
@@ -39,15 +39,15 @@ testStateMachine << entryEvent;" ];
 		},
 		{
 			name: "state machine with invariant violation",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(false)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			want: `digraph {
   5438153399123815847 [ label="StateMachines:
@@ -68,12 +68,12 @@ testStateMachine << entryEvent;" ];
 		},
 		{
 			name: "multiple state machines",
-			setup: func() kripke {
+			setup: func() model {
 				sm1 := newTestStateMachine(newTestState("state1"))
 				sm2 := newTestStateMachine(newTestState("state2"))
-				k, _ := kripkeModel(WithStateMachines(sm1, sm2))
-				_ = k.Solve()
-				return k
+				m, _ := newModel(WithStateMachines(sm1, sm2))
+				_ = m.Solve()
+				return m
 			},
 			want: `digraph {
   1352120299877738753 [ label="StateMachines:
@@ -112,9 +112,9 @@ testStateMachine << entryEvent;" ];
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := tt.setup()
+			m := tt.setup()
 			var buf bytes.Buffer
-			k.writeDot(&buf)
+			m.writeDot(&buf)
 			got := buf.String()
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
@@ -124,39 +124,39 @@ testStateMachine << entryEvent;" ];
 	}
 }
 
-func TestKripke_writeLog(t *testing.T) {
+func TestModel_writeLog(t *testing.T) {
 	tests := []struct {
 		name        string
-		setup       func() kripke
+		setup       func() model
 		description string
 		want        string
 	}{
 		{
 			name: "no invariant violations",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(true)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			description: "test invariant",
 			want:        "No invariant violations found.\n",
 		},
 		{
 			name: "with invariant violation",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(false)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			description: "failing test invariant",
 			want: `InvariantError:  failing test invariant   ✘
@@ -172,9 +172,9 @@ Path (length = 1):
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := tt.setup()
+			m := tt.setup()
 			var buf bytes.Buffer
-			k.writeLog(&buf, tt.description)
+			m.writeLog(&buf, tt.description)
 			got := buf.String()
 
 			if got != tt.want {
@@ -184,49 +184,49 @@ Path (length = 1):
 	}
 }
 
-func TestKripke_findPathsToViolations(t *testing.T) {
+func TestModel_findPathsToViolations(t *testing.T) {
 	tests := []struct {
 		name          string
-		setup         func() kripke
+		setup         func() model
 		expectedPaths [][]worldID
 	}{
 		{
 			name: "no violations",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(true)
-				k, err := kripkeModel(
+				m, err := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
 				if err != nil {
 					panic(err)
 				}
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			expectedPaths: nil,
 		},
 		{
 			name: "single violation",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(false)
-				k, err := kripkeModel(
+				m, err := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
 				if err != nil {
 					panic(err)
 				}
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			expectedPaths: [][]worldID{{8682599965454615616}},
 		},
 		{
 			name: "violation after transition",
-			setup: func() kripke {
+			setup: func() model {
 				type testCounter struct {
 					testStateMachine
 					count int
@@ -252,15 +252,15 @@ func TestKripke_findPathsToViolations(t *testing.T) {
 					return sm.count <= 1
 				})
 
-				k, err := kripkeModel(
+				m, err := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
 				if err != nil {
 					panic(err)
 				}
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			expectedPaths: [][]worldID{
 				{5790322525083387874, 15591947093441390666, 10703074720578030081, 15159594575768829045, 8395799135532667686},
@@ -270,8 +270,8 @@ func TestKripke_findPathsToViolations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := tt.setup()
-			actualPaths := k.findPathsToViolations()
+			m := tt.setup()
+			actualPaths := m.findPathsToViolations()
 
 			if diff := cmp.Diff(tt.expectedPaths, actualPaths); diff != "" {
 				t.Errorf("Violation paths mismatch (-expected +actual):\n%s", diff)
@@ -325,19 +325,19 @@ func TestWorld_label(t *testing.T) {
 	}
 }
 
-func TestKripke_worldsToJSON(t *testing.T) {
+func TestModel_worldsToJSON(t *testing.T) {
 	tests := []struct {
 		name           string
-		setupKripke    func() kripke
+		setupModel     func() model
 		expectedWorlds []worldJSON
 	}{
 		{
 			name: "single state machine creates multiple worlds",
-			setupKripke: func() kripke {
+			setupModel: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				k, _ := kripkeModel(WithStateMachines(sm))
-				_ = k.Solve()
-				return k
+				m, _ := newModel(WithStateMachines(sm))
+				_ = m.Solve()
+				return m
 			},
 			expectedWorlds: []worldJSON{
 				{
@@ -374,12 +374,12 @@ func TestKripke_worldsToJSON(t *testing.T) {
 		},
 		{
 			name: "multiple state machines creating multiple worlds",
-			setupKripke: func() kripke {
+			setupModel: func() model {
 				sm1 := newTestStateMachine(newTestState("state1"))
 				sm2 := newTestStateMachine(newTestState("state2"))
-				k, _ := kripkeModel(WithStateMachines(sm1, sm2))
-				_ = k.Solve()
-				return k
+				m, _ := newModel(WithStateMachines(sm1, sm2))
+				_ = m.Solve()
+				return m
 			},
 			expectedWorlds: []worldJSON{
 				{
@@ -481,9 +481,9 @@ func TestKripke_worldsToJSON(t *testing.T) {
 		},
 		{
 			name: "empty kripke structure",
-			setupKripke: func() kripke {
-				k, _ := kripkeModel()
-				return k
+			setupModel: func() model {
+				m, _ := newModel()
+				return m
 			},
 			expectedWorlds: []worldJSON{},
 		},
@@ -491,8 +491,8 @@ func TestKripke_worldsToJSON(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := tt.setupKripke()
-			actualWorlds := k.worldsToJSON()
+			m := tt.setupModel()
+			actualWorlds := m.worldsToJSON()
 
 			if diff := cmp.Diff(tt.expectedWorlds, actualWorlds); diff != "" {
 				t.Errorf("Worlds data mismatch (-expected +actual):\n%s", diff)
@@ -501,27 +501,27 @@ func TestKripke_worldsToJSON(t *testing.T) {
 	}
 }
 
-func TestKripke_summarize(t *testing.T) {
+func TestModel_summarize(t *testing.T) {
 	tests := []struct {
 		name            string
-		setupKripke     func() kripke
+		setupModel      func() model
 		executionTimeMs int64
-		wantSummary     *kripkeSummary
+		wantSummary     *modelSummary
 	}{
 		{
 			name: "kripke with no invariant violations",
-			setupKripke: func() kripke {
+			setupModel: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(true)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			executionTimeMs: 150,
-			wantSummary: &kripkeSummary{
+			wantSummary: &modelSummary{
 				TotalWorlds:     2,
 				ExecutionTimeMs: 150,
 				InvariantViolations: struct {
@@ -535,18 +535,18 @@ func TestKripke_summarize(t *testing.T) {
 		},
 		{
 			name: "kripke with invariant violations",
-			setupKripke: func() kripke {
+			setupModel: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(false)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
-				_ = k.Solve()
-				return k
+				_ = m.Solve()
+				return m
 			},
 			executionTimeMs: 250,
-			wantSummary: &kripkeSummary{
+			wantSummary: &modelSummary{
 				TotalWorlds:     2,
 				ExecutionTimeMs: 250,
 				InvariantViolations: struct {
@@ -560,12 +560,12 @@ func TestKripke_summarize(t *testing.T) {
 		},
 		{
 			name: "empty kripke structure",
-			setupKripke: func() kripke {
-				k, _ := kripkeModel()
-				return k
+			setupModel: func() model {
+				m, _ := newModel()
+				return m
 			},
 			executionTimeMs: 0,
-			wantSummary: &kripkeSummary{
+			wantSummary: &modelSummary{
 				TotalWorlds:     0,
 				ExecutionTimeMs: 0,
 				InvariantViolations: struct {
@@ -579,15 +579,15 @@ func TestKripke_summarize(t *testing.T) {
 		},
 		{
 			name: "multiple worlds without violations",
-			setupKripke: func() kripke {
+			setupModel: func() model {
 				sm1 := newTestStateMachine(newTestState("state1"))
 				sm2 := newTestStateMachine(newTestState("state2"))
-				k, _ := kripkeModel(WithStateMachines(sm1, sm2))
-				_ = k.Solve()
-				return k
+				m, _ := newModel(WithStateMachines(sm1, sm2))
+				_ = m.Solve()
+				return m
 			},
 			executionTimeMs: 500,
-			wantSummary: &kripkeSummary{
+			wantSummary: &modelSummary{
 				TotalWorlds:     4,
 				ExecutionTimeMs: 500,
 				InvariantViolations: struct {
@@ -603,8 +603,8 @@ func TestKripke_summarize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := tt.setupKripke()
-			summary := k.summarize(tt.executionTimeMs)
+			m := tt.setupModel()
+			summary := m.summarize(tt.executionTimeMs)
 
 			if !cmp.Equal(summary, tt.wantSummary) {
 				t.Errorf("summarize() mismatch: %v", cmp.Diff(tt.wantSummary, summary))

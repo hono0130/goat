@@ -8,21 +8,21 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func TestKripke_Solve(t *testing.T) {
+func TestModel_Solve(t *testing.T) {
 	tests := []struct {
 		name    string
-		setup   func() kripke
-		want    func() kripke
+		setup   func() model
+		want    func() model
 		wantErr bool
 	}{
 		{
 			name: "simple state machine with no transitions",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				k, _ := kripkeModel(WithStateMachines(sm))
-				return k
+				m, _ := newModel(WithStateMachines(sm))
+				return m
 			},
-			want: func() kripke {
+			want: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				getInnerStateMachine(sm).smID = testStateMachineID
 
@@ -44,7 +44,7 @@ func TestKripke_Solve(t *testing.T) {
 					},
 				})
 
-				return kripke{
+				return model{
 					worlds: worlds{
 						initialWorld.id:   initialWorld,
 						processedWorld.id: processedWorld,
@@ -61,16 +61,16 @@ func TestKripke_Solve(t *testing.T) {
 		},
 		{
 			name: "state machine with invariant violation",
-			setup: func() kripke {
+			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				inv := BoolInvariant(false) // Always false invariant
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
-				return k
+				return m
 			},
-			want: func() kripke {
+			want: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
 				getInnerStateMachine(sm).smID = testStateMachineID
 
@@ -97,7 +97,7 @@ func TestKripke_Solve(t *testing.T) {
 				initialWorldInMap := initialWorld
 				initialWorldInMap.invariantViolation = true
 
-				return kripke{
+				return model{
 					worlds: worlds{
 						initialWorld.id:   initialWorldInMap,
 						processedWorld.id: processedWorld,
@@ -115,8 +115,8 @@ func TestKripke_Solve(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k := tt.setup()
-			err := k.Solve()
+			m := tt.setup()
+			err := m.Solve()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Solve() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -126,79 +126,79 @@ func TestKripke_Solve(t *testing.T) {
 
 				opts := cmp.Options{
 					cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
-					cmpopts.IgnoreFields(kripke{}, "invariants"), // Ignore function pointers
-					cmp.AllowUnexported(kripke{}, world{}, environment{}, StateMachine{}),
+					cmpopts.IgnoreFields(model{}, "invariants"), // Ignore function pointers
+					cmp.AllowUnexported(model{}, world{}, environment{}, StateMachine{}),
 				}
 
-				if diff := cmp.Diff(expected, k, opts); diff != "" {
+				if diff := cmp.Diff(expected, m, opts); diff != "" {
 					t.Errorf("Solve() result mismatch (-want +got):\n%s", diff)
 				}
 			}
 
-			if !k.worlds.member(k.initial) {
+			if !m.worlds.member(m.initial) {
 				t.Error("Initial world should be in explored worlds")
 			}
 		})
 	}
 }
 
-func TestKripke_evaluateInvariants(t *testing.T) {
+func TestModel_evaluateInvariants(t *testing.T) {
 	tests := []struct {
 		name          string
-		setup         func() (kripke, world)
+		setup         func() (model, world)
 		wantViolation bool
 	}{
 		{
 			name: "no invariants",
-			setup: func() (kripke, world) {
+			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
-				k, _ := kripkeModel(WithStateMachines(sm))
+				m, _ := newModel(WithStateMachines(sm))
 				w := initialWorld(sm)
-				return k, w
+				return m, w
 			},
 			wantViolation: false,
 		},
 		{
 			name: "passing invariant",
-			setup: func() (kripke, world) {
+			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
 				inv := BoolInvariant(true)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
 				w := initialWorld(sm)
-				return k, w
+				return m, w
 			},
 			wantViolation: false,
 		},
 		{
 			name: "failing invariant",
-			setup: func() (kripke, world) {
+			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
 				inv := BoolInvariant(false)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv),
 				)
 				w := initialWorld(sm)
-				return k, w
+				return m, w
 			},
 			wantViolation: true,
 		},
 		{
 			name: "multiple invariants with one failing",
-			setup: func() (kripke, world) {
+			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
 				inv1 := BoolInvariant(true)
 				inv2 := BoolInvariant(false)
 				inv3 := BoolInvariant(true)
-				k, _ := kripkeModel(
+				m, _ := newModel(
 					WithStateMachines(sm),
 					WithInvariants(inv1, inv2, inv3),
 				)
 				w := initialWorld(sm)
-				return k, w
+				return m, w
 			},
 			wantViolation: true,
 		},
@@ -206,8 +206,8 @@ func TestKripke_evaluateInvariants(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k, w := tt.setup()
-			result := k.evaluateInvariants(w)
+			m, w := tt.setup()
+			result := m.evaluateInvariants(w)
 			if result == tt.wantViolation {
 				t.Errorf("evaluateInvariants() returned %v, but expected %v", result, !tt.wantViolation)
 			}
