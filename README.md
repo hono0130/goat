@@ -52,8 +52,11 @@ func main() {
     })
 
     // Create instance and run model checking
-    sm := spec.NewInstance()
-    err := goat.Test(
+    sm, err := spec.NewInstance()
+    if err != nil {
+        log.Fatal(err)
+    }
+    err = goat.Test(
         goat.WithStateMachines(sm),
         goat.WithInvariants(
             goat.NewInvariant(sm, func(sm *MyStateMachine) bool {

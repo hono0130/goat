@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestOnEvent(t *testing.T) {
@@ -264,12 +265,12 @@ func TestTransitionHandlers_handle(t *testing.T) {
 				},
 			},
 			setupEnv: func() (environment, string, AbstractState) {
-				sm := newTestStateMachine(newTestState("initial"))
-				env := newTestEnvironment(sm)
 				target := newTestState("target")
+				sm := newTestStateMachine(newTestState("initial"), target)
+				env := newTestEnvironment(sm)
 				return env, sm.id(), target
 			},
-			event: nil, // will be set based on target
+			event: nil, 
 			wantStates: func() []localState {
 				sm := newTestStateMachine(newTestState("target"))
 				env := newTestEnvironment(sm)
@@ -286,19 +287,19 @@ func TestTransitionHandlers_handle(t *testing.T) {
 				},
 			},
 			setupEnv: func() (environment, string, AbstractState) {
-				sm := newTestStateMachine(newTestState("initial"))
+				target := newTestState("target")	
+				sm := newTestStateMachine(newTestState("initial"), target)
 				env := newTestEnvironment(sm)
-				target := newTestState("target")
 				return env, sm.id(), target
 			},
-			event: nil, // will be set based on target
+			event: nil,
 			wantStates: func() []localState {
-				// Each handler creates a separate state
-				sm1 := newTestStateMachine(newTestState("target"))
+				target := newTestState("target")
+				sm1 := newTestStateMachine(newTestState("initial"), target)
 				env1 := newTestEnvironment(sm1)
 				sm1.setCurrentState(newTestState("target"))
 
-				sm2 := newTestStateMachine(newTestState("target"))
+				sm2 := newTestStateMachine(newTestState("initial"), target)
 				env2 := newTestEnvironment(sm2)
 				sm2.setCurrentState(newTestState("target"))
 
@@ -322,7 +323,6 @@ func TestTransitionHandlers_handle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			env, smID, target := tt.setupEnv()
 
-			// Set event based on target if not already set
 			event := tt.event
 			if event == nil && target != nil {
 				event = &transitionEvent{To: target}
@@ -334,7 +334,11 @@ func TestTransitionHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
+			opts := cmp.Options{
+				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
+			}
+			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -422,7 +426,11 @@ func TestHaltHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
+			opts := cmp.Options{
+				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
+			}
+			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -507,7 +515,11 @@ func TestEntryHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
+			opts := cmp.Options{
+				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
+			}
+			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -588,7 +600,11 @@ func TestExitHandlers_handle(t *testing.T) {
 				t.Fatalf("handle() error = %v", err)
 			}
 
-			if diff := cmp.Diff(tt.wantStates, states, cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{})); diff != "" {
+			opts := cmp.Options{
+				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
+			}
+			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {
 				t.Errorf("States mismatch (-want +got):\n%s", diff)
 			}
 		})

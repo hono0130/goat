@@ -22,9 +22,13 @@ func newTestState(name string) *testState {
 
 func newTestStateMachine(initialState AbstractState, states ...AbstractState) *testStateMachine {
 	spec := NewStateMachineSpec(&testStateMachine{})
-	spec.DefineStates(states...)
+	allStates := append([]AbstractState{initialState}, states...)
+	spec.DefineStates(allStates...)
 	spec.SetInitialState(initialState)
-	sm := spec.NewInstance()
+	sm, err := spec.NewInstance()
+	if err != nil {
+		panic(err.Error()) // Test helper can panic for simplicity
+	}
 	return sm
 }
 

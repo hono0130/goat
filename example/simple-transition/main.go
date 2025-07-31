@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/goatx/goat"
 )
@@ -52,7 +53,10 @@ func createSimpleTransitionModel() []goat.Option {
 	})
 
 	// === Create Instance ===
-	sm := spec.NewInstance()
+	sm, err := spec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	opts := []goat.Option{
 		goat.WithStateMachines(sm),

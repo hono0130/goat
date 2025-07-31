@@ -73,7 +73,11 @@ func TestStateMachineSpec_NewInstance(t *testing.T) {
 		spec.DefineStates(initialState)
 		spec.SetInitialState(initialState)
 
-		instance := spec.NewInstance()
+		instance, err := spec.NewInstance()
+		if err != nil {
+			t.Errorf("NewInstance() returned error: %v", err)
+			return
+		}
 
 		if instance == nil {
 			t.Error("Instance should not be nil")

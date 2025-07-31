@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/goatx/goat"
 )
@@ -241,23 +242,38 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 
 	// === Create Instances ===
 	// Create database instance
-	db := dbSpec.NewInstance()
+	db, err := dbSpec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
 	db.Reservations = make([]Reservation, 0)
 
 	// Create server instances
-	server1 := serverSpec.NewInstance()
+	server1, err := serverSpec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
 	server1.DB = db
 
-	server2 := serverSpec.NewInstance()
+	server2, err := serverSpec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
 	server2.DB = db
 
 	// Create client instances
-	client1 := clientSpec.NewInstance()
+	client1, err := clientSpec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
 	client1.ClientID = 0
 	client1.TargetRoom = 101
 	client1.Server = server1
 
-	client2 := clientSpec.NewInstance()
+	client2, err := clientSpec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
 	client2.ClientID = 1
 	client2.TargetRoom = 101
 	client2.Server = server2

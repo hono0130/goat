@@ -246,7 +246,10 @@ func TestModel_findPathsToViolations(t *testing.T) {
 					sm.count = 2
 				})
 
-				sm := spec.NewInstance()
+				sm, err := spec.NewInstance()
+				if err != nil {
+					panic(err)
+				}
 
 				inv := NewInvariant(sm, func(sm *testCounter) bool {
 					return sm.count <= 1

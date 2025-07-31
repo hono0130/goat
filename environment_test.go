@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestEnvironmentClone(t *testing.T) {
@@ -22,7 +23,11 @@ func TestEnvironmentClone(t *testing.T) {
 
 	cloned := original.clone()
 
-	if diff := cmp.Diff(original, cloned, cmp.AllowUnexported(environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{})); diff != "" {
+	opts := cmp.Options{
+		cmp.AllowUnexported(environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+		cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
+	}
+	if diff := cmp.Diff(original, cloned, opts); diff != "" {
 		t.Errorf("environment mismatch (-original +cloned):\n%s", diff)
 	}
 

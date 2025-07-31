@@ -102,17 +102,39 @@ func (spec *StateMachineSpec[T]) setDefaultHandlerBuilders(state AbstractState) 
 	})
 }
 
+func (spec *StateMachineSpec[T]) validate() error {
+	if spec.initialState == nil {
+		return fmt.Errorf("state machine spec has no initial state")
+	}
+
+	for _, definedState := range spec.states {
+		if sameState(definedState, spec.initialState) {
+			return nil
+		}
+	}
+	
+	return fmt.Errorf("initial state is not in defined states")
+}
+
 // NewInstance creates a new state machine instance based on this specification.
 // Each instance is independent and starts in the initial state defined by
 // SetInitialState with all handlers configured.
 //
-// Returns a fully configured state machine instance ready for use.
+// Returns a fully configured state machine instance and any validation error.
 //
 // Example:
 //
-//	instance1 := spec.NewInstance()
-//	instance2 := spec.NewInstance() // Independent instance
-func (spec *StateMachineSpec[T]) NewInstance() T {
+//	instance1, err := spec.NewInstance()
+//	if err != nil {
+//		return err
+//	}
+//	instance2, err := spec.NewInstance() // Independent instance
+func (spec *StateMachineSpec[T]) NewInstance() (T, error) {
+	var zero T
+	if err := spec.validate(); err != nil {
+		return zero, err
+	}
+
 	instance := cloneStateMachine(spec.prototype).(T)
 	innerSM := getInnerStateMachine(instance)
 
@@ -126,7 +148,7 @@ func (spec *StateMachineSpec[T]) NewInstance() T {
 		innerSM.HandlerBuilders[state] = append([]handlerBuilderInfo{}, builders...)
 	}
 
-	return instance
+	return instance, nil
 }
 
 // AbstractState is the base interface for all states in the state machine.

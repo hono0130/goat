@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/goatx/goat"
 )
@@ -153,8 +154,14 @@ func createClientServerModel() []goat.Option {
 	)
 
 	// === Create Instances ===
-	server := serverSpec.NewInstance()
-	client := clientSpec.NewInstance()
+	server, err := serverSpec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
+	client, err := clientSpec.NewInstance()
+	if err != nil {
+		log.Fatal(err)
+	}
 	client.Server = server
 
 	opts := []goat.Option{
