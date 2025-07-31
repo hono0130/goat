@@ -112,7 +112,7 @@ func (spec *StateMachineSpec[T]) validate() error {
 			return nil
 		}
 	}
-	
+
 	return fmt.Errorf("initial state is not in defined states")
 }
 

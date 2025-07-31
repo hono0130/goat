@@ -270,7 +270,7 @@ func TestTransitionHandlers_handle(t *testing.T) {
 				env := newTestEnvironment(sm)
 				return env, sm.id(), target
 			},
-			event: nil, 
+			event: nil,
 			wantStates: func() []localState {
 				sm := newTestStateMachine(newTestState("target"))
 				env := newTestEnvironment(sm)
@@ -287,7 +287,7 @@ func TestTransitionHandlers_handle(t *testing.T) {
 				},
 			},
 			setupEnv: func() (environment, string, AbstractState) {
-				target := newTestState("target")	
+				target := newTestState("target")
 				sm := newTestStateMachine(newTestState("initial"), target)
 				env := newTestEnvironment(sm)
 				return env, sm.id(), target
