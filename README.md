@@ -96,3 +96,22 @@ Run any example:
 ```bash
 go run ./example/simple-transition
 ```
+
+### Multi state machine invariants
+
+- `NewMultiInvariant(check func(Machines) bool, sms ...AbstractStateMachine)` — reference multiple machines in one invariant
+- `NewInvariant2` / `NewInvariant3` — convenience wrappers for 2 or 3 machines
+- `Machines` + `GetMachine[T]` — type-safe access to referenced machines during evaluation
+
+```go
+inv := goat.NewInvariant2(primary, replica, func(p *Storage, r *Storage) bool {
+    // Simple consistency: every key in primary exists in replica with the same value
+    for key, pv := range p.Data {
+        rv, ok := r.Data[key]
+        if !ok || rv != pv {
+            return false
+        }
+    }
+    return true 
+})
+```

@@ -164,8 +164,13 @@ func createClientServerModel() []goat.Option {
 	}
 	client.Server = server
 
+	inv := goat.NewInvariant2(client, server, func(c *Client, s *Server) bool {
+		return c.Server != nil && s != nil
+	})
+
 	opts := []goat.Option{
 		goat.WithStateMachines(server, client),
+		goat.WithInvariants(inv),
 	}
 
 	return opts
