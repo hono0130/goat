@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/goatx/goat"
@@ -43,5 +45,29 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 
 	if diff := cmp.Diff(expectedSummary, got, ignoreOpts); diff != "" {
 		t.Errorf("Summary mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestSequenceDiagram(t *testing.T) {
+	tempDir := t.TempDir()
+	outputPath := filepath.Join(tempDir, "sequence.md")
+
+	err := goat.AnalyzePackage(".", outputPath)
+	if err != nil {
+		t.Fatalf("AnalyzePackage failed: %v", err)
+	}
+
+	got, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("Failed to read output file: %v", err)
+	}
+
+	want, err := os.ReadFile("sequence.md")
+	if err != nil {
+		t.Fatalf("Failed to read expected file: %v", err)
+	}
+
+	if string(got) != string(want) {
+		t.Errorf("Generated sequence diagram doesn't match expected:\ngot:\n%s\nwant:\n%s", got, want)
 	}
 }
