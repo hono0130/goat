@@ -9,6 +9,15 @@ import (
 	"sort"
 )
 
+const (
+	stateMachineType = "StateMachine"
+	sendToFunction   = "SendTo"
+	unknownType      = "Unknown"
+	onEntryHandler   = "OnEntry"
+	onEventHandler   = "OnEvent"
+	onExitHandler    = "OnExit"
+)
+
 type flow struct {
 	from             string
 	to               string
@@ -114,7 +123,7 @@ func communicationFlows(pkg *PackageInfo) []flow {
 			}
 			var eventType string
 			if handlerType == onEventHandler && len(callExpr.Args) >= 4 {
-				eventType = getEventType(callExpr.Args[2], pkg)
+				eventType = getTypeName(callExpr.Args[2], pkg, true)
 			}
 			pos := pkg.Fset.Position(handlerFunc.Pos())
 			handlerID := fmt.Sprintf("%s_%s_%s_%s:%d",
@@ -137,8 +146,8 @@ func communicationFlows(pkg *PackageInfo) []flow {
 				}
 				f := flow{
 					from:             stateMachineType,
-					to:               resolveTargetType(sendToCall.Args[1], pkg),
-					eventType:        getEventType(sendToCall.Args[2], pkg),
+					to:               getTypeName(sendToCall.Args[1], pkg, false),
+					eventType:        getTypeName(sendToCall.Args[2], pkg, true),
 					handlerType:      handlerType,
 					handlerEventType: eventType,
 					handlerID:        handlerID,
@@ -321,12 +330,4 @@ func getTypeName(expr ast.Expr, pkg *PackageInfo, isEvent bool) string {
 		return e.Sel.Name
 	}
 	return unknownType
-}
-
-func resolveTargetType(targetExpr ast.Expr, pkg *PackageInfo) string {
-	return getTypeName(targetExpr, pkg, false)
-}
-
-func getEventType(eventExpr ast.Expr, pkg *PackageInfo) string {
-	return getTypeName(eventExpr, pkg, true)
 }

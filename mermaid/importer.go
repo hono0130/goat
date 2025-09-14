@@ -13,6 +13,11 @@ import (
 	"strings"
 )
 
+const (
+	goatPackageName     = "goat"
+	goatPackageFullPath = "github.com/goatx/goat"
+)
+
 // PackageInfo holds the parsed syntax and type information for a Go package.
 type PackageInfo struct {
 	Fset      *token.FileSet
