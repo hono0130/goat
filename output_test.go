@@ -41,9 +41,10 @@ testStateMachine << entryEvent;" ];
 			name: "state machine with invariant violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition("inv", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				_ = m.Solve()
@@ -135,9 +136,10 @@ func TestModel_writeLog(t *testing.T) {
 			name: "no invariant violations",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				_ = m.Solve()
@@ -150,9 +152,10 @@ func TestModel_writeLog(t *testing.T) {
 			name: "with invariant violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				_ = m.Solve()
@@ -194,9 +197,10 @@ func TestModel_findPathsToViolations(t *testing.T) {
 			name: "no violations",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition("pass", true)
 				m, err := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				if err != nil {
@@ -211,9 +215,10 @@ func TestModel_findPathsToViolations(t *testing.T) {
 			name: "single violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition("fail", false)
 				m, err := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				if err != nil {
@@ -251,12 +256,13 @@ func TestModel_findPathsToViolations(t *testing.T) {
 					panic(err)
 				}
 
-				inv := NewInvariant(sm, func(sm *testCounter) bool {
+				inv := NewCondition("count<=1", sm, func(sm *testCounter) bool {
 					return sm.count <= 1
 				})
 
 				m, err := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				if err != nil {
@@ -515,9 +521,10 @@ func TestModel_summarize(t *testing.T) {
 			name: "kripke with no invariant violations",
 			setupModel: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				_ = m.Solve()
@@ -540,9 +547,10 @@ func TestModel_summarize(t *testing.T) {
 			name: "kripke with invariant violations",
 			setupModel: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				_ = m.Solve()
