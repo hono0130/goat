@@ -21,7 +21,8 @@ import (
 //
 //	err := goat.Test(
 //	    goat.WithStateMachines(serverSM, clientSM),
-//	    goat.WithInvariants(safetyInvariant),
+//	    goat.WithConditions(cond),
+//	    goat.WithInvariants(cond),
 //	)
 func Test(opts ...Option) error {
 	model, err := newModel(opts...)
@@ -67,21 +68,40 @@ func WithStateMachines(sms ...AbstractStateMachine) Option {
 	})
 }
 
-// WithInvariants configures the test with the specified invariants.
-// These invariants will be checked during model exploration to detect
+// WithConditions registers conditions that can be referenced by invariants or other checks.
+//
+// Parameters:
+//   - cs: The conditions to register
+//
+// Returns an Option that can be passed to Test() or Debug().
+func WithConditions(cs ...Condition) Option {
+	return optionFunc(func(o *options) {
+		if o.conds == nil {
+			o.conds = make(map[ConditionName]Condition)
+		}
+		for _, c := range cs {
+			o.conds[c.Name()] = c
+		}
+	})
+}
+
+// WithInvariants configures the test with the specified conditions as invariants.
+// These conditions will be checked during model exploration to detect
 // violations of system properties.
 //
 // Parameters:
-//   - is: The invariants to check during testing
+//   - cs: The conditions to check during testing
 //
 // Returns an Option that can be passed to Test() or Debug().
 //
 // Example:
 //
-//	goat.WithInvariants(exclusionInvariant, livenessInvariant)
-func WithInvariants(is ...Invariant) Option {
+//	goat.WithInvariants(conditionA, conditionB)
+func WithInvariants(cs ...Condition) Option {
 	return optionFunc(func(o *options) {
-		o.invariants = is
+		for _, c := range cs {
+			o.invariants = append(o.invariants, c.Name())
+		}
 	})
 }
 
@@ -98,7 +118,7 @@ func WithInvariants(is ...Invariant) Option {
 // Example:
 //
 //	var buf bytes.Buffer
-//	err := goat.Debug(&buf, goat.WithStateMachines(sm), goat.WithInvariants(inv))
+//	err := goat.Debug(&buf, goat.WithStateMachines(sm), goat.WithConditions(cond), goat.WithInvariants(cond))
 //	fmt.Println(buf.String()) // JSON output
 func Debug(w io.Writer, opts ...Option) error {
 	model, err := newModel(opts...)
@@ -137,13 +157,13 @@ func Debug(w io.Writer, opts ...Option) error {
 //
 // Example:
 //
-//	var file *os.File
-//	file, err := os.Create("model.dot")
-//	if err != nil {
-//	    return err
-//	}
-//	defer file.Close()
-//	err = goat.WriteDot(file, goat.WithStateMachines(sm), goat.WithInvariants(inv))
+//		var file *os.File
+//		file, err := os.Create("model.dot")
+//		if err != nil {
+//		    return err
+//		}
+//		defer file.Close()
+//	     err = goat.WriteDot(file, goat.WithStateMachines(sm), goat.WithConditions(cond), goat.WithInvariants(cond))
 func WriteDot(w io.Writer, opts ...Option) error {
 	model, err := newModel(opts...)
 	if err != nil {
