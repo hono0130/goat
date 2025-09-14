@@ -309,27 +309,29 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 	client2.TargetRoom = 101
 	client2.Server = server2
 
+	cond := goat.NewCondition("no-double-book", db, func(db *DBStateMachine) bool {
+		roomClients := make(map[int]map[int]bool)
+		for _, res := range db.Reservations {
+			if _, ok := roomClients[res.RoomID]; !ok {
+				roomClients[res.RoomID] = make(map[int]bool)
+			}
+			roomClients[res.RoomID][res.ClientID] = true
+		}
+
+		for _, clients := range roomClients {
+			if len(clients) > 1 {
+				return false
+			}
+		}
+
+		return true
+	})
+
 	opts := []goat.Option{
 		goat.WithStateMachines(server1, server2, db, client1, client2),
-		goat.WithInvariants(
-			goat.NewInvariant(db, func(db *DBStateMachine) bool {
-				roomClients := make(map[int]map[int]bool)
-				for _, res := range db.Reservations {
-					if _, ok := roomClients[res.RoomID]; !ok {
-						roomClients[res.RoomID] = make(map[int]bool)
-					}
-					roomClients[res.RoomID][res.ClientID] = true
-				}
-
-				for _, clients := range roomClients {
-					if len(clients) > 1 {
-						return false
-					}
-				}
-
-				return true
-			}),
-		),
+		goat.WithConditions(cond),
+		goat.WithInvariants(cond),
+		goat.WithTemporalRules(goat.AlwaysEventually(cond)),
 	}
 
 	return opts
