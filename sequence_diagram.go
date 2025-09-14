@@ -3,14 +3,16 @@ package goat
 import (
 	"fmt"
 	"go/ast"
+	"go/importer"
+	"go/parser"
 	"go/token"
 	"go/types"
 	"io"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"golang.org/x/tools/go/packages"
 )
 
 const (
@@ -55,6 +57,59 @@ type SequenceDiagramElement struct {
 	IsOptional bool // whether to display as opt block
 }
 
+// PackageInfo holds the parsed syntax and type information for a Go package.
+type PackageInfo struct {
+	Fset      *token.FileSet
+	Syntax    []*ast.File
+	TypesInfo *types.Info
+}
+
+type moduleImporter struct {
+	root string
+	std  types.Importer
+}
+
+func newModuleImporter(root string) moduleImporter {
+	return moduleImporter{root: root, std: importer.Default()}
+}
+
+func (m moduleImporter) Import(path string) (*types.Package, error) {
+	if path == goatPackageFullPath {
+		return m.importGoat()
+	}
+	return m.std.Import(path)
+}
+
+func (m moduleImporter) ImportFrom(path, dir string, mode types.ImportMode) (*types.Package, error) {
+	if path == goatPackageFullPath {
+		return m.importGoat()
+	}
+	if imp, ok := m.std.(types.ImporterFrom); ok {
+		return imp.ImportFrom(path, dir, mode)
+	}
+	return nil, fmt.Errorf("unsupported importer")
+}
+
+func (m moduleImporter) importGoat() (*types.Package, error) {
+	fset := token.NewFileSet()
+	pkgs, err := parser.ParseDir(fset, m.root, func(fi fs.FileInfo) bool {
+		return !strings.HasSuffix(fi.Name(), "_test.go")
+	}, 0)
+	if err != nil {
+		return nil, err
+	}
+	pkg, ok := pkgs[goatPackageName]
+	if !ok {
+		return nil, fmt.Errorf("goat package not found")
+	}
+	files := make([]*ast.File, 0, len(pkg.Files))
+	for _, f := range pkg.Files {
+		files = append(files, f)
+	}
+	conf := types.Config{Importer: m.std, FakeImportC: true}
+	return conf.Check(goatPackageFullPath, fset, files, nil)
+}
+
 // AnalyzePackage analyzes a Go package and generates a Mermaid sequence diagram
 func AnalyzePackage(packagePath string, writer io.Writer) error {
 	// Load package with type information
@@ -72,8 +127,8 @@ func AnalyzePackage(packagePath string, writer io.Writer) error {
 	// Build sequence diagram elements with opt blocks
 	elements := buildSequenceDiagramElements(flows)
 
-	// Generate Mermaid with groups
-	mermaidContent := generateMermaidWithGroups(elements, stateMachineOrder)
+	// Render the final mermaid diagram
+	mermaidContent := generateMermaid(elements, stateMachineOrder)
 
 	// Write to writer
 	_, err = writer.Write([]byte(mermaidContent))
@@ -84,40 +139,61 @@ func AnalyzePackage(packagePath string, writer io.Writer) error {
 	return nil
 }
 
-// loadPackageWithTypes loads a package with type information using go/packages
-func loadPackageWithTypes(packagePath string) (*packages.Package, error) {
-	cfg := &packages.Config{
-		Mode: packages.NeedName |
-			packages.NeedFiles |
-			packages.NeedCompiledGoFiles |
-			packages.NeedSyntax |
-			packages.NeedTypes |
-			packages.NeedTypesSizes |
-			packages.NeedTypesInfo |
-			packages.NeedImports |
-			packages.NeedDeps |
-			packages.NeedModule,
-		Dir: packagePath,
-	}
-	pkgs, err := packages.Load(cfg, ".")
+// loadPackageWithTypes parses the package at packagePath and performs type checking.
+func loadPackageWithTypes(packagePath string) (*PackageInfo, error) {
+	fset := token.NewFileSet()
+	parsed, err := parser.ParseDir(fset, packagePath, func(fi fs.FileInfo) bool {
+		return !strings.HasSuffix(fi.Name(), "_test.go")
+	}, 0)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load package: %w", err)
+		return nil, fmt.Errorf("failed to parse package: %w", err)
 	}
-
-	if len(pkgs) != 1 {
-		return nil, fmt.Errorf("expected 1 package, got %d", len(pkgs))
+	if len(parsed) != 1 {
+		return nil, fmt.Errorf("expected 1 package, got %d", len(parsed))
 	}
-
-	pkg := pkgs[0]
-	if len(pkg.Errors) > 0 {
-		return nil, fmt.Errorf("package has errors: %v", pkg.Errors)
+	var astPkg *ast.Package
+	for _, p := range parsed {
+		astPkg = p
 	}
+	files := make([]*ast.File, 0, len(astPkg.Files))
+	for _, f := range astPkg.Files {
+		files = append(files, f)
+	}
+	info := &types.Info{
+		Types:      make(map[ast.Expr]types.TypeAndValue),
+		Defs:       make(map[*ast.Ident]types.Object),
+		Uses:       make(map[*ast.Ident]types.Object),
+		Implicits:  make(map[ast.Node]types.Object),
+		Selections: make(map[*ast.SelectorExpr]*types.Selection),
+		Scopes:     make(map[ast.Node]*types.Scope),
+	}
+	abs, err := filepath.Abs(packagePath)
+	if err != nil {
+		return nil, err
+	}
+	conf := types.Config{Importer: newModuleImporter(findModuleRoot(abs)), FakeImportC: true}
+	if _, err := conf.Check(astPkg.Name, fset, files, info); err != nil {
+		return nil, fmt.Errorf("type checking failed: %w", err)
+	}
+	return &PackageInfo{Fset: fset, Syntax: files, TypesInfo: info}, nil
+}
 
-	return pkg, nil
+func findModuleRoot(path string) string {
+	dir := path
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return path
+		}
+		dir = parent
+	}
 }
 
 // extractStateMachineOrder extracts state machine types in definition order
-func extractStateMachineOrder(pkg *packages.Package) []string {
+func extractStateMachineOrder(pkg *PackageInfo) []string {
 	var stateMachineOrder []string
 	seenStateMachines := make(map[string]bool)
 
@@ -161,7 +237,7 @@ func extractStateMachineOrder(pkg *packages.Package) []string {
 }
 
 // extractCommunicationFlows extracts all communication flows from the package
-func extractCommunicationFlows(pkg *packages.Package) []CommunicationFlow {
+func extractCommunicationFlows(pkg *PackageInfo) []CommunicationFlow {
 	var flows []CommunicationFlow
 
 	for _, file := range pkg.Syntax {
@@ -316,7 +392,7 @@ func isFromGoat(sel *ast.SelectorExpr, info *types.Info) bool {
 }
 
 // getTypeName extracts type name from expression with type info priority and AST fallback
-func getTypeName(expr ast.Expr, pkg *packages.Package, isEvent bool) string {
+func getTypeName(expr ast.Expr, pkg *PackageInfo, isEvent bool) string {
 	// Try to get type from type information first
 	if tv, ok := pkg.TypesInfo.Types[expr]; ok && tv.Type != nil {
 		typ := tv.Type
@@ -358,216 +434,183 @@ func getTypeName(expr ast.Expr, pkg *packages.Package, isEvent bool) string {
 }
 
 // resolveTargetType resolves target expressions to state machine names using type information
-func resolveTargetType(targetExpr ast.Expr, pkg *packages.Package) string {
+func resolveTargetType(targetExpr ast.Expr, pkg *PackageInfo) string {
 	return getTypeName(targetExpr, pkg, false)
 }
 
 // getEventType extracts event type name from event expression using type information
-func getEventType(eventExpr ast.Expr, pkg *packages.Package) string {
+func getEventType(eventExpr ast.Expr, pkg *PackageInfo) string {
 	return getTypeName(eventExpr, pkg, true)
 }
 
-// buildSequenceDiagramElements organizes flows into sequence diagram elements with opt blocks
+// groupFlowsByHandler returns flows keyed by handler ID.
+func groupFlowsByHandler(flows []CommunicationFlow) map[string][]CommunicationFlow {
+	groups := make(map[string][]CommunicationFlow)
+	for _, f := range flows {
+		groups[f.HandlerID] = append(groups[f.HandlerID], f)
+	}
+	return groups
+}
+
+// findTriggerFlow locates the flow that triggered the given handler flow.
+func findTriggerFlow(handlerFlow CommunicationFlow, flows []CommunicationFlow) *CommunicationFlow {
+	for _, f := range flows {
+		if f.EventType == handlerFlow.HandlerEventType && f.To == handlerFlow.From {
+			return &f
+		}
+	}
+	return nil
+}
+
+// findNextFlows returns flows triggered by the given flow.
+func findNextFlows(flow CommunicationFlow, flows []CommunicationFlow) []CommunicationFlow {
+	var next []CommunicationFlow
+	for _, candidate := range flows {
+		if candidate.HandlerType == onEventHandler &&
+			candidate.HandlerEventType == flow.EventType &&
+			candidate.From == flow.To {
+			next = append(next, candidate)
+		}
+	}
+	return next
+}
+
+// findFlowPosition returns the index of a flow in the original slice.
+func findFlowPosition(target CommunicationFlow, flows []CommunicationFlow) int {
+	for i, f := range flows {
+		if f.HandlerID == target.HandlerID &&
+			f.From == target.From &&
+			f.To == target.To &&
+			f.EventType == target.EventType {
+			return i
+		}
+	}
+	return len(flows)
+}
+
+// collectChain gathers flows that are transitively triggered by the given flow.
+func collectChain(flow CommunicationFlow, flows []CommunicationFlow, processed map[string]bool) []CommunicationFlow {
+	var chain []CommunicationFlow
+	for _, next := range findNextFlows(flow, flows) {
+		if processed[next.HandlerID] {
+			continue
+		}
+		processed[next.HandlerID] = true
+		chain = append(chain, next)
+		chain = append(chain, collectChain(next, flows, processed)...)
+	}
+	return chain
+}
+
+// buildSequenceDiagramElements organizes flows into sequence diagram elements with opt blocks.
 func buildSequenceDiagramElements(flows []CommunicationFlow) []SequenceDiagramElement {
 	var elements []SequenceDiagramElement
 	processed := make(map[string]bool)
-	handlerGroups := make(map[string][]CommunicationFlow)
+	handlerGroups := groupFlowsByHandler(flows)
 
-	// Group flows by handler ID
-	for _, flow := range flows {
-		handlerGroups[flow.HandlerID] = append(handlerGroups[flow.HandlerID], flow)
-	}
-
-	// Helper functions (inlined for better readability)
-	findTriggerFlow := func(handlerFlow CommunicationFlow) *CommunicationFlow {
-		for _, flow := range flows {
-			if flow.EventType == handlerFlow.HandlerEventType && flow.To == handlerFlow.From {
-				return &flow
-			}
-		}
-		return nil
-	}
-
-	findNextFlows := func(flow CommunicationFlow) []CommunicationFlow {
-		var next []CommunicationFlow
-		for _, candidate := range flows {
-			if candidate.HandlerType == onEventHandler &&
-				candidate.HandlerEventType == flow.EventType &&
-				candidate.From == flow.To {
-				next = append(next, candidate)
-			}
-		}
-		return next
-	}
-
-	findFlowPosition := func(target CommunicationFlow) int {
-		for i, flow := range flows {
-			if flow.HandlerID == target.HandlerID &&
-				flow.From == target.From &&
-				flow.To == target.To &&
-				flow.EventType == target.EventType {
-				return i
-			}
-		}
-		return len(flows)
-	}
-
-	var collectChain func(CommunicationFlow) []CommunicationFlow
-	collectChain = func(flow CommunicationFlow) []CommunicationFlow {
-		var chain []CommunicationFlow
-		for _, next := range findNextFlows(flow) {
-			if !processed[next.HandlerID] {
-				chain = append(chain, next)
-				processed[next.HandlerID] = true
-				chain = append(chain, collectChain(next)...)
-			}
-		}
-		return chain
-	}
-
-	var processFlow func(CommunicationFlow) []SequenceDiagramElement
-	processFlow = func(flow CommunicationFlow) []SequenceDiagramElement {
-		var elements []SequenceDiagramElement
-
+	var processFlow func(CommunicationFlow)
+	processFlow = func(flow CommunicationFlow) {
 		if processed[flow.HandlerID] {
-			return elements
+			return
 		}
 
 		handlerFlows := handlerGroups[flow.HandlerID]
-
 		if len(handlerFlows) > 1 {
-			// Multiple flows from same handler = conditional branches
-			// Put trigger flow in opt block first if needed
-			if trigger := findTriggerFlow(flow); trigger != nil && !processed[trigger.HandlerID] {
-				elements = append(elements, SequenceDiagramElement{
-					Flows:      []CommunicationFlow{*trigger},
-					IsOptional: true,
-				})
+			if trigger := findTriggerFlow(flow, flows); trigger != nil && !processed[trigger.HandlerID] {
+				elements = append(elements, SequenceDiagramElement{Flows: []CommunicationFlow{*trigger}, IsOptional: true})
 				processed[trigger.HandlerID] = true
 			}
 
-			// Sort flows by original order to ensure consistent output
-			sortedFlows := make([]CommunicationFlow, len(handlerFlows))
-			copy(sortedFlows, handlerFlows)
-			sort.Slice(sortedFlows, func(i, j int) bool {
-				flow1, flow2 := sortedFlows[j], sortedFlows[i]
-				pos1, pos2 := findFlowPosition(flow1), findFlowPosition(flow2)
-				hasChain1 := len(findNextFlows(flow1)) > 0
-				hasChain2 := len(findNextFlows(flow2)) > 0
-
-				if hasChain1 && !hasChain2 {
-					return true
+			sorted := append([]CommunicationFlow(nil), handlerFlows...)
+			sort.Slice(sorted, func(i, j int) bool {
+				fi, fj := sorted[i], sorted[j]
+				hasChainI := len(findNextFlows(fi, flows)) > 0
+				hasChainJ := len(findNextFlows(fj, flows)) > 0
+				if hasChainI != hasChainJ {
+					return !hasChainI
 				}
-				if !hasChain1 && hasChain2 {
-					return false
-				}
-				return pos1 > pos2
+				return findFlowPosition(fi, flows) < findFlowPosition(fj, flows)
 			})
 
-			// Each conditional path becomes an opt block
-			for _, hFlow := range sortedFlows {
-				pathFlows := []CommunicationFlow{hFlow}
-				pathFlows = append(pathFlows, collectChain(hFlow)...)
-
-				elements = append(elements, SequenceDiagramElement{
-					Flows:      pathFlows,
-					IsOptional: true,
-				})
+			for _, hFlow := range sorted {
+				path := append([]CommunicationFlow{hFlow}, collectChain(hFlow, flows, processed)...)
+				elements = append(elements, SequenceDiagramElement{Flows: path, IsOptional: true})
 			}
 			processed[flow.HandlerID] = true
-		} else {
-			// Single flow
-			hFlow := handlerFlows[0]
-			elements = append(elements, SequenceDiagramElement{
-				Flows:      []CommunicationFlow{hFlow},
-				IsOptional: false,
-			})
-			processed[hFlow.HandlerID] = true
-
-			// Process next flows
-			for _, next := range findNextFlows(hFlow) {
-				elements = append(elements, processFlow(next)...)
-			}
+			return
 		}
 
-		return elements
+		hFlow := handlerFlows[0]
+		elements = append(elements, SequenceDiagramElement{Flows: []CommunicationFlow{hFlow}})
+		processed[hFlow.HandlerID] = true
+		for _, next := range findNextFlows(hFlow, flows) {
+			processFlow(next)
+		}
 	}
 
-	// Start with OnEntry flows and follow the chain
 	for _, flow := range flows {
 		if flow.HandlerType == onEntryHandler && !processed[flow.HandlerID] {
-			elements = append(elements, processFlow(flow)...)
+			processFlow(flow)
 		}
 	}
-
-	// Process remaining flows
 	for _, flow := range flows {
 		if !processed[flow.HandlerID] {
-			elements = append(elements, processFlow(flow)...)
+			processFlow(flow)
 		}
 	}
 
 	return elements
 }
 
-// generateMermaidWithGroups generates Mermaid sequence diagram with opt block support
-func generateMermaidWithGroups(elements []SequenceDiagramElement, stateMachineOrder []string) string {
+// generateMermaid renders a Mermaid sequence diagram for the provided elements.
+func generateMermaid(elements []SequenceDiagramElement, stateMachineOrder []string) string {
+	participants := orderedParticipants(elements, stateMachineOrder)
 	var sb strings.Builder
 	sb.WriteString("sequenceDiagram\n")
-
-	// Collect all participants from flows
-	allParticipants := make(map[string]bool)
-	for _, participant := range stateMachineOrder {
-		allParticipants[participant] = true
+	for _, p := range participants {
+		sb.WriteString(fmt.Sprintf("    participant %s\n", p))
 	}
-
-	// Add any participants that appear in flows but not in definition order
-	var additionalParticipants []string
-	for _, element := range elements {
-		for _, flow := range element.Flows {
-			if !allParticipants[flow.From] {
-				additionalParticipants = append(additionalParticipants, flow.From)
-				allParticipants[flow.From] = true
-			}
-			if !allParticipants[flow.To] {
-				additionalParticipants = append(additionalParticipants, flow.To)
-				allParticipants[flow.To] = true
-			}
-		}
-	}
-
-	// Sort additional participants for consistent output
-	sort.Strings(additionalParticipants)
-
-	// Write participants in definition order first
-	for _, participant := range stateMachineOrder {
-		sb.WriteString(fmt.Sprintf("    participant %s\n", participant))
-	}
-
-	// Write additional participants found in flows
-	for _, participant := range additionalParticipants {
-		sb.WriteString(fmt.Sprintf("    participant %s\n", participant))
-	}
-
-	// Add blank line after participants
 	sb.WriteString("\n")
-
-	// Write flows
 	for _, element := range elements {
 		if element.IsOptional {
 			sb.WriteString("    opt\n")
 			for _, f := range element.Flows {
-				sb.WriteString(fmt.Sprintf("        %s->>%s: %s\n",
-					f.From, f.To, f.EventType))
+				sb.WriteString(fmt.Sprintf("        %s->>%s: %s\n", f.From, f.To, f.EventType))
 			}
 			sb.WriteString("    end\n")
-		} else {
-			for _, f := range element.Flows {
-				sb.WriteString(fmt.Sprintf("    %s->>%s: %s\n",
-					f.From, f.To, f.EventType))
+			continue
+		}
+		for _, f := range element.Flows {
+			sb.WriteString(fmt.Sprintf("    %s->>%s: %s\n", f.From, f.To, f.EventType))
+		}
+	}
+	return sb.String()
+}
+
+// orderedParticipants returns participants in definition order followed by any additional ones.
+func orderedParticipants(elements []SequenceDiagramElement, stateMachineOrder []string) []string {
+	seen := make(map[string]bool)
+	var participants []string
+	for _, p := range stateMachineOrder {
+		if !seen[p] {
+			participants = append(participants, p)
+			seen[p] = true
+		}
+	}
+	var extras []string
+	for _, element := range elements {
+		for _, flow := range element.Flows {
+			if !seen[flow.From] {
+				extras = append(extras, flow.From)
+				seen[flow.From] = true
+			}
+			if !seen[flow.To] {
+				extras = append(extras, flow.To)
+				seen[flow.To] = true
 			}
 		}
 	}
-
-	return sb.String()
+	sort.Strings(extras)
+	participants = append(participants, extras...)
+	return participants
 }
