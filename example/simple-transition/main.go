@@ -58,13 +58,15 @@ func createSimpleTransitionModel() []goat.Option {
 		log.Fatal(err)
 	}
 
+	cond := goat.NewCondition("mut<=1", sm, func(sm *StateMachine) bool {
+		return sm.Mut <= 1
+	})
+
 	opts := []goat.Option{
 		goat.WithStateMachines(sm),
-		goat.WithInvariants(
-			goat.NewInvariant(sm, func(sm *StateMachine) bool {
-				return sm.Mut <= 1
-			}),
-		),
+		goat.WithConditions(cond),
+		goat.WithInvariants(cond),
+		goat.WithTemporalRules(goat.AlwaysEventually(cond)),
 	}
 
 	return opts

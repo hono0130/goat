@@ -1,6 +1,6 @@
 # goat
 
-A Go library for model checking concurrent systems using state machines. goat helps you verify the correctness of distributed systems by exhaustively exploring all possible states and checking invariants.
+A Go library for model checking concurrent systems using state machines. goat helps you verify the correctness of distributed systems by exhaustively exploring all possible states and checking conditions/invariants.
 
 ## Installation
 
@@ -56,13 +56,14 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
+    cond := goat.NewCondition("counter<=2", sm, func(sm *MyStateMachine) bool {
+        return sm.Counter <= 2
+    })
+
     err = goat.Test(
         goat.WithStateMachines(sm),
-        goat.WithInvariants(
-            goat.NewInvariant(sm, func(sm *MyStateMachine) bool {
-                return sm.Counter <= 2
-            }),
-        ),
+        goat.WithConditions(cond),
+        goat.WithInvariants(cond),
     )
     if err != nil {
         panic(err)
@@ -79,7 +80,9 @@ func main() {
 - **`Test()`** - Run model checking with invariant verification
 - **`Debug()`** - Output detailed JSON results for debugging
 - **`WithStateMachines()`** - Configure which state machines to test
-- **`WithInvariants()`** - Configure invariants to check
+- **`WithConditions()`** - Register named conditions
+- **`WithInvariants()`** - Configure conditions to check as invariants
+- **`WithTemporalRules()`** - Register temporal rules over conditions
 
 ## Examples
 
@@ -97,14 +100,14 @@ Run any example:
 go run ./example/simple-transition
 ```
 
-### Multi state machine invariants
+### Multi state machine conditions
 
-- `NewMultiInvariant(check func(Machines) bool, sms ...AbstractStateMachine)` — reference multiple machines in one invariant
-- `NewInvariant2` / `NewInvariant3` — convenience wrappers for 2 or 3 machines
+- `NewMultiCondition(name string, check func(Machines) bool, sms ...AbstractStateMachine)` — reference multiple machines in one condition
+- `NewCondition2` / `NewCondition3` — convenience wrappers for 2 or 3 machines
 - `Machines` + `GetMachine[T]` — type-safe access to referenced machines during evaluation
 
 ```go
-inv := goat.NewInvariant2(primary, replica, func(p *Storage, r *Storage) bool {
+cond := goat.NewCondition2("replica", primary, replica, func(p *Storage, r *Storage) bool {
     // Simple consistency: every key in primary exists in replica with the same value
     for key, pv := range p.Data {
         rv, ok := r.Data[key]
@@ -112,6 +115,28 @@ inv := goat.NewInvariant2(primary, replica, func(p *Storage, r *Storage) bool {
             return false
         }
     }
-    return true 
+    return true
 })
 ```
+
+### Temporal Rules
+
+Temporal rules express properties over sequences of states. Register them with
+`WithTemporalRules` and reference existing conditions:
+
+```go
+err := goat.Test(
+    goat.WithStateMachines(sm),
+    goat.WithConditions(p, q),
+    goat.WithTemporalRules(
+        goat.WheneverPEventuallyQ(p, q), // whenever p holds, q eventually holds
+        goat.AlwaysEventually(q),        // q holds infinitely often
+    ),
+)
+```
+
+Available helpers:
+
+- `WheneverPEventuallyQ(p, q Condition)` – `G (p -> F q)`
+- `EventuallyAlways(c Condition)` – `F G c`
+- `AlwaysEventually(c Condition)` – `G F c`
