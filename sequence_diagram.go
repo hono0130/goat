@@ -37,20 +37,6 @@ type CommunicationFlow struct {
 	HandlerID        string // identifies the handler for grouping flows
 }
 
-// HandlerInfo stores information about a goat handler registration
-type HandlerInfo struct {
-	StateMachineType string       // state machine type
-	Function         *ast.FuncLit // handler function AST node
-	HandlerType      string       // "OnEntry", "OnEvent", "OnExit"
-	EventType        string       // for OnEvent handlers, the event type being handled
-}
-
-// SendToInfo stores information about a goat.SendTo call
-type SendToInfo struct {
-	Target ast.Expr // target expression AST node
-	Event  ast.Expr // event expression AST node
-}
-
 // SequenceDiagramElement represents an element in the sequence diagram
 type SequenceDiagramElement struct {
 	Flows      []CommunicationFlow
@@ -139,7 +125,6 @@ func AnalyzePackage(packagePath string, writer io.Writer) error {
 	return nil
 }
 
-// loadPackageWithTypes parses the package at packagePath and performs type checking.
 func loadPackageWithTypes(packagePath string) (*PackageInfo, error) {
 	fset := token.NewFileSet()
 	parsed, err := parser.ParseDir(fset, packagePath, func(fi fs.FileInfo) bool {
@@ -192,7 +177,6 @@ func findModuleRoot(path string) string {
 	}
 }
 
-// extractStateMachineOrder extracts state machine types in definition order
 func extractStateMachineOrder(pkg *PackageInfo) []string {
 	var stateMachineOrder []string
 	seenStateMachines := make(map[string]bool)
@@ -236,7 +220,6 @@ func extractStateMachineOrder(pkg *PackageInfo) []string {
 	return stateMachineOrder
 }
 
-// extractCommunicationFlows extracts all communication flows from the package
 func extractCommunicationFlows(pkg *PackageInfo) []CommunicationFlow {
 	var flows []CommunicationFlow
 
@@ -366,7 +349,6 @@ func extractCommunicationFlows(pkg *PackageInfo) []CommunicationFlow {
 	return uniqueFlows
 }
 
-// isFromGoat checks if a selector expression is from the goat package using type information
 func isFromGoat(sel *ast.SelectorExpr, info *types.Info) bool {
 	id, ok := sel.X.(*ast.Ident)
 	if !ok {
@@ -391,7 +373,6 @@ func isFromGoat(sel *ast.SelectorExpr, info *types.Info) bool {
 	return id.Name == goatPackageName
 }
 
-// getTypeName extracts type name from expression with type info priority and AST fallback
 func getTypeName(expr ast.Expr, pkg *PackageInfo, isEvent bool) string {
 	// Try to get type from type information first
 	if tv, ok := pkg.TypesInfo.Types[expr]; ok && tv.Type != nil {
@@ -433,17 +414,14 @@ func getTypeName(expr ast.Expr, pkg *PackageInfo, isEvent bool) string {
 	}
 }
 
-// resolveTargetType resolves target expressions to state machine names using type information
 func resolveTargetType(targetExpr ast.Expr, pkg *PackageInfo) string {
 	return getTypeName(targetExpr, pkg, false)
 }
 
-// getEventType extracts event type name from event expression using type information
 func getEventType(eventExpr ast.Expr, pkg *PackageInfo) string {
 	return getTypeName(eventExpr, pkg, true)
 }
 
-// groupFlowsByHandler returns flows keyed by handler ID.
 func groupFlowsByHandler(flows []CommunicationFlow) map[string][]CommunicationFlow {
 	groups := make(map[string][]CommunicationFlow)
 	for _, f := range flows {
@@ -452,7 +430,6 @@ func groupFlowsByHandler(flows []CommunicationFlow) map[string][]CommunicationFl
 	return groups
 }
 
-// findTriggerFlow locates the flow that triggered the given handler flow.
 func findTriggerFlow(handlerFlow CommunicationFlow, flows []CommunicationFlow) *CommunicationFlow {
 	for _, f := range flows {
 		if f.EventType == handlerFlow.HandlerEventType && f.To == handlerFlow.From {
@@ -462,7 +439,6 @@ func findTriggerFlow(handlerFlow CommunicationFlow, flows []CommunicationFlow) *
 	return nil
 }
 
-// findNextFlows returns flows triggered by the given flow.
 func findNextFlows(flow CommunicationFlow, flows []CommunicationFlow) []CommunicationFlow {
 	var next []CommunicationFlow
 	for _, candidate := range flows {
@@ -475,7 +451,6 @@ func findNextFlows(flow CommunicationFlow, flows []CommunicationFlow) []Communic
 	return next
 }
 
-// findFlowPosition returns the index of a flow in the original slice.
 func findFlowPosition(target CommunicationFlow, flows []CommunicationFlow) int {
 	for i, f := range flows {
 		if f.HandlerID == target.HandlerID &&
@@ -488,7 +463,6 @@ func findFlowPosition(target CommunicationFlow, flows []CommunicationFlow) int {
 	return len(flows)
 }
 
-// collectChain gathers flows that are transitively triggered by the given flow.
 func collectChain(flow CommunicationFlow, flows []CommunicationFlow, processed map[string]bool) []CommunicationFlow {
 	var chain []CommunicationFlow
 	for _, next := range findNextFlows(flow, flows) {
@@ -502,7 +476,6 @@ func collectChain(flow CommunicationFlow, flows []CommunicationFlow, processed m
 	return chain
 }
 
-// buildSequenceDiagramElements organizes flows into sequence diagram elements with opt blocks.
 func buildSequenceDiagramElements(flows []CommunicationFlow) []SequenceDiagramElement {
 	var elements []SequenceDiagramElement
 	processed := make(map[string]bool)
@@ -562,7 +535,6 @@ func buildSequenceDiagramElements(flows []CommunicationFlow) []SequenceDiagramEl
 	return elements
 }
 
-// generateMermaid renders a Mermaid sequence diagram for the provided elements.
 func generateMermaid(elements []SequenceDiagramElement, stateMachineOrder []string) string {
 	participants := orderedParticipants(elements, stateMachineOrder)
 	var sb strings.Builder
@@ -587,7 +559,6 @@ func generateMermaid(elements []SequenceDiagramElement, stateMachineOrder []stri
 	return sb.String()
 }
 
-// orderedParticipants returns participants in definition order followed by any additional ones.
 func orderedParticipants(elements []SequenceDiagramElement, stateMachineOrder []string) []string {
 	seen := make(map[string]bool)
 	var participants []string
