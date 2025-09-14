@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/goatx/goat"
+	"github.com/goatx/goat/mermaid"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -50,9 +51,9 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 func TestSequenceDiagram(t *testing.T) {
 	var buf bytes.Buffer
 
-	err := goat.AnalyzePackage(".", &buf)
+	err := mermaid.Generate(".", &buf)
 	if err != nil {
-		t.Fatalf("AnalyzePackage failed: %v", err)
+		t.Fatalf("Generate failed: %v", err)
 	}
 
 	got := buf.String()
