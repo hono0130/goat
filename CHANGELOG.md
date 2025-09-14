@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.0](https://github.com/goatx/goat/releases/tag/v0.2.0) - 2025-09-14
+
+### Added
+- Protocol Buffer generation support
+  - Support for generating `.proto` files from Go state machines
+
+### Dependencies
+- Updated GitHub Actions workflows (setup-go v6, checkout v5)
+- Migrated Renovate configuration
+
 ## [0.1.1](https://github.com/goatx/goat/releases/tag/v0.1.1) - 2025-08-16
 
 ### Added
