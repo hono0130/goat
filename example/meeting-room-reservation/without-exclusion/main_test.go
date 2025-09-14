@@ -31,7 +31,7 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 
 	expectedSummary := map[string]any{
 		"total_worlds": float64(12152),
-		"invariant_violations": map[string]any{
+		"condition_violations": map[string]any{
 			"found": true,
 			"count": float64(2592),
 		},

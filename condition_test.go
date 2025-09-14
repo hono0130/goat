@@ -12,7 +12,7 @@ const (
 	stateInitial2 = "initial2"
 )
 
-func TestInvariantFor(t *testing.T) {
+func TestConditionFor(t *testing.T) {
 	tests := []struct {
 		name       string
 		setup      func() (*testStateMachine, world)
@@ -20,7 +20,7 @@ func TestInvariantFor(t *testing.T) {
 		wantResult bool
 	}{
 		{
-			name: "always true invariant",
+			name: "always true condition",
 			setup: func() (*testStateMachine, world) {
 				sm := newTestStateMachine(newTestState(stateInitial))
 				return sm, newTestWorld(newTestEnvironment(sm))
@@ -31,7 +31,7 @@ func TestInvariantFor(t *testing.T) {
 			wantResult: true,
 		},
 		{
-			name: "always false invariant",
+			name: "always false condition",
 			setup: func() (*testStateMachine, world) {
 				sm := newTestStateMachine(newTestState(stateInitial))
 				return sm, newTestWorld(newTestEnvironment(sm))
@@ -73,9 +73,9 @@ func TestInvariantFor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sm, w := tt.setup()
-			invariant := NewInvariant(sm, tt.checkFunc)
+			condition := NewCondition(sm, tt.checkFunc)
 
-			got := invariant.Evaluate(w)
+			got := condition.Evaluate(w)
 			if diff := cmp.Diff(tt.wantResult, got); diff != "" {
 				t.Errorf("Evaluate() result mismatch (-want +got):\n%s", diff)
 			}
@@ -83,19 +83,19 @@ func TestInvariantFor(t *testing.T) {
 	}
 }
 
-func TestBoolInvariant(t *testing.T) {
+func TestBoolCondition(t *testing.T) {
 	tests := []struct {
 		name       string
 		value      bool
 		wantResult bool
 	}{
 		{
-			name:       "true invariant",
+			name:       "true condition",
 			value:      true,
 			wantResult: true,
 		},
 		{
-			name:       "false invariant",
+			name:       "false condition",
 			value:      false,
 			wantResult: false,
 		},
@@ -104,9 +104,9 @@ func TestBoolInvariant(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			w := newTestWorld(newTestEnvironment())
-			invariant := BoolInvariant(tt.value)
+			condition := BoolCondition(tt.value)
 
-			got := invariant.Evaluate(w)
+			got := condition.Evaluate(w)
 			if diff := cmp.Diff(tt.wantResult, got); diff != "" {
 				t.Errorf("Evaluate() result mismatch (-want +got):\n%s", diff)
 			}
@@ -114,13 +114,13 @@ func TestBoolInvariant(t *testing.T) {
 	}
 }
 
-func TestNewMultiInvariant(t *testing.T) {
+func TestNewMultiCondition(t *testing.T) {
 	t.Run("basic two machines", func(t *testing.T) {
 		sm1 := newTestStateMachine(newTestState(stateInitial))
 		sm2 := newTestStateMachine(newTestState(stateInitial))
 		w := initialWorld(sm1, sm2)
 
-		inv := NewMultiInvariant(func(ms Machines) bool {
+		inv := NewMultiCondition(func(ms Machines) bool {
 			m1, ok := GetMachine(ms, sm1)
 			if !ok {
 				return false
@@ -149,7 +149,7 @@ func TestNewMultiInvariant(t *testing.T) {
 
 		w := initialWorld(sm1)
 
-		inv := NewMultiInvariant(func(ms Machines) bool {
+		inv := NewMultiCondition(func(ms Machines) bool {
 			_, ok1 := GetMachine(ms, sm1)
 			_, ok2 := GetMachine(ms, smB)
 			return ok1 && ok2
@@ -170,7 +170,7 @@ func TestNewMultiInvariant(t *testing.T) {
 
 		w := initialWorld(sm)
 
-		inv := NewMultiInvariant(func(ms Machines) bool {
+		inv := NewMultiCondition(func(ms Machines) bool {
 			got, ok := GetMachine(ms, sm)
 			if !ok {
 				return false
@@ -198,7 +198,7 @@ func TestNewMultiInvariant(t *testing.T) {
 
 		w := initialWorld(m1, m2)
 
-		inv := NewMultiInvariant(func(ms Machines) bool {
+		inv := NewMultiCondition(func(ms Machines) bool {
 			x1, ok1 := GetMachine(ms, m1)
 			if !ok1 {
 				return false
@@ -221,13 +221,13 @@ func TestNewMultiInvariant(t *testing.T) {
 	})
 }
 
-func TestNewInvariant2(t *testing.T) {
+func TestNewCondition2(t *testing.T) {
 	t.Run("basic two machines", func(t *testing.T) {
 		sm1 := newTestStateMachine(newTestState(stateInitial1))
 		sm2 := newTestStateMachine(newTestState(stateInitial2))
 		w := initialWorld(sm1, sm2)
 
-		inv := NewInvariant2(sm1, sm2, func(m1 *testStateMachine, m2 *testStateMachine) bool {
+		inv := NewCondition2(sm1, sm2, func(m1 *testStateMachine, m2 *testStateMachine) bool {
 			s1 := m1.currentState().(*testState)
 			s2 := m2.currentState().(*testState)
 			return s1.Name == stateInitial1 && s2.Name == stateInitial2
@@ -249,7 +249,7 @@ func TestNewInvariant2(t *testing.T) {
 
 		w := initialWorld(sm1)
 
-		inv := NewInvariant2(sm1, smB, func(_ *testStateMachine, _ *testStateMachineB) bool { return true })
+		inv := NewCondition2(sm1, smB, func(_ *testStateMachine, _ *testStateMachineB) bool { return true })
 
 		if got := inv.Evaluate(w); got {
 			t.Errorf("Evaluate() = true, want false")
@@ -257,14 +257,14 @@ func TestNewInvariant2(t *testing.T) {
 	})
 }
 
-func TestNewInvariant3(t *testing.T) {
+func TestNewCondition3(t *testing.T) {
 	t.Run("basic three machines", func(t *testing.T) {
 		sm1 := newTestStateMachine(newTestState("a"))
 		sm2 := newTestStateMachine(newTestState("b"))
 		sm3 := newTestStateMachine(newTestState("c"))
 		w := initialWorld(sm1, sm2, sm3)
 
-		inv := NewInvariant3(sm1, sm2, sm3, func(x *testStateMachine, y *testStateMachine, z *testStateMachine) bool {
+		inv := NewCondition3(sm1, sm2, sm3, func(x *testStateMachine, y *testStateMachine, z *testStateMachine) bool {
 			sx := x.currentState().(*testState)
 			sy := y.currentState().(*testState)
 			sz := z.currentState().(*testState)
@@ -288,7 +288,7 @@ func TestNewInvariant3(t *testing.T) {
 
 		w := initialWorld(sm1, sm2)
 
-		inv := NewInvariant3(sm1, sm2, smC, func(_ *testStateMachine, _ *testStateMachine, _ *testStateMachineC) bool { return true })
+		inv := NewCondition3(sm1, sm2, smC, func(_ *testStateMachine, _ *testStateMachine, _ *testStateMachineC) bool { return true })
 
 		if got := inv.Evaluate(w); got {
 			t.Errorf("Evaluate() = true, want false")
@@ -296,29 +296,29 @@ func TestNewInvariant3(t *testing.T) {
 	})
 }
 
-func TestConvenienceInvariants_IntegrationWithNewInvariant(t *testing.T) {
-	t.Run("combination of NewInvariant and NewInvariant2", func(t *testing.T) {
+func TestConvenienceConditions_IntegrationWithNewCondition(t *testing.T) {
+	t.Run("combination of NewCondition and NewCondition2", func(t *testing.T) {
 		sm1 := newTestStateMachine(newTestState(stateInitial1))
 		sm2 := newTestStateMachine(newTestState(stateInitial2))
 
-		invSingle := NewInvariant(sm1, func(m *testStateMachine) bool {
+		invSingle := NewCondition(sm1, func(m *testStateMachine) bool {
 			return m.currentState().(*testState).Name == "initial1"
 		})
 
-		invPair := NewInvariant2(sm1, sm2, func(m1 *testStateMachine, m2 *testStateMachine) bool {
+		invPair := NewCondition2(sm1, sm2, func(m1 *testStateMachine, m2 *testStateMachine) bool {
 			return m1.currentState().(*testState).Name == stateInitial1 && m2.currentState().(*testState).Name == stateInitial2
 		})
 
 		m, err := newModel(
 			WithStateMachines(sm1, sm2),
-			WithInvariants(invSingle, invPair),
+			WithConditions(invSingle, invPair),
 		)
 		if err != nil {
 			t.Fatalf("newModel() error: %v", err)
 		}
 
-		if ok := m.evaluateInvariants(m.initial); !ok {
-			t.Errorf("evaluateInvariants() = false, want true")
+		if ok := m.evaluateConditions(m.initial); !ok {
+			t.Errorf("evaluateConditions() = false, want true")
 		}
 	})
 }

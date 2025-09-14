@@ -280,8 +280,8 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 
 	opts := []goat.Option{
 		goat.WithStateMachines(server1, server2, db, client1, client2),
-		goat.WithInvariants(
-			goat.NewInvariant(db, func(db *DBStateMachine) bool {
+		goat.WithConditions(
+			goat.NewCondition(db, func(db *DBStateMachine) bool {
 				roomClients := make(map[int]map[int]bool)
 				for _, res := range db.Reservations {
 					if _, ok := roomClients[res.RoomID]; !ok {

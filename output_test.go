@@ -38,13 +38,13 @@ testStateMachine << entryEvent;" ];
 `,
 		},
 		{
-			name: "state machine with invariant violation",
+			name: "state machine with condition violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition(false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				_ = m.Solve()
 				return m
@@ -132,34 +132,34 @@ func TestModel_writeLog(t *testing.T) {
 		want        string
 	}{
 		{
-			name: "no invariant violations",
+			name: "no condition violations",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition(true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				_ = m.Solve()
 				return m
 			},
-			description: "test invariant",
-			want:        "No invariant violations found.\n",
+			description: "test condition",
+			want:        "No condition violations found.\n",
 		},
 		{
-			name: "with invariant violation",
+			name: "with condition violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition(false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				_ = m.Solve()
 				return m
 			},
-			description: "failing test invariant",
-			want: `InvariantError:  failing test invariant   ✘
+			description: "failing test condition",
+			want: `ConditionError:  failing test condition   ✘
 Path (length = 1):
   [0] <-- violation here
   StateMachines:
@@ -194,10 +194,10 @@ func TestModel_findPathsToViolations(t *testing.T) {
 			name: "no violations",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition(true)
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				if err != nil {
 					panic(err)
@@ -211,10 +211,10 @@ func TestModel_findPathsToViolations(t *testing.T) {
 			name: "single violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition(false)
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				if err != nil {
 					panic(err)
@@ -251,13 +251,13 @@ func TestModel_findPathsToViolations(t *testing.T) {
 					panic(err)
 				}
 
-				inv := NewInvariant(sm, func(sm *testCounter) bool {
+				inv := NewCondition(sm, func(sm *testCounter) bool {
 					return sm.count <= 1
 				})
 
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				if err != nil {
 					panic(err)
@@ -344,7 +344,7 @@ func TestModel_worldsToJSON(t *testing.T) {
 			},
 			expectedWorlds: []worldJSON{
 				{
-					InvariantViolation: false,
+					ConditionViolation: false,
 					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
@@ -356,7 +356,7 @@ func TestModel_worldsToJSON(t *testing.T) {
 					QueuedEvents: []eventJSON{},
 				},
 				{
-					InvariantViolation: false,
+					ConditionViolation: false,
 					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
@@ -386,7 +386,7 @@ func TestModel_worldsToJSON(t *testing.T) {
 			},
 			expectedWorlds: []worldJSON{
 				{
-					InvariantViolation: false,
+					ConditionViolation: false,
 					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
@@ -404,7 +404,7 @@ func TestModel_worldsToJSON(t *testing.T) {
 					QueuedEvents: []eventJSON{},
 				},
 				{
-					InvariantViolation: false,
+					ConditionViolation: false,
 					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
@@ -428,7 +428,7 @@ func TestModel_worldsToJSON(t *testing.T) {
 					},
 				},
 				{
-					InvariantViolation: false,
+					ConditionViolation: false,
 					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
@@ -452,7 +452,7 @@ func TestModel_worldsToJSON(t *testing.T) {
 					},
 				},
 				{
-					InvariantViolation: false,
+					ConditionViolation: false,
 					StateMachines: []stateMachineJSON{
 						{
 							ID:      "testStateMachine",
@@ -512,13 +512,13 @@ func TestModel_summarize(t *testing.T) {
 		wantSummary     *modelSummary
 	}{
 		{
-			name: "kripke with no invariant violations",
+			name: "kripke with no condition violations",
 			setupModel: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition(true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				_ = m.Solve()
 				return m
@@ -527,7 +527,7 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     2,
 				ExecutionTimeMs: 150,
-				InvariantViolations: struct {
+				ConditionViolations: struct {
 					Found bool `json:"found"`
 					Count int  `json:"count"`
 				}{
@@ -537,13 +537,13 @@ func TestModel_summarize(t *testing.T) {
 			},
 		},
 		{
-			name: "kripke with invariant violations",
+			name: "kripke with condition violations",
 			setupModel: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition(false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				_ = m.Solve()
 				return m
@@ -552,7 +552,7 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     2,
 				ExecutionTimeMs: 250,
-				InvariantViolations: struct {
+				ConditionViolations: struct {
 					Found bool `json:"found"`
 					Count int  `json:"count"`
 				}{
@@ -571,7 +571,7 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     0,
 				ExecutionTimeMs: 0,
-				InvariantViolations: struct {
+				ConditionViolations: struct {
 					Found bool `json:"found"`
 					Count int  `json:"count"`
 				}{
@@ -593,7 +593,7 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     4,
 				ExecutionTimeMs: 500,
-				InvariantViolations: struct {
+				ConditionViolations: struct {
 					Found bool `json:"found"`
 					Count int  `json:"count"`
 				}{

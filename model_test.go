@@ -54,19 +54,19 @@ func TestModel_Solve(t *testing.T) {
 						initialWorld.id:   {processedWorld.id},
 						processedWorld.id: {},
 					},
-					invariants: nil,
+					conditions: nil,
 				}
 			},
 			wantErr: false,
 		},
 		{
-			name: "state machine with invariant violation",
+			name: "state machine with condition violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false) // Always false invariant
+				inv := BoolCondition(false) // Always false condition
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				return m
 			},
@@ -82,7 +82,7 @@ func TestModel_Solve(t *testing.T) {
 						testStateMachineID: {&entryEvent{}},
 					},
 				})
-				initialWorld.invariantViolation = false
+				initialWorld.conditionViolation = false
 
 				processedWorld := newWorld(environment{
 					machines: map[string]AbstractStateMachine{
@@ -92,10 +92,10 @@ func TestModel_Solve(t *testing.T) {
 						testStateMachineID: {},
 					},
 				})
-				processedWorld.invariantViolation = true
+				processedWorld.conditionViolation = true
 
 				initialWorldInMap := initialWorld
-				initialWorldInMap.invariantViolation = true
+				initialWorldInMap.conditionViolation = true
 
 				return model{
 					worlds: worlds{
@@ -126,7 +126,7 @@ func TestModel_Solve(t *testing.T) {
 
 				opts := cmp.Options{
 					cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
-					cmpopts.IgnoreFields(model{}, "invariants"), // Ignore function pointers
+					cmpopts.IgnoreFields(model{}, "conditions"), // Ignore function pointers
 					cmp.AllowUnexported(model{}, world{}, environment{}, StateMachine{}),
 				}
 
@@ -142,14 +142,14 @@ func TestModel_Solve(t *testing.T) {
 	}
 }
 
-func TestModel_evaluateInvariants(t *testing.T) {
+func TestModel_evaluateConditions(t *testing.T) {
 	tests := []struct {
 		name          string
 		setup         func() (model, world)
 		wantViolation bool
 	}{
 		{
-			name: "no invariants",
+			name: "no conditions",
 			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
 				m, _ := newModel(WithStateMachines(sm))
@@ -159,13 +159,13 @@ func TestModel_evaluateInvariants(t *testing.T) {
 			wantViolation: false,
 		},
 		{
-			name: "passing invariant",
+			name: "passing condition",
 			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition(true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				w := initialWorld(sm)
 				return m, w
@@ -173,13 +173,13 @@ func TestModel_evaluateInvariants(t *testing.T) {
 			wantViolation: false,
 		},
 		{
-			name: "failing invariant",
+			name: "failing condition",
 			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition(false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv),
+					WithConditions(inv),
 				)
 				w := initialWorld(sm)
 				return m, w
@@ -187,15 +187,15 @@ func TestModel_evaluateInvariants(t *testing.T) {
 			wantViolation: true,
 		},
 		{
-			name: "multiple invariants with one failing",
+			name: "multiple conditions with one failing",
 			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
-				inv1 := BoolInvariant(true)
-				inv2 := BoolInvariant(false)
-				inv3 := BoolInvariant(true)
+				inv1 := BoolCondition(true)
+				inv2 := BoolCondition(false)
+				inv3 := BoolCondition(true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithInvariants(inv1, inv2, inv3),
+					WithConditions(inv1, inv2, inv3),
 				)
 				w := initialWorld(sm)
 				return m, w
@@ -207,9 +207,9 @@ func TestModel_evaluateInvariants(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m, w := tt.setup()
-			result := m.evaluateInvariants(w)
+			result := m.evaluateConditions(w)
 			if result == tt.wantViolation {
-				t.Errorf("evaluateInvariants() returned %v, but expected %v", result, !tt.wantViolation)
+				t.Errorf("evaluateConditions() returned %v, but expected %v", result, !tt.wantViolation)
 			}
 		})
 	}
@@ -237,7 +237,7 @@ func TestInitialWorld(t *testing.T) {
 						testStateMachineID: {&entryEvent{}},
 					},
 				},
-				invariantViolation: false,
+				conditionViolation: false,
 			},
 		},
 		{
@@ -265,7 +265,7 @@ func TestInitialWorld(t *testing.T) {
 						"testStateMachine_1": {&entryEvent{}},
 					},
 				},
-				invariantViolation: false,
+				conditionViolation: false,
 			},
 		},
 		{
@@ -276,7 +276,7 @@ func TestInitialWorld(t *testing.T) {
 					machines: map[string]AbstractStateMachine{},
 					queue:    map[string][]AbstractEvent{},
 				},
-				invariantViolation: false,
+				conditionViolation: false,
 			},
 		},
 	}

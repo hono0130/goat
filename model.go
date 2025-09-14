@@ -12,7 +12,7 @@ type model struct {
 	worlds     worlds
 	initial    world
 	accessible map[worldID][]worldID
-	invariants []Invariant
+	conditions []Condition
 }
 
 type worldID uint64
@@ -30,7 +30,7 @@ func (ws worlds) insert(w world) {
 type world struct {
 	id                 worldID
 	env                environment
-	invariantViolation bool
+	conditionViolation bool
 }
 
 func newWorld(env environment) world {
@@ -183,7 +183,7 @@ func newModel(opts ...Option) (model, error) {
 		initial:    initial,
 		worlds:     make(worlds),
 		accessible: make(map[worldID][]worldID),
-		invariants: os.invariants,
+		conditions: os.conditions,
 	}, nil
 }
 
@@ -195,8 +195,8 @@ func (m *model) Solve() error {
 		current := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		if !m.evaluateInvariants(current) {
-			current.invariantViolation = true
+		if !m.evaluateConditions(current) {
+			current.conditionViolation = true
 			m.worlds[current.id] = current
 		}
 
@@ -218,9 +218,9 @@ func (m *model) Solve() error {
 	return nil
 }
 
-func (m *model) evaluateInvariants(w world) bool {
-	for _, invariant := range m.invariants {
-		if !invariant.Evaluate(w) {
+func (m *model) evaluateConditions(w world) bool {
+	for _, condition := range m.conditions {
+		if !condition.Evaluate(w) {
 			return false
 		}
 	}
@@ -229,21 +229,21 @@ func (m *model) evaluateInvariants(w world) bool {
 
 type options struct {
 	sms        []AbstractStateMachine
-	invariants []Invariant
+	conditions []Condition
 }
 
 // Option is a configuration option for model checking operations.
 // Options are used with Test() and Debug() functions to configure
-// state machines, invariants, and other testing parameters.
+// state machines, conditions, and other testing parameters.
 //
 // Use the provided helper functions like WithStateMachines() and
-// WithInvariants() to create options.
+// WithConditions() to create options.
 //
 // Example:
 //
 //	goat.Test(
 //	    goat.WithStateMachines(sm1, sm2),
-//	    goat.WithInvariants(invariant1),
+//	    goat.WithConditions(condition1),
 //	)
 type Option interface {
 	apply(*options)

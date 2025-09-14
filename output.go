@@ -10,10 +10,10 @@ import (
 type modelSummary struct {
 	TotalWorlds int `json:"total_worlds"`
 
-	InvariantViolations struct {
+	ConditionViolations struct {
 		Found bool `json:"found"`
 		Count int  `json:"count"`
-	} `json:"invariant_violations"`
+	} `json:"condition_violations"`
 
 	ExecutionTimeMs int64 `json:"execution_time_ms"`
 }
@@ -42,7 +42,7 @@ func (m *model) writeDot(w io.Writer) {
 			sb.WriteString(fmt.Sprintf("%d", id))
 			sb.WriteString(" [ penwidth=5 ];\n")
 		}
-		if wld.invariantViolation {
+		if wld.conditionViolation {
 			sb.WriteString("  ")
 			sb.WriteString(fmt.Sprintf("%d", id))
 			sb.WriteString(" [ color=red, penwidth=3 ];\n")
@@ -74,12 +74,12 @@ func (m *model) writeDot(w io.Writer) {
 	_, _ = io.WriteString(w, sb.String())
 }
 
-func (m *model) writeLog(w io.Writer, invariantDescription string) {
+func (m *model) writeLog(w io.Writer, conditionDescription string) {
 	var sb strings.Builder
 	paths := m.findPathsToViolations()
 
 	if len(paths) == 0 {
-		sb.WriteString("No invariant violations found.\n")
+		sb.WriteString("No condition violations found.\n")
 		_, _ = io.WriteString(w, sb.String())
 		return
 	}
@@ -89,8 +89,8 @@ func (m *model) writeLog(w io.Writer, invariantDescription string) {
 			sb.WriteString("\n")
 		}
 
-		sb.WriteString("InvariantError:  ")
-		sb.WriteString(invariantDescription)
+		sb.WriteString("ConditionError:  ")
+		sb.WriteString(conditionDescription)
 		sb.WriteString("   ✘\n")
 		sb.WriteString("Path (length = ")
 		sb.WriteString(fmt.Sprintf("%d", len(path)))
@@ -99,7 +99,7 @@ func (m *model) writeLog(w io.Writer, invariantDescription string) {
 		for j, worldID := range path {
 			world := m.worlds[worldID]
 
-			if j == len(path)-1 && world.invariantViolation {
+			if j == len(path)-1 && world.conditionViolation {
 				sb.WriteString("  [")
 				sb.WriteString(fmt.Sprintf("%d", j))
 				sb.WriteString("] <-- violation here\n")
@@ -154,7 +154,7 @@ func (m *model) findPathsToViolations() [][]worldID {
 		}
 		visited[currentID] = true
 
-		if m.worlds[currentID].invariantViolation {
+		if m.worlds[currentID].conditionViolation {
 			paths = append(paths, path)
 			continue
 		}
@@ -212,7 +212,7 @@ func (w world) label() string {
 }
 
 type worldJSON struct {
-	InvariantViolation bool               `json:"invariant_violation"`
+	ConditionViolation bool               `json:"condition_violation"`
 	StateMachines      []stateMachineJSON `json:"state_machines"`
 	QueuedEvents       []eventJSON        `json:"queued_events"`
 }
@@ -245,8 +245,8 @@ func (m *model) worldsToJSON() []worldJSON {
 }
 
 func compareWorlds(a, b worldJSON) bool {
-	if a.InvariantViolation != b.InvariantViolation {
-		return !a.InvariantViolation && b.InvariantViolation
+	if a.ConditionViolation != b.ConditionViolation {
+		return !a.ConditionViolation && b.ConditionViolation
 	}
 
 	for i := 0; i < len(a.StateMachines) && i < len(b.StateMachines); i++ {
@@ -320,7 +320,7 @@ func (*model) worldToJSON(w world) worldJSON {
 	})
 
 	return worldJSON{
-		InvariantViolation: w.invariantViolation,
+		ConditionViolation: w.conditionViolation,
 		StateMachines:      stateMachines,
 		QueuedEvents:       queuedEvents,
 	}
@@ -334,13 +334,13 @@ func (m *model) summarize(executionTimeMs int64) *modelSummary {
 
 	violationCount := 0
 	for _, world := range m.worlds {
-		if world.invariantViolation {
+		if world.conditionViolation {
 			violationCount++
 		}
 	}
 
-	summary.InvariantViolations.Found = violationCount > 0
-	summary.InvariantViolations.Count = violationCount
+	summary.ConditionViolations.Found = violationCount > 0
+	summary.ConditionViolations.Count = violationCount
 
 	return summary
 }

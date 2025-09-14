@@ -1,6 +1,6 @@
 [
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -44,7 +44,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -54,143 +54,6 @@
       {
         "details": "no fields",
         "event_name": "exitEvent",
-        "target_machine": "Client"
-      },
-      {
-        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} waiting}}",
-        "event_name": "transitionEvent",
-        "target_machine": "Client"
-      },
-      {
-        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
-        "event_name": "eCheckMenuExistenceRequest",
-        "target_machine": "Server"
-      },
-      {
-        "details": "no fields",
-        "event_name": "entryEvent",
-        "target_machine": "Server"
-      },
-      {
-        "details": "no fields",
-        "event_name": "exitEvent",
-        "target_machine": "Server"
-      },
-      {
-        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} running}}",
-        "event_name": "transitionEvent",
-        "target_machine": "Server"
-      }
-    ],
-    "state_machines": [
-      {
-        "details": "no fields",
-        "id": "Client",
-        "name": "Client",
-        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}"
-      },
-      {
-        "details": "no fields",
-        "id": "Server",
-        "name": "Server",
-        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}"
-      }
-    ]
-  },
-  {
-    "invariant_violation": false,
-    "queued_events": [
-      {
-        "details": "no fields",
-        "event_name": "entryEvent",
-        "target_machine": "Client"
-      },
-      {
-        "details": "no fields",
-        "event_name": "exitEvent",
-        "target_machine": "Client"
-      },
-      {
-        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} waiting}}",
-        "event_name": "transitionEvent",
-        "target_machine": "Client"
-      },
-      {
-        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
-        "event_name": "eCheckMenuExistenceRequest",
-        "target_machine": "Server"
-      },
-      {
-        "details": "no fields",
-        "event_name": "entryEvent",
-        "target_machine": "Server"
-      },
-      {
-        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} running}}",
-        "event_name": "transitionEvent",
-        "target_machine": "Server"
-      }
-    ],
-    "state_machines": [
-      {
-        "details": "no fields",
-        "id": "Client",
-        "name": "Client",
-        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}"
-      },
-      {
-        "details": "no fields",
-        "id": "Server",
-        "name": "Server",
-        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}"
-      }
-    ]
-  },
-  {
-    "invariant_violation": false,
-    "queued_events": [
-      {
-        "details": "no fields",
-        "event_name": "entryEvent",
-        "target_machine": "Client"
-      },
-      {
-        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} waiting}}",
-        "event_name": "transitionEvent",
-        "target_machine": "Client"
-      },
-      {
-        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
-        "event_name": "eCheckMenuExistenceRequest",
-        "target_machine": "Server"
-      },
-      {
-        "details": "no fields",
-        "event_name": "entryEvent",
-        "target_machine": "Server"
-      }
-    ],
-    "state_machines": [
-      {
-        "details": "no fields",
-        "id": "Client",
-        "name": "Client",
-        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}"
-      },
-      {
-        "details": "no fields",
-        "id": "Server",
-        "name": "Server",
-        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}"
-      }
-    ]
-  },
-  {
-    "invariant_violation": false,
-    "queued_events": [
-      {
-        "details": "no fields",
-        "event_name": "entryEvent",
         "target_machine": "Client"
       },
       {
@@ -235,7 +98,144 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
+    "queued_events": [
+      {
+        "details": "no fields",
+        "event_name": "entryEvent",
+        "target_machine": "Client"
+      },
+      {
+        "details": "no fields",
+        "event_name": "exitEvent",
+        "target_machine": "Client"
+      },
+      {
+        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} waiting}}",
+        "event_name": "transitionEvent",
+        "target_machine": "Client"
+      },
+      {
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
+        "event_name": "eCheckMenuExistenceRequest",
+        "target_machine": "Server"
+      },
+      {
+        "details": "no fields",
+        "event_name": "entryEvent",
+        "target_machine": "Server"
+      },
+      {
+        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} running}}",
+        "event_name": "transitionEvent",
+        "target_machine": "Server"
+      }
+    ],
+    "state_machines": [
+      {
+        "details": "no fields",
+        "id": "Client",
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}"
+      },
+      {
+        "details": "no fields",
+        "id": "Server",
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}"
+      }
+    ]
+  },
+  {
+    "condition_violation": false,
+    "queued_events": [
+      {
+        "details": "no fields",
+        "event_name": "entryEvent",
+        "target_machine": "Client"
+      },
+      {
+        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} waiting}}",
+        "event_name": "transitionEvent",
+        "target_machine": "Client"
+      },
+      {
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
+        "event_name": "eCheckMenuExistenceRequest",
+        "target_machine": "Server"
+      },
+      {
+        "details": "no fields",
+        "event_name": "entryEvent",
+        "target_machine": "Server"
+      }
+    ],
+    "state_machines": [
+      {
+        "details": "no fields",
+        "id": "Client",
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}"
+      },
+      {
+        "details": "no fields",
+        "id": "Server",
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}"
+      }
+    ]
+  },
+  {
+    "condition_violation": false,
+    "queued_events": [
+      {
+        "details": "no fields",
+        "event_name": "entryEvent",
+        "target_machine": "Client"
+      },
+      {
+        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} waiting}}",
+        "event_name": "transitionEvent",
+        "target_machine": "Client"
+      },
+      {
+        "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
+        "event_name": "eCheckMenuExistenceRequest",
+        "target_machine": "Server"
+      },
+      {
+        "details": "no fields",
+        "event_name": "entryEvent",
+        "target_machine": "Server"
+      },
+      {
+        "details": "no fields",
+        "event_name": "exitEvent",
+        "target_machine": "Server"
+      },
+      {
+        "details": "{Name:To,Type:goat.AbstractState,Value:\u0026{{0} running}}",
+        "event_name": "transitionEvent",
+        "target_machine": "Server"
+      }
+    ],
+    "state_machines": [
+      {
+        "details": "no fields",
+        "id": "Client",
+        "name": "Client",
+        "state": "{Name:ClientState,Type:main.ClientStateType,Value:idle}"
+      },
+      {
+        "details": "no fields",
+        "id": "Server",
+        "name": "Server",
+        "state": "{Name:ServerState,Type:main.ServerStateType,Value:init}"
+      }
+    ]
+  },
+  {
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -279,7 +279,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -308,7 +308,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -347,7 +347,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -381,7 +381,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}",
@@ -420,7 +420,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}",
@@ -454,7 +454,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}",
@@ -493,7 +493,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}",
@@ -527,7 +527,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}",
@@ -566,7 +566,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}",
@@ -600,7 +600,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -624,7 +624,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -663,7 +663,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -707,7 +707,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -741,7 +741,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -780,7 +780,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -809,7 +809,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -843,7 +843,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -887,7 +887,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -926,7 +926,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
@@ -955,7 +955,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
@@ -994,7 +994,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
@@ -1028,7 +1028,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [],
     "state_machines": [
       {
@@ -1046,7 +1046,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}",
@@ -1070,7 +1070,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:false}",
@@ -1099,7 +1099,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}",
@@ -1123,7 +1123,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:false},{Name:Err,Type:bool,Value:true}",
@@ -1152,7 +1152,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}",
@@ -1176,7 +1176,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Exists,Type:bool,Value:true},{Name:Err,Type:bool,Value:false}",
@@ -1205,7 +1205,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -1239,7 +1239,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -1268,7 +1268,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -1297,7 +1297,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -1331,7 +1331,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",
@@ -1355,7 +1355,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "{Name:Ctx,Type:main.Context,Value:{random_request_id}},{Name:MenuID,Type:string,Value:menu_id}",

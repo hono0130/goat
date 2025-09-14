@@ -60,8 +60,8 @@ func createSimpleTransitionModel() []goat.Option {
 
 	opts := []goat.Option{
 		goat.WithStateMachines(sm),
-		goat.WithInvariants(
-			goat.NewInvariant(sm, func(sm *StateMachine) bool {
+		goat.WithConditions(
+			goat.NewCondition(sm, func(sm *StateMachine) bool {
 				return sm.Mut <= 1
 			}),
 		),

@@ -1,6 +1,6 @@
 [
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -18,7 +18,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",
@@ -51,7 +51,7 @@
     ]
   },
   {
-    "invariant_violation": false,
+    "condition_violation": false,
     "queued_events": [
       {
         "details": "no fields",

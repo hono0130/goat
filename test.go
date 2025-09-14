@@ -9,19 +9,19 @@ import (
 )
 
 // Test performs model checking on state machines with the provided options.
-// It creates a Kripke model, explores all reachable states, checks invariants,
+// It creates a Kripke model, explores all reachable states, checks conditions,
 // and outputs results to stdout.
 //
 // Parameters:
-//   - opts: Configuration options including state machines and invariants
+//   - opts: Configuration options including state machines and conditions
 //
-// Returns an error if model creation, solving, or invariant checking fails.
+// Returns an error if model creation, solving, or condition checking fails.
 //
 // Example:
 //
 //	err := goat.Test(
 //	    goat.WithStateMachines(serverSM, clientSM),
-//	    goat.WithInvariants(safetyInvariant),
+//	    goat.WithConditions(safetyCond),
 //	)
 func Test(opts ...Option) error {
 	model, err := newModel(opts...)
@@ -35,15 +35,15 @@ func Test(opts ...Option) error {
 	}
 	executionTime := time.Since(start).Milliseconds()
 
-	model.writeLog(os.Stdout, "invariant violation")
+	model.writeLog(os.Stdout, "condition violation")
 
 	summary := model.summarize(executionTime)
 	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
 	_, _ = fmt.Fprintf(os.Stdout, "Total Worlds: %d\n", summary.TotalWorlds)
-	if summary.InvariantViolations.Found {
-		_, _ = fmt.Fprintf(os.Stdout, "Invariant Violations: %d found\n", summary.InvariantViolations.Count)
+	if summary.ConditionViolations.Found {
+		_, _ = fmt.Fprintf(os.Stdout, "Condition Violations: %d found\n", summary.ConditionViolations.Count)
 	} else {
-		_, _ = fmt.Fprintln(os.Stdout, "Invariant Violations: None")
+		_, _ = fmt.Fprintln(os.Stdout, "Condition Violations: None")
 	}
 	_, _ = fmt.Fprintf(os.Stdout, "Execution Time: %dms\n", summary.ExecutionTimeMs)
 
@@ -67,21 +67,21 @@ func WithStateMachines(sms ...AbstractStateMachine) Option {
 	})
 }
 
-// WithInvariants configures the test with the specified invariants.
-// These invariants will be checked during model exploration to detect
+// WithConditions configures the test with the specified conditions.
+// These conditions will be checked during model exploration to detect
 // violations of system properties.
 //
 // Parameters:
-//   - is: The invariants to check during testing
+//   - cs: The conditions to check during testing
 //
 // Returns an Option that can be passed to Test() or Debug().
 //
 // Example:
 //
-//	goat.WithInvariants(exclusionInvariant, livenessInvariant)
-func WithInvariants(is ...Invariant) Option {
+//	goat.WithConditions(exclusionCond, livenessCond)
+func WithConditions(cs ...Condition) Option {
 	return optionFunc(func(o *options) {
-		o.invariants = is
+		o.conditions = cs
 	})
 }
 
@@ -91,14 +91,14 @@ func WithInvariants(is ...Invariant) Option {
 //
 // Parameters:
 //   - w: Writer to output the JSON results to
-//   - opts: Configuration options including state machines and invariants
+//   - opts: Configuration options including state machines and conditions
 //
 // Returns an error if model creation, solving, or JSON encoding fails.
 //
 // Example:
 //
 //	var buf bytes.Buffer
-//	err := goat.Debug(&buf, goat.WithStateMachines(sm), goat.WithInvariants(inv))
+//	err := goat.Debug(&buf, goat.WithStateMachines(sm), goat.WithConditions(cond))
 //	fmt.Println(buf.String()) // JSON output
 func Debug(w io.Writer, opts ...Option) error {
 	model, err := newModel(opts...)
@@ -127,11 +127,11 @@ func Debug(w io.Writer, opts ...Option) error {
 
 // WriteDot performs model checking and outputs the state graph in DOT format.
 // The output can be used with Graphviz to visualize the state space and
-// identify paths to invariant violations.
+// identify paths to condition violations.
 //
 // Parameters:
 //   - w: Writer to output the DOT graph to
-//   - opts: Configuration options including state machines and invariants
+//   - opts: Configuration options including state machines and conditions
 //
 // Returns an error if model creation or solving fails.
 //
@@ -143,7 +143,7 @@ func Debug(w io.Writer, opts ...Option) error {
 //	    return err
 //	}
 //	defer file.Close()
-//	err = goat.WriteDot(file, goat.WithStateMachines(sm), goat.WithInvariants(inv))
+//	err = goat.WriteDot(file, goat.WithStateMachines(sm), goat.WithConditions(cond))
 func WriteDot(w io.Writer, opts ...Option) error {
 	model, err := newModel(opts...)
 	if err != nil {

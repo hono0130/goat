@@ -1,6 +1,6 @@
 # goat
 
-A Go library for model checking concurrent systems using state machines. goat helps you verify the correctness of distributed systems by exhaustively exploring all possible states and checking invariants.
+A Go library for model checking concurrent systems using state machines. goat helps you verify the correctness of distributed systems by exhaustively exploring all possible states and checking conditions.
 
 ## Installation
 
@@ -58,8 +58,8 @@ func main() {
     }
     err = goat.Test(
         goat.WithStateMachines(sm),
-        goat.WithInvariants(
-            goat.NewInvariant(sm, func(sm *MyStateMachine) bool {
+        goat.WithConditions(
+            goat.NewCondition(sm, func(sm *MyStateMachine) bool {
                 return sm.Counter <= 2
             }),
         ),
@@ -76,16 +76,16 @@ func main() {
 - **`OnEntry()`, `OnEvent()`, `OnExit()`** - Register event handlers for each lifecycle events
 - **`Goto()`** - Trigger state transitions
 - **`SendTo()`** - Send events between state machines
-- **`Test()`** - Run model checking with invariant verification
+- **`Test()`** - Run model checking with condition verification
 - **`Debug()`** - Output detailed JSON results for debugging
 - **`WithStateMachines()`** - Configure which state machines to test
-- **`WithInvariants()`** - Configure invariants to check
+- **`WithConditions()`** - Configure conditions to check
 
 ## Examples
 
 The `example/` directory contains several complete examples:
 
-- **`simple-transition/`** - Basic state transitions and invariants
+- **`simple-transition/`** - Basic state transitions and conditions
 - **`client-server/`** - Distributed communication patterns
 - **`meeting-room-reservation/`** - Resource contention scenarios
 - **`simple-halt/`** - State machine termination
@@ -97,14 +97,14 @@ Run any example:
 go run ./example/simple-transition
 ```
 
-### Multi state machine invariants
+### Multi state machine conditions
 
-- `NewMultiInvariant(check func(Machines) bool, sms ...AbstractStateMachine)` — reference multiple machines in one invariant
-- `NewInvariant2` / `NewInvariant3` — convenience wrappers for 2 or 3 machines
+- `NewMultiCondition(check func(Machines) bool, sms ...AbstractStateMachine)` — reference multiple machines in one condition
+- `NewCondition2` / `NewCondition3` — convenience wrappers for 2 or 3 machines
 - `Machines` + `GetMachine[T]` — type-safe access to referenced machines during evaluation
 
 ```go
-inv := goat.NewInvariant2(primary, replica, func(p *Storage, r *Storage) bool {
+inv := goat.NewCondition2(primary, replica, func(p *Storage, r *Storage) bool {
     // Simple consistency: every key in primary exists in replica with the same value
     for key, pv := range p.Data {
         rv, ok := r.Data[key]
