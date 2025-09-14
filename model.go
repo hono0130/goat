@@ -12,7 +12,9 @@ type model struct {
 	worlds     worlds
 	initial    world
 	accessible map[worldID][]worldID
-	invariants []Invariant
+	conds      map[ConditionName]Condition
+	invariants []ConditionName
+	labels     map[worldID]map[ConditionName]bool
 }
 
 type worldID uint64
@@ -177,14 +179,26 @@ func newModel(opts ...Option) (model, error) {
 	if len(os.sms) == 0 {
 		return model{}, fmt.Errorf("no state machines provided")
 	}
-
 	initial := initialWorld(os.sms...)
-	return model{
+	m := model{
 		initial:    initial,
 		worlds:     make(worlds),
 		accessible: make(map[worldID][]worldID),
+		conds:      os.conds,
 		invariants: os.invariants,
-	}, nil
+		labels:     make(map[worldID]map[ConditionName]bool),
+	}
+	m.labelWorld(initial)
+	return m, nil
+}
+
+func (m *model) labelWorld(w world) {
+	if m.labels[w.id] == nil {
+		m.labels[w.id] = make(map[ConditionName]bool)
+	}
+	for name, cond := range m.conds {
+		m.labels[w.id][name] = cond.Evaluate(w)
+	}
 }
 
 func (m *model) Solve() error {
@@ -209,6 +223,7 @@ func (m *model) Solve() error {
 			acc = append(acc, next.id)
 			if !m.worlds.member(next) {
 				m.worlds.insert(next)
+				m.labelWorld(next)
 				stack = append(stack, next)
 			}
 		}
@@ -219,8 +234,8 @@ func (m *model) Solve() error {
 }
 
 func (m *model) evaluateInvariants(w world) bool {
-	for _, invariant := range m.invariants {
-		if !invariant.Evaluate(w) {
+	for _, name := range m.invariants {
+		if !m.labels[w.id][name] {
 			return false
 		}
 	}
@@ -229,21 +244,23 @@ func (m *model) evaluateInvariants(w world) bool {
 
 type options struct {
 	sms        []AbstractStateMachine
-	invariants []Invariant
+	conds      map[ConditionName]Condition
+	invariants []ConditionName
 }
 
 // Option is a configuration option for model checking operations.
 // Options are used with Test() and Debug() functions to configure
-// state machines, invariants, and other testing parameters.
+// state machines, conditions, invariants, and other testing parameters.
 //
-// Use the provided helper functions like WithStateMachines() and
-// WithInvariants() to create options.
+// Use the provided helper functions like WithStateMachines(),
+// WithConditions(), and WithInvariants() to create options.
 //
 // Example:
 //
 //	goat.Test(
 //	    goat.WithStateMachines(sm1, sm2),
-//	    goat.WithInvariants(invariant1),
+//	    goat.WithConditions(cond1),
+//	    goat.WithInvariants(cond1),
 //	)
 type Option interface {
 	apply(*options)
