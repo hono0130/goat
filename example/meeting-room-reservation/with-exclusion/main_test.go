@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/goatx/goat"
+	"github.com/goatx/goat/mermaid"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
@@ -45,4 +47,24 @@ func TestMeetingRoomReservationWithExclusion(t *testing.T) {
 		t.Errorf("Summary mismatch (-want +got):\n%s", diff)
 	}
 
+}
+
+func TestSequenceDiagram(t *testing.T) {
+	var buf bytes.Buffer
+
+	err := mermaid.Generate(".", &buf)
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+
+	got := buf.String()
+
+	want, err := os.ReadFile("sequence.md")
+	if err != nil {
+		t.Fatalf("Failed to read expected file: %v", err)
+	}
+
+	if got != string(want) {
+		t.Errorf("Generated sequence diagram doesn't match expected:\ngot:\n%s\nwant:\n%s", got, want)
+	}
 }

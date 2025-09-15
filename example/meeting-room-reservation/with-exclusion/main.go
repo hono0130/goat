@@ -78,7 +78,13 @@ type Reservation struct {
 	ClientID int
 }
 
-// Server state machine
+type ClientStateMachine struct {
+	goat.StateMachine
+	ClientID   int
+	TargetRoom int
+	Server     *ServerStateMachine
+}
+
 type ServerStateMachine struct {
 	goat.StateMachine
 	CurrentRequest *ReservationRequestEvent
@@ -89,13 +95,6 @@ type DBStateMachine struct {
 	goat.StateMachine
 	Reservations []Reservation
 	LockedRooms  map[int]int
-}
-
-type ClientStateMachine struct {
-	goat.StateMachine
-	ClientID   int
-	TargetRoom int
-	Server     *ServerStateMachine
 }
 
 func createMeetingRoomWithExclusionModel() []goat.Option {
