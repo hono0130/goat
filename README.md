@@ -64,6 +64,11 @@ func main() {
         goat.WithStateMachines(sm),
         goat.WithConditions(cond),
         goat.WithInvariants(cond),
+        goat.WithTemporalRules(
+            goat.WheneverPEventuallyQ(cond, cond),
+            goat.EventuallyAlways(cond),
+            goat.AlwaysEventually(cond),
+        ),
     )
     if err != nil {
         panic(err)
@@ -82,6 +87,7 @@ func main() {
 - **`WithStateMachines()`** - Configure which state machines to test
 - **`WithConditions()`** - Register named conditions
 - **`WithInvariants()`** - Configure conditions to check as invariants
+- **`WithTemporalRules()`** - Register temporal rules to verify temporal properties
 
 ## Examples
 
