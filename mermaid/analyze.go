@@ -3,7 +3,6 @@ package mermaid
 import (
 	"fmt"
 	"go/ast"
-	"go/token"
 	"go/types"
 	"path/filepath"
 	"sort"
@@ -28,11 +27,11 @@ type flow struct {
 }
 
 type element struct {
-	flows      []flow
-	isOptional bool
+    flows    []flow
+    branches [][]flow
 }
 
-func stateMachineOrder(pkg *PackageInfo) []string {
+func stateMachineOrder(pkg *packageInfo) []string {
 	var order []string
 	seenStateMachines := make(map[string]bool)
 
@@ -71,7 +70,7 @@ func stateMachineOrder(pkg *PackageInfo) []string {
 	return order
 }
 
-func communicationFlows(pkg *PackageInfo) []flow {
+func communicationFlows(pkg *packageInfo) []flow {
 	var flows []flow
 	for _, file := range pkg.Syntax {
 		ast.Inspect(file, func(n ast.Node) bool {
@@ -86,17 +85,18 @@ func communicationFlows(pkg *PackageInfo) []flow {
 			if !isFromGoat(selExpr, pkg.TypesInfo) {
 				return true
 			}
-			var handlerType string
+			var handlerKind string
 			switch selExpr.Sel.Name {
 			case onEntryHandler, onEventHandler, onExitHandler:
-				handlerType = selExpr.Sel.Name
+				handlerKind = selExpr.Sel.Name
 			default:
 				return true
 			}
 			if len(callExpr.Args) < 3 {
 				return true
 			}
-			var stateMachineType string
+			// Resolve the generic type argument of the handler (state machine type name).
+			var smTypeName string
 			if tv, ok := pkg.TypesInfo.Types[callExpr.Args[0]]; ok && tv.Type != nil {
 				typ := tv.Type
 				if ptr, ok := typ.(*types.Pointer); ok {
@@ -109,12 +109,12 @@ func communicationFlows(pkg *PackageInfo) []flow {
 							arg = p.Elem()
 						}
 						if n, ok := arg.(*types.Named); ok {
-							stateMachineType = n.Obj().Name()
+							smTypeName = n.Obj().Name()
 						}
 					}
 				}
 			}
-			if stateMachineType == "" {
+			if smTypeName == "" {
 				return true
 			}
 			handlerFunc, ok := callExpr.Args[len(callExpr.Args)-1].(*ast.FuncLit)
@@ -122,13 +122,15 @@ func communicationFlows(pkg *PackageInfo) []flow {
 				return true
 			}
 			var eventType string
-			if handlerType == onEventHandler && len(callExpr.Args) >= 4 {
-				eventType = getTypeName(callExpr.Args[2], pkg, true)
+			if handlerKind == onEventHandler && len(callExpr.Args) >= 4 {
+				if name, ok := namedTypeName(callExpr.Args[2], pkg.TypesInfo); ok {
+					eventType = name
+				}
 			}
 			pos := pkg.Fset.Position(handlerFunc.Pos())
 			handlerID := fmt.Sprintf("%s_%s_%s_%s:%d",
-				stateMachineType,
-				handlerType,
+				smTypeName,
+				handlerKind,
 				eventType,
 				filepath.Base(pos.Filename),
 				pos.Line)
@@ -144,11 +146,19 @@ func communicationFlows(pkg *PackageInfo) []flow {
 				if len(sendToCall.Args) < 3 {
 					return true
 				}
+				toName := unknownType
+				if name, ok := namedTypeName(sendToCall.Args[1], pkg.TypesInfo); ok {
+					toName = name
+				}
+				evName := ""
+				if name, ok := namedTypeName(sendToCall.Args[2], pkg.TypesInfo); ok {
+					evName = name
+				}
 				f := flow{
-					from:             stateMachineType,
-					to:               getTypeName(sendToCall.Args[1], pkg, false),
-					eventType:        getTypeName(sendToCall.Args[2], pkg, true),
-					handlerType:      handlerType,
+					from:             smTypeName,
+					to:               toName,
+					eventType:        evName,
+					handlerType:      handlerKind,
 					handlerEventType: eventType,
 					handlerID:        handlerID,
 				}
@@ -168,23 +178,6 @@ func communicationFlows(pkg *PackageInfo) []flow {
 		}
 	}
 	return unique
-}
-
-func groupFlowsByHandler(flows []flow) map[string][]flow {
-	groups := make(map[string][]flow)
-	for _, f := range flows {
-		groups[f.handlerID] = append(groups[f.handlerID], f)
-	}
-	return groups
-}
-
-func findTriggerFlow(handlerFlow flow, flows []flow) *flow {
-	for _, f := range flows {
-		if f.eventType == handlerFlow.handlerEventType && f.to == handlerFlow.from {
-			return &f
-		}
-	}
-	return nil
 }
 
 func findNextFlows(f flow, flows []flow) []flow {
@@ -224,56 +217,80 @@ func collectChain(f flow, flows []flow, processed map[string]bool) []flow {
 	return chain
 }
 
+type elementBuilder struct {
+    flows         []flow
+    processed     map[string]bool
+    handlerGroups map[string][]flow
+    elements      []element
+}
+
+func (b *elementBuilder) process(f flow) {
+    if b.processed[f.handlerID] {
+        return
+    }
+    handlerFlows := b.handlerGroups[f.handlerID]
+        if len(handlerFlows) > 1 {
+            var trigger flow
+            triggerFound := false
+            for _, cand := range b.flows {
+                if cand.eventType == f.handlerEventType && cand.to == f.from {
+                    trigger = cand
+                    triggerFound = true
+                    break
+                }
+            }
+        if triggerFound && !b.processed[trigger.handlerID] {
+            // Add the triggering flow as a normal element before the branches
+            b.elements = append(b.elements, element{flows: []flow{trigger}})
+            b.processed[trigger.handlerID] = true
+        }
+        sorted := append([]flow(nil), handlerFlows...)
+        sort.Slice(sorted, func(i, j int) bool {
+            fi, fj := sorted[i], sorted[j]
+            ci := len(findNextFlows(fi, b.flows))
+            cj := len(findNextFlows(fj, b.flows))
+            if ci != cj {
+                return ci < cj
+            }
+            return findFlowPosition(fi, b.flows) < findFlowPosition(fj, b.flows)
+        })
+        var branchPaths [][]flow
+        for _, h := range sorted {
+            path := append([]flow{h}, collectChain(h, b.flows, b.processed)...)
+            branchPaths = append(branchPaths, path)
+        }
+        b.elements = append(b.elements, element{branches: branchPaths})
+        b.processed[f.handlerID] = true
+        return
+    }
+    h := handlerFlows[0]
+    b.elements = append(b.elements, element{flows: []flow{h}})
+    b.processed[h.handlerID] = true
+    for _, next := range findNextFlows(h, b.flows) {
+        b.process(next)
+    }
+}
+
 func buildElements(flows []flow) []element {
-	var elements []element
-	processed := make(map[string]bool)
-	handlerGroups := groupFlowsByHandler(flows)
-	var process func(flow)
-	process = func(f flow) {
-		if processed[f.handlerID] {
-			return
-		}
-		handlerFlows := handlerGroups[f.handlerID]
-		if len(handlerFlows) > 1 {
-			if trigger := findTriggerFlow(f, flows); trigger != nil && !processed[trigger.handlerID] {
-				elements = append(elements, element{flows: []flow{*trigger}, isOptional: true})
-				processed[trigger.handlerID] = true
-			}
-			sorted := append([]flow(nil), handlerFlows...)
-			sort.Slice(sorted, func(i, j int) bool {
-				fi, fj := sorted[i], sorted[j]
-				hasChainI := len(findNextFlows(fi, flows)) > 0
-				hasChainJ := len(findNextFlows(fj, flows)) > 0
-				if hasChainI != hasChainJ {
-					return !hasChainI
-				}
-				return findFlowPosition(fi, flows) < findFlowPosition(fj, flows)
-			})
-			for _, h := range sorted {
-				path := append([]flow{h}, collectChain(h, flows, processed)...)
-				elements = append(elements, element{flows: path, isOptional: true})
-			}
-			processed[f.handlerID] = true
-			return
-		}
-		h := handlerFlows[0]
-		elements = append(elements, element{flows: []flow{h}})
-		processed[h.handlerID] = true
-		for _, next := range findNextFlows(h, flows) {
-			process(next)
-		}
-	}
-	for _, f := range flows {
-		if f.handlerType == onEntryHandler && !processed[f.handlerID] {
-			process(f)
-		}
-	}
-	for _, f := range flows {
-		if !processed[f.handlerID] {
-			process(f)
-		}
-	}
-	return elements
+    b := &elementBuilder{
+        flows:         flows,
+        processed:     make(map[string]bool),
+        handlerGroups: make(map[string][]flow),
+    }
+    for _, f := range flows {
+        b.handlerGroups[f.handlerID] = append(b.handlerGroups[f.handlerID], f)
+    }
+    for _, f := range flows {
+        if f.handlerType == onEntryHandler && !b.processed[f.handlerID] {
+            b.process(f)
+        }
+    }
+    for _, f := range flows {
+        if !b.processed[f.handlerID] {
+            b.process(f)
+        }
+    }
+    return b.elements
 }
 
 func isFromGoat(sel *ast.SelectorExpr, info *types.Info) bool {
@@ -297,37 +314,15 @@ func isFromGoat(sel *ast.SelectorExpr, info *types.Info) bool {
 	return id.Name == goatPackageName
 }
 
-func getTypeName(expr ast.Expr, pkg *PackageInfo, isEvent bool) string {
-	if tv, ok := pkg.TypesInfo.Types[expr]; ok && tv.Type != nil {
+func namedTypeName(expr ast.Expr, info *types.Info) (string, bool) {
+	if tv, ok := info.Types[expr]; ok && tv.Type != nil {
 		typ := tv.Type
 		if ptr, ok := typ.(*types.Pointer); ok {
 			typ = ptr.Elem()
 		}
 		if named, ok := typ.(*types.Named); ok {
-			return named.Obj().Name()
+			return named.Obj().Name(), true
 		}
 	}
-	if isEvent {
-		switch e := expr.(type) {
-		case *ast.UnaryExpr:
-			if e.Op == token.AND {
-				return getTypeName(e.X, pkg, true)
-			}
-		case *ast.CompositeLit:
-			switch t := e.Type.(type) {
-			case *ast.Ident:
-				return t.Name
-			case *ast.SelectorExpr:
-				return t.Sel.Name
-			}
-		}
-		return ""
-	}
-	switch e := expr.(type) {
-	case *ast.Ident:
-		return e.Name
-	case *ast.SelectorExpr:
-		return e.Sel.Name
-	}
-	return unknownType
+	return "", false
 }

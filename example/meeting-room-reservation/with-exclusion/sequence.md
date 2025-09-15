@@ -6,10 +6,9 @@ sequenceDiagram
     ClientStateMachine->>ServerStateMachine: ReservationRequestEvent
     ServerStateMachine->>DBStateMachine: DBSelectEvent
     DBStateMachine->>ServerStateMachine: DBSelectResultEvent
-    opt
+    alt
         ServerStateMachine->>ClientStateMachine: ReservationResultEvent
-    end
-    opt
+    else
         ServerStateMachine->>DBStateMachine: DBUpdateEvent
         DBStateMachine->>ServerStateMachine: DBUpdateResultEvent
         ServerStateMachine->>ClientStateMachine: ReservationResultEvent
