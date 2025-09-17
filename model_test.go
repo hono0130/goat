@@ -54,7 +54,9 @@ func TestModel_Solve(t *testing.T) {
 						initialWorld.id:   {processedWorld.id},
 						processedWorld.id: {},
 					},
+					conds:      nil,
 					invariants: nil,
+					labels:     nil,
 				}
 			},
 			wantErr: false,
@@ -63,9 +65,10 @@ func TestModel_Solve(t *testing.T) {
 			name: "state machine with invariant violation",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
-				inv := BoolInvariant(false) // Always false invariant
+				inv := BoolCondition("inv", false) // Always false condition
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				return m
@@ -126,7 +129,7 @@ func TestModel_Solve(t *testing.T) {
 
 				opts := cmp.Options{
 					cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
-					cmpopts.IgnoreFields(model{}, "invariants"), // Ignore function pointers
+					cmpopts.IgnoreFields(model{}, "conds", "invariants", "labels"), // Ignore function pointers and maps
 					cmp.AllowUnexported(model{}, world{}, environment{}, StateMachine{}),
 				}
 
@@ -162,9 +165,10 @@ func TestModel_evaluateInvariants(t *testing.T) {
 			name: "passing invariant",
 			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
-				inv := BoolInvariant(true)
+				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				w := initialWorld(sm)
@@ -176,9 +180,10 @@ func TestModel_evaluateInvariants(t *testing.T) {
 			name: "failing invariant",
 			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
-				inv := BoolInvariant(false)
+				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv),
 					WithInvariants(inv),
 				)
 				w := initialWorld(sm)
@@ -190,11 +195,12 @@ func TestModel_evaluateInvariants(t *testing.T) {
 			name: "multiple invariants with one failing",
 			setup: func() (model, world) {
 				sm := newTestStateMachine(newTestState("initial"), newTestState("target"))
-				inv1 := BoolInvariant(true)
-				inv2 := BoolInvariant(false)
-				inv3 := BoolInvariant(true)
+				inv1 := BoolCondition("i1", true)
+				inv2 := BoolCondition("i2", false)
+				inv3 := BoolCondition("i3", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
+					WithConditions(inv1, inv2, inv3),
 					WithInvariants(inv1, inv2, inv3),
 				)
 				w := initialWorld(sm)
