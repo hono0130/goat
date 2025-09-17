@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -35,6 +36,17 @@ func Test(opts ...Option) error {
 		return err
 	}
 	executionTime := time.Since(start).Milliseconds()
+
+	trResults := model.checkLTL()
+	names := make([]string, 0)
+	for _, r := range trResults {
+		if !r.Holds {
+			names = append(names, r.Rule)
+		}
+	}
+	if len(names) > 0 {
+		return fmt.Errorf("temporal rule violation: %s", strings.Join(names, ", "))
+	}
 
 	model.writeLog(os.Stdout, "invariant violation")
 
@@ -134,10 +146,14 @@ func Debug(w io.Writer, opts ...Option) error {
 
 	worlds := model.worldsToJSON()
 	summary := model.summarize(executionTime)
+	temporal := model.checkLTL()
 
 	result := map[string]any{
 		"worlds":  worlds,
 		"summary": summary,
+	}
+	if len(temporal) > 0 {
+		result["temporal_rules"] = temporal
 	}
 
 	encoder := json.NewEncoder(w)
