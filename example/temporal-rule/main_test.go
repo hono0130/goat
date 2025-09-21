@@ -53,7 +53,7 @@ func TestTemporalRuleExample(t *testing.T) {
 	if !ok {
 		t.Fatalf("malformed temporal rule data: %v", temporal[0])
 	}
-	if rule["holds"] != true {
+	if rule["satisfied"] != true {
 		t.Fatalf("expected temporal rule to hold")
 	}
 }
