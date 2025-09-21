@@ -5,16 +5,17 @@ import "fmt"
 // TemporalRule represents a temporal property specified
 type TemporalRule interface {
 	name() string
-	ba() *ba
-}
+	isTemporalRule() bool
+} 
 
-type temporalRule struct {
+type ltlRule struct {
 	n string
 	b *ba
 }
 
-func (r temporalRule) name() string { return r.n }
-func (r temporalRule) ba() *ba      { return r.b }
+func (r ltlRule) name() string         { return r.n }
+func (r ltlRule) isTemporalRule() bool { return true }
+func (r ltlRule) ba() *ba              { return r.b }
 
 type temporalRuleResult struct {
 	Rule  string `json:"rule"`
@@ -37,11 +38,15 @@ type temporalRuleResult struct {
 //	)
 func WithTemporalRules(rs ...TemporalRule) Option {
 	return optionFunc(func(o *options) {
-		o.ltlRules = append(o.ltlRules, rs...)
+		for _, r := range rs {
+			ltlRule, ok := r.(ltlRule)
+			if !ok {
+				panic(fmt.Sprintf("temporal rule %T must be constructed using helper functions like WheneverPEventuallyQ or EventuallyAlways", r))
+			}
+			o.ltlRules = append(o.ltlRules, ltlRule)
+		}
 	})
 }
-
-// ---------- Temporal rule constructors ----------
 
 // WheneverPEventuallyQ returns a rule enforcing that whenever p holds, q eventually holds.
 //
@@ -79,7 +84,7 @@ func WheneverPEventuallyQ(p, q Condition) TemporalRule {
 			},
 		},
 	}
-	return temporalRule{n: name, b: b}
+	return ltlRule{n: name, b: b}
 }
 
 // EventuallyAlways returns a rule enforcing that c eventually holds forever.
@@ -114,7 +119,7 @@ func EventuallyAlways(c Condition) TemporalRule {
 			},
 		},
 	}
-	return temporalRule{n: name, b: b}
+	return ltlRule{n: name, b: b}
 }
 
 // AlwaysEventually returns a rule enforcing that c holds infinitely often.
@@ -152,5 +157,5 @@ func AlwaysEventually(c Condition) TemporalRule {
 			},
 		},
 	}
-	return temporalRule{n: name, b: b}
+	return ltlRule{n: name, b: b}
 }

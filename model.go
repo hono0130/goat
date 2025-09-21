@@ -14,7 +14,7 @@ type model struct {
 	accessible map[worldID][]worldID
 	conds      map[ConditionName]Condition
 	invariants []ConditionName
-	ltlRules   []TemporalRule
+	ltlRules   []ltlRule
 	labels     map[worldID]map[ConditionName]bool
 }
 
@@ -248,7 +248,7 @@ type options struct {
 	sms        []AbstractStateMachine
 	conds      map[ConditionName]Condition
 	invariants []ConditionName
-	ltlRules   []TemporalRule
+	ltlRules   []ltlRule
 }
 
 // Option is a configuration option for model checking operations.
