@@ -20,7 +20,7 @@ func TestTemporalRule_EventuallyAlways(t *testing.T) {
 		}
 		_ = m.Solve()
 		res := m.checkLTL()
-		if !res[0].Holds {
+		if !res[0].Satisfied {
 			t.Fatalf("expected rule to hold")
 		}
 	})
@@ -38,10 +38,10 @@ func TestTemporalRule_EventuallyAlways(t *testing.T) {
 		}
 		_ = m.Solve()
 		res := m.checkLTL()
-		if res[0].Holds {
+		if res[0].Satisfied {
 			t.Fatalf("expected rule violation")
 		}
-		if res[0].Lasso == nil {
+		if l, ok := res[0].Evidence.(*lasso); !ok || l == nil {
 			t.Fatalf("expected lasso")
 		}
 	})
@@ -61,7 +61,7 @@ func TestTemporalRule_AlwaysEventually(t *testing.T) {
 		}
 		_ = m.Solve()
 		res := m.checkLTL()
-		if !res[0].Holds {
+		if !res[0].Satisfied {
 			t.Fatalf("expected rule to hold")
 		}
 	})
@@ -79,10 +79,10 @@ func TestTemporalRule_AlwaysEventually(t *testing.T) {
 		}
 		_ = m.Solve()
 		res := m.checkLTL()
-		if res[0].Holds {
+		if res[0].Satisfied {
 			t.Fatalf("expected rule violation")
 		}
-		if res[0].Lasso == nil {
+		if l, ok := res[0].Evidence.(*lasso); !ok || l == nil {
 			t.Fatalf("expected lasso")
 		}
 	})
@@ -103,7 +103,7 @@ func TestTemporalRule_WheneverPEventuallyQ(t *testing.T) {
 		}
 		_ = m.Solve()
 		res := m.checkLTL()
-		if !res[0].Holds {
+		if !res[0].Satisfied {
 			t.Fatalf("expected rule to hold")
 		}
 	})
@@ -122,10 +122,10 @@ func TestTemporalRule_WheneverPEventuallyQ(t *testing.T) {
 		}
 		_ = m.Solve()
 		res := m.checkLTL()
-		if res[0].Holds {
+		if res[0].Satisfied {
 			t.Fatalf("expected rule violation")
 		}
-		if res[0].Lasso == nil {
+		if l, ok := res[0].Evidence.(*lasso); !ok || l == nil {
 			t.Fatalf("expected lasso")
 		}
 	})

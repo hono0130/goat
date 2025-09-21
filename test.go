@@ -40,7 +40,7 @@ func Test(opts ...Option) error {
 	trResults := model.checkLTL()
 	names := make([]string, 0)
 	for _, r := range trResults {
-		if !r.Holds {
+		if !r.Satisfied {
 			names = append(names, r.Rule)
 		}
 	}

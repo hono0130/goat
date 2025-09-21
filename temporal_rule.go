@@ -6,7 +6,7 @@ import "fmt"
 type TemporalRule interface {
 	name() string
 	isTemporalRule() bool
-} 
+}
 
 type ltlRule struct {
 	n string
@@ -17,10 +17,14 @@ func (r ltlRule) name() string         { return r.n }
 func (r ltlRule) isTemporalRule() bool { return true }
 func (r ltlRule) ba() *ba              { return r.b }
 
+type temporalEvidence interface {
+	temporalEvidence()
+}
+
 type temporalRuleResult struct {
-	Rule  string `json:"rule"`
-	Holds bool   `json:"holds"`
-	Lasso *lasso `json:"lasso,omitempty"`
+	Rule      string           `json:"rule"`
+	Satisfied bool             `json:"satisfied"`
+	Evidence  temporalEvidence `json:"evidence,omitempty"`
 }
 
 // WithTemporalRules registers temporal rules for model checking.
