@@ -2,7 +2,7 @@ package goat
 
 import "fmt"
 
-// TemporalRule represents a temporal property specified by a Büchi automaton.
+// TemporalRule represents a temporal property specified
 type TemporalRule interface {
 	name() string
 	ba() *ba
@@ -53,11 +53,12 @@ func WithTemporalRules(rs ...TemporalRule) Option {
 //
 // Example:
 //
-//	rule := goat.WheneverPEventuallyQ(write, replicated)
 //	err := goat.Test(
-//	    goat.WithStateMachines(primary, replica),
-//	    goat.WithConditions(write, replicated),
-//	    goat.WithTemporalRules(rule),
+//		goat.WithStateMachines(primary, replica),
+//		goat.WithConditions(write, replicated),
+//		goat.WithTemporalRules(
+//			goat.WheneverPEventuallyQ(write, replicated),
+//		),
 //	)
 func WheneverPEventuallyQ(p, q Condition) TemporalRule {
 	name := fmt.Sprintf("whenever %s eventually %s", p.Name(), q.Name())
@@ -90,11 +91,12 @@ func WheneverPEventuallyQ(p, q Condition) TemporalRule {
 //
 // Example:
 //
-//	rule := goat.EventuallyAlways(stable)
 //	err := goat.Test(
 //	    goat.WithStateMachines(nodes...),
 //	    goat.WithConditions(stable),
-//	    goat.WithTemporalRules(rule),
+//	    goat.WithTemporalRules(
+//			goat.EventuallyAlways(stable),
+//		),
 //	)
 func EventuallyAlways(c Condition) TemporalRule {
 	name := fmt.Sprintf("eventually always %s", c.Name())
@@ -124,11 +126,12 @@ func EventuallyAlways(c Condition) TemporalRule {
 //
 // Example:
 //
-//	rule := goat.AlwaysEventually(heartbeat)
 //	err := goat.Test(
 //	    goat.WithStateMachines(node),
 //	    goat.WithConditions(heartbeat),
-//	    goat.WithTemporalRules(rule),
+//	    goat.WithTemporalRules(
+//			goat.AlwaysEventually(heartbeat),
+//		),
 //	)
 func AlwaysEventually(c Condition) TemporalRule {
 	name := fmt.Sprintf("always eventually %s", c.Name())
