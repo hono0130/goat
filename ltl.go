@@ -152,8 +152,7 @@ func sccProduct(graph map[prodNode][]prodNode) [][]prodNode {
 	onStack := make(map[prodNode]bool)
 	var result [][]prodNode
 
-	var strongConnect func(v prodNode)
-	strongConnect = func(v prodNode) {
+	strongConnect := func(v prodNode) {
 		indices[v] = index
 		lowlink[v] = index
 		index++
