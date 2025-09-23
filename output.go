@@ -178,7 +178,7 @@ func (m *model) writeWorldSequence(sb *strings.Builder, worldIDs []worldID, anno
 		world := m.worlds[worldID]
 
 		sb.WriteString("  [")
-		sb.WriteString(fmt.Sprintf("%d", idx))
+		fmt.Fprintf(sb, "%d", idx)
 		sb.WriteString("]")
 		if annotate != nil {
 			if annotation := annotate(idx, world); annotation != "" {

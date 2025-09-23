@@ -13,9 +13,9 @@ type ltlRule struct {
 	b *ba
 }
 
-func (r ltlRule) name() string         { return r.n }
-func (r ltlRule) isTemporalRule() bool { return true }
-func (r ltlRule) ba() *ba              { return r.b }
+func (r ltlRule) name() string       { return r.n }
+func (ltlRule) isTemporalRule() bool { return true }
+func (r ltlRule) ba() *ba            { return r.b }
 
 type temporalEvidence interface {
 	temporalEvidence()
