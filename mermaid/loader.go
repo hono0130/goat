@@ -14,7 +14,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 )
 
 const (
@@ -159,7 +158,6 @@ type moduleImporter struct {
 	modulePath string
 	fallback   types.Importer
 
-	mu    sync.Mutex
 	cache map[string]*types.Package
 }
 
@@ -173,12 +171,9 @@ func newModuleImporter(moduleRoot, modulePath string) *moduleImporter {
 }
 
 func (m *moduleImporter) Import(path string) (*types.Package, error) {
-	m.mu.Lock()
 	if pkg, ok := m.cache[path]; ok {
-		m.mu.Unlock()
 		return pkg, nil
 	}
-	m.mu.Unlock()
 
 	if !strings.HasPrefix(path, m.modulePath) {
 		if isStandardLibraryPackage(path) {
@@ -207,22 +202,17 @@ func (m *moduleImporter) importFromDir(path, dir string) (*types.Package, error)
 		return nil, fmt.Errorf("failed to load package in %s: %w", dir, err)
 	}
 
-	m.mu.Lock()
 	if pkg, ok := m.cache[path]; ok {
-		m.mu.Unlock()
 		return pkg, nil
 	}
 	placeholder := types.NewPackage(path, buildPkg.Name)
 	m.cache[path] = placeholder
-	m.mu.Unlock()
 
 	fileNames := append([]string{}, buildPkg.GoFiles...)
 	fileNames = append(fileNames, buildPkg.CgoFiles...)
 	files, fset, err := parseGoFiles(dir, fileNames)
 	if err != nil {
-		m.mu.Lock()
 		delete(m.cache, path)
-		m.mu.Unlock()
 		return nil, fmt.Errorf("failed to load source files for %s: %w", path, err)
 	}
 
@@ -234,15 +224,11 @@ func (m *moduleImporter) importFromDir(path, dir string) (*types.Package, error)
 
 	pkg, err := conf.Check(path, fset, files, nil)
 	if err != nil {
-		m.mu.Lock()
 		delete(m.cache, path)
-		m.mu.Unlock()
 		return nil, fmt.Errorf("failed to type-check dependency %s: %w", path, err)
 	}
 
-	m.mu.Lock()
 	m.cache[path] = pkg
-	m.mu.Unlock()
 
 	return pkg, nil
 }
@@ -253,22 +239,17 @@ func (m *moduleImporter) importExternal(path string) (*types.Package, error) {
 		return nil, fmt.Errorf("failed to load external package %s: %w", path, err)
 	}
 
-	m.mu.Lock()
 	if pkg, ok := m.cache[path]; ok {
-		m.mu.Unlock()
 		return pkg, nil
 	}
 	placeholder := types.NewPackage(path, pkgInfo.Name)
 	m.cache[path] = placeholder
-	m.mu.Unlock()
 
 	fileNames := append([]string{}, pkgInfo.GoFiles...)
 	fileNames = append(fileNames, pkgInfo.CgoFiles...)
 	files, fset, err := parseGoFiles(pkgInfo.Dir, fileNames)
 	if err != nil {
-		m.mu.Lock()
 		delete(m.cache, path)
-		m.mu.Unlock()
 		return nil, fmt.Errorf("failed to load source files for %s: %w", path, err)
 	}
 
@@ -280,15 +261,11 @@ func (m *moduleImporter) importExternal(path string) (*types.Package, error) {
 
 	pkg, err := conf.Check(path, fset, files, nil)
 	if err != nil {
-		m.mu.Lock()
 		delete(m.cache, path)
-		m.mu.Unlock()
 		return nil, fmt.Errorf("failed to type-check dependency %s: %w", path, err)
 	}
 
-	m.mu.Lock()
 	m.cache[path] = pkg
-	m.mu.Unlock()
 
 	return pkg, nil
 }
