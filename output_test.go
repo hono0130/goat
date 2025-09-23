@@ -125,7 +125,7 @@ testStateMachine << entryEvent;" ];
 	}
 }
 
-func TestModel_writeLog(t *testing.T) {
+func TestModel_writeInvariantViolations(t *testing.T) {
 	tests := []struct {
 		name        string
 		setup       func() model
@@ -177,13 +177,54 @@ Path (length = 1):
 		t.Run(tt.name, func(t *testing.T) {
 			m := tt.setup()
 			var buf bytes.Buffer
-			m.writeLog(&buf, tt.description)
+			m.writeInvariantViolations(&buf, tt.description)
 			got := buf.String()
 
 			if got != tt.want {
-				t.Errorf("writeLog() output mismatch\ngot:\n%s\nwant:\n%s", got, tt.want)
+				t.Errorf("writeInvariantViolations() output mismatch\ngot:\n%s\nwant:\n%s", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestModel_writeTemporalViolations(t *testing.T) {
+	sm := newTestStateMachine(newTestState("s"))
+	cFalse := BoolCondition("c", false)
+	m, err := newModel(
+		WithStateMachines(sm),
+		WithConditions(cFalse),
+		WithTemporalRules(EventuallyAlways(cFalse)),
+	)
+	if err != nil {
+		t.Fatalf("newModel error: %v", err)
+	}
+	_ = m.Solve()
+
+	results := m.checkLTL()
+	var buf bytes.Buffer
+	m.writeTemporalViolations(&buf, results)
+	got := buf.String()
+
+	want := `TemporalRuleViolation:  eventually always c   ✘
+Prefix (length = 2):
+  [0]
+  StateMachines:
+    Name: testStateMachine, Detail: no fields, State: {Name:Name,Type:string,Value:s}
+  QueuedEvents:
+    StateMachine: testStateMachine, Event: entryEvent, Detail: no fields
+  [1]
+  StateMachines:
+    Name: testStateMachine, Detail: no fields, State: {Name:Name,Type:string,Value:s}
+  QueuedEvents:
+Loop (length = 1):
+  [0] <-- loop start
+  StateMachines:
+    Name: testStateMachine, Detail: no fields, State: {Name:Name,Type:string,Value:s}
+  QueuedEvents:
+`
+
+	if got != want {
+		t.Errorf("writeTemporalViolations() output mismatch\ngot:\n%s\nwant:\n%s", got, want)
 	}
 }
 

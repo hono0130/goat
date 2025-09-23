@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -17,6 +16,8 @@ import (
 //   - opts: Configuration options including state machines and invariants
 //
 // Returns an error if model creation, solving, or invariant checking fails.
+// Temporal rule violations are reported to stdout instead of being surfaced
+// as errors.
 //
 // Example:
 //
@@ -38,17 +39,9 @@ func Test(opts ...Option) error {
 	executionTime := time.Since(start).Milliseconds()
 
 	trResults := model.checkLTL()
-	names := make([]string, 0)
-	for _, r := range trResults {
-		if !r.Satisfied {
-			names = append(names, r.Rule)
-		}
-	}
-	if len(names) > 0 {
-		return fmt.Errorf("temporal rule violation: %s", strings.Join(names, ", "))
-	}
+	model.writeTemporalViolations(os.Stdout, trResults)
 
-	model.writeLog(os.Stdout, "invariant violation")
+	model.writeInvariantViolations(os.Stdout, "invariant violation")
 
 	summary := model.summarize(executionTime)
 	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
