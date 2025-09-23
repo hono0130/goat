@@ -38,10 +38,10 @@ func Test(opts ...Option) error {
 	}
 	executionTime := time.Since(start).Milliseconds()
 
+	model.writeInvariantViolations(os.Stdout, "invariant violation")
+
 	trResults := model.checkLTL()
 	model.writeTemporalViolations(os.Stdout, trResults)
-
-	model.writeInvariantViolations(os.Stdout, "invariant violation")
 
 	summary := model.summarize(executionTime)
 	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
