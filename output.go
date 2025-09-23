@@ -153,17 +153,7 @@ func (m *model) writeTemporalViolations(w io.Writer, results []temporalRuleResul
 			continue
 		}
 
-		loopStartIdx := 0
-		if prefixLen > 0 {
-			loopStartIdx = prefixLen - 1
-		}
-
-		m.writeWorldSequence(&sb, sequence, func(idx int, w world) string {
-			if loopLen > 0 && idx == loopStartIdx {
-				return "<-- loop start"
-			}
-			return ""
-		})
+		m.writeWorldSequence(&sb, sequence, nil)
 	}
 
 	if block == 0 {

@@ -212,7 +212,7 @@ Lasso (prefix length = 2, loop length = 1):
     Name: testStateMachine, Detail: no fields, State: {Name:Name,Type:string,Value:s}
   QueuedEvents:
     StateMachine: testStateMachine, Event: entryEvent, Detail: no fields
-  [1] <-- loop start
+  [1]
   StateMachines:
     Name: testStateMachine, Detail: no fields, State: {Name:Name,Type:string,Value:s}
   QueuedEvents:
