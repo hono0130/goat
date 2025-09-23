@@ -132,11 +132,6 @@ func (m *model) writeTemporalViolations(w io.Writer, results []temporalRuleResul
 
 		prefixLen := len(lasso.Prefix)
 		loopLen := len(lasso.Loop)
-		sb.WriteString("Lasso (prefix length = ")
-		sb.WriteString(fmt.Sprintf("%d", prefixLen))
-		sb.WriteString(", loop length = ")
-		sb.WriteString(fmt.Sprintf("%d", loopLen))
-		sb.WriteString("):\n")
 
 		sequence := make([]worldID, 0, prefixLen+loopLen)
 		sequence = append(sequence, lasso.Prefix...)
@@ -149,9 +144,14 @@ func (m *model) writeTemporalViolations(w io.Writer, results []temporalRuleResul
 		}
 
 		if len(sequence) == 0 {
+			sb.WriteString("Violation path (length = 0):\n")
 			sb.WriteString("  <empty witness>\n")
 			continue
 		}
+
+		sb.WriteString("Violation path (length = ")
+		sb.WriteString(fmt.Sprintf("%d", len(sequence)))
+		sb.WriteString("):\n")
 
 		m.writeWorldSequence(&sb, sequence, nil)
 	}

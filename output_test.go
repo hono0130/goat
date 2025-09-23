@@ -206,7 +206,7 @@ func TestModel_writeTemporalViolations(t *testing.T) {
 	got := buf.String()
 
 	want := `TemporalRuleViolation:  eventually always c   ✘
-Lasso (prefix length = 2, loop length = 1):
+Violation path (length = 2):
   [0]
   StateMachines:
     Name: testStateMachine, Detail: no fields, State: {Name:Name,Type:string,Value:s}
