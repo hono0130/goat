@@ -112,8 +112,14 @@ func extractHandlerContext(callExpr *ast.CallExpr, pkg *packageInfo) (*handlerCo
 		return nil, false
 	}
 
-	kind, ok := handlerKind(selExpr.Sel.Name)
-	if !ok || len(callExpr.Args) < 3 {
+	var kind string
+	switch selExpr.Sel.Name {
+	case onEntryHandler, onEventHandler, onExitHandler:
+		kind = selExpr.Sel.Name
+	default:
+		return nil, false
+	}
+	if len(callExpr.Args) < 3 {
 		return nil, false
 	}
 
@@ -127,7 +133,12 @@ func extractHandlerContext(callExpr *ast.CallExpr, pkg *packageInfo) (*handlerCo
 		return nil, false
 	}
 
-	eventType := handlerEventType(kind, callExpr, pkg.TypesInfo)
+	eventType := ""
+	if kind == onEventHandler && len(callExpr.Args) >= 4 {
+		if name, ok := namedTypeName(callExpr.Args[2], pkg.TypesInfo); ok {
+			eventType = name
+		}
+	}
 	handlerID := buildHandlerID(stateMachine, kind, eventType, handlerFunc, pkg)
 
 	return &handlerContext{
@@ -137,15 +148,6 @@ func extractHandlerContext(callExpr *ast.CallExpr, pkg *packageInfo) (*handlerCo
 		handlerID:    handlerID,
 		function:     handlerFunc,
 	}, true
-}
-
-func handlerKind(name string) (string, bool) {
-	switch name {
-	case onEntryHandler, onEventHandler, onExitHandler:
-		return name, true
-	default:
-		return "", false
-	}
 }
 
 func resolveStateMachineType(expr ast.Expr, info *types.Info) string {
@@ -171,16 +173,6 @@ func resolveStateMachineType(expr ast.Expr, info *types.Info) string {
 	}
 	if n, ok := arg.(*types.Named); ok {
 		return n.Obj().Name()
-	}
-	return ""
-}
-
-func handlerEventType(kind string, callExpr *ast.CallExpr, info *types.Info) string {
-	if kind != onEventHandler || len(callExpr.Args) < 4 {
-		return ""
-	}
-	if name, ok := namedTypeName(callExpr.Args[2], info); ok {
-		return name
 	}
 	return ""
 }
