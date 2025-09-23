@@ -130,28 +130,40 @@ func (m *model) writeTemporalViolations(w io.Writer, results []temporalRuleResul
 		sb.WriteString(res.Rule)
 		sb.WriteString("   ✘\n")
 
-		if len(lasso.Prefix) > 0 {
-			sb.WriteString("Prefix (length = ")
-			sb.WriteString(fmt.Sprintf("%d", len(lasso.Prefix)))
-			sb.WriteString("):\n")
-			m.writeWorldSequence(&sb, lasso.Prefix, nil)
-		} else {
-			sb.WriteString("Prefix: <empty>\n")
+		prefixLen := len(lasso.Prefix)
+		loopLen := len(lasso.Loop)
+		sb.WriteString("Lasso (prefix length = ")
+		sb.WriteString(fmt.Sprintf("%d", prefixLen))
+		sb.WriteString(", loop length = ")
+		sb.WriteString(fmt.Sprintf("%d", loopLen))
+		sb.WriteString("):\n")
+
+		sequence := make([]worldID, 0, prefixLen+loopLen)
+		sequence = append(sequence, lasso.Prefix...)
+		if loopLen > 0 {
+			if prefixLen == 0 || lasso.Prefix[prefixLen-1] != lasso.Loop[0] {
+				sequence = append(sequence, lasso.Loop...)
+			} else {
+				sequence = append(sequence, lasso.Loop[1:]...)
+			}
 		}
 
-		if len(lasso.Loop) > 0 {
-			sb.WriteString("Loop (length = ")
-			sb.WriteString(fmt.Sprintf("%d", len(lasso.Loop)))
-			sb.WriteString("):\n")
-			m.writeWorldSequence(&sb, lasso.Loop, func(idx int, w world) string {
-				if idx == 0 {
-					return "<-- loop start"
-				}
-				return ""
-			})
-		} else {
-			sb.WriteString("Loop: <empty>\n")
+		if len(sequence) == 0 {
+			sb.WriteString("  <empty witness>\n")
+			continue
 		}
+
+		loopStartIdx := 0
+		if prefixLen > 0 {
+			loopStartIdx = prefixLen - 1
+		}
+
+		m.writeWorldSequence(&sb, sequence, func(idx int, w world) string {
+			if loopLen > 0 && idx == loopStartIdx {
+				return "<-- loop start"
+			}
+			return ""
+		})
 	}
 
 	if block == 0 {
