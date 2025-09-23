@@ -11,7 +11,8 @@ func TestGenerate(t *testing.T) {
 	t.Setenv("GOCACHE", t.TempDir())
 
 	var buf bytes.Buffer
-	if err := Generate(workflowDir(t), &buf); err != nil {
+	dir := writeWorkflowFixture(t)
+	if err := Generate(dir, &buf); err != nil {
 		t.Fatalf("Generate returned error: %v", err)
 	}
 
