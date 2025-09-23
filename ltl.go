@@ -107,41 +107,41 @@ func buildPrefix(pre map[prodNode]prodNode, to prodNode) []worldID {
 }
 
 func findCycle(graph map[prodNode][]prodNode, start prodNode, scc map[prodNode]bool) []worldID {
-    queue := []prodNode{start}
-    pre := map[prodNode]prodNode{start: start}
+	queue := []prodNode{start}
+	pre := map[prodNode]prodNode{start: start}
 
-    for len(queue) > 0 {
-        v := queue[0]
-        queue = queue[1:]
+	for len(queue) > 0 {
+		v := queue[0]
+		queue = queue[1:]
 
-        for _, n := range graph[v] {
-            if !scc[n] {
-                continue
-            }
+		for _, n := range graph[v] {
+			if !scc[n] {
+				continue
+			}
 
-            if n == start {
-                path := make([]prodNode, 0)
-                x := v
-                for x != start {
-                    path = append([]prodNode{x}, path...)
-                    x = pre[x]
-                }
-                path = append([]prodNode{start}, path...)
-                loop := make([]worldID, 0, len(path))
-                for i := range path {
+			if n == start {
+				path := make([]prodNode, 0)
+				x := v
+				for x != start {
+					path = append([]prodNode{x}, path...)
+					x = pre[x]
+				}
+				path = append([]prodNode{start}, path...)
+				loop := make([]worldID, 0, len(path))
+				for i := range path {
 					loop = append(loop, path[i].w)
-                }
-                return loop
-            }
+				}
+				return loop
+			}
 
-            if _, seen := pre[n]; seen {
-                continue
-            }
-            pre[n] = v
-            queue = append(queue, n)
-        }
-    }
-    return nil
+			if _, seen := pre[n]; seen {
+				continue
+			}
+			pre[n] = v
+			queue = append(queue, n)
+		}
+	}
+	return nil
 }
 
 func sccProduct(graph map[prodNode][]prodNode) [][]prodNode {
