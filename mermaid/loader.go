@@ -27,33 +27,33 @@ type packageInfo struct {
 	TypesInfo *types.Info
 }
 
-func loadPackageWithTypes(packagePath string) (*packageInfo, error) {
+func loadPackageWithTypes(packagePath string) (packageInfo, error) {
 	abs, err := filepath.Abs(packagePath)
 	if err != nil {
-		return nil, err
+		return packageInfo{}, err
 	}
 
 	moduleRoot, err := findModuleRoot(abs)
 	if err != nil {
-		return nil, err
+		return packageInfo{}, err
 	}
 
 	modulePath, err := readModulePath(moduleRoot)
 	if err != nil {
-		return nil, err
+		return packageInfo{}, err
 	}
 
 	importPath, err := packageImportPath(moduleRoot, modulePath, abs)
 	if err != nil {
-		return nil, err
+		return packageInfo{}, err
 	}
 
 	files, info, fset, err := parseAndTypeCheck(importPath, abs, moduleRoot, modulePath)
 	if err != nil {
-		return nil, err
+		return packageInfo{}, err
 	}
 
-	return &packageInfo{Fset: fset, Syntax: files, TypesInfo: info}, nil
+	return packageInfo{Fset: fset, Syntax: files, TypesInfo: info}, nil
 }
 
 func parseAndTypeCheck(importPath, dir, moduleRoot, modulePath string) ([]*ast.File, *types.Info, *token.FileSet, error) {

@@ -27,8 +27,8 @@ func Generate(packagePath string, writer io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("failed to load package with types: %w", err)
 	}
-	order := stateMachineOrder(pkg)
-	flows := communicationFlows(pkg)
+	order := stateMachineOrder(&pkg)
+	flows := communicationFlows(&pkg)
 	elements := buildElements(flows)
 	_, err = writer.Write([]byte(render(elements, order)))
 	return err
