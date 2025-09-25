@@ -38,6 +38,9 @@ func TestLoadPackageWithTypes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadPackageWithTypes returned error: %v", err)
 	}
+	if pkg == nil {
+		t.Fatal("loadPackageWithTypes returned nil packageInfo")
+	}
 	if pkg.TypesInfo == nil {
 		t.Fatal("TypesInfo should not be nil")
 	}

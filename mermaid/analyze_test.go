@@ -9,7 +9,7 @@ import (
 
 func TestStateMachineOrder(t *testing.T) {
 	pkg := loadWorkflowPackage(t)
-	got := stateMachineOrder(&pkg)
+	got := stateMachineOrder(pkg)
 	want := []string{"Sender", "Receiver", "Logger"}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("stateMachineOrder mismatch (-want +got):\n%s", diff)
@@ -18,7 +18,7 @@ func TestStateMachineOrder(t *testing.T) {
 
 func TestCommunicationFlows(t *testing.T) {
 	pkg := loadWorkflowPackage(t)
-	got := communicationFlows(&pkg)
+	got := communicationFlows(pkg)
 	want := []flow{
 		{from: "Sender", to: "Receiver", eventType: "PingEvent", handlerType: "OnEntry"},
 		{from: "Receiver", to: "Sender", eventType: "AckEvent", handlerType: "OnEvent", handlerEventType: "PingEvent"},
@@ -37,7 +37,7 @@ func TestCommunicationFlows(t *testing.T) {
 
 func TestBuildElements(t *testing.T) {
 	pkg := loadWorkflowPackage(t)
-	flows := communicationFlows(&pkg)
+	flows := communicationFlows(pkg)
 	got := buildElements(flows)
 	want := []element{
 		{

@@ -100,7 +100,7 @@ func Configure() {
 	return dir
 }
 
-func loadWorkflowPackage(t *testing.T) packageInfo {
+func loadWorkflowPackage(t *testing.T) *packageInfo {
 	t.Helper()
 
 	dir := writeWorkflowFixture(t)

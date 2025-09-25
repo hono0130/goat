@@ -27,39 +27,39 @@ type packageInfo struct {
 	TypesInfo *types.Info
 }
 
-func loadPackageWithTypes(packagePath string) (packageInfo, error) {
+func loadPackageWithTypes(packagePath string) (*packageInfo, error) {
 	abs, err := filepath.Abs(packagePath)
 	if err != nil {
-		return packageInfo{}, err
+		return nil, err
 	}
 
 	moduleRoot, err := findModuleRoot(abs)
 	if err != nil {
-		return packageInfo{}, err
+		return nil, err
 	}
 
 	modulePath, err := readModulePath(moduleRoot)
 	if err != nil {
-		return packageInfo{}, err
+		return nil, err
 	}
 
 	importPath, err := packageImportPath(moduleRoot, modulePath, abs)
 	if err != nil {
-		return packageInfo{}, err
+		return nil, err
 	}
 
-	files, info, fset, err := parseAndTypeCheck(importPath, abs, moduleRoot, modulePath)
+	pkg, err := parseAndTypeCheck(importPath, abs, moduleRoot, modulePath)
 	if err != nil {
-		return packageInfo{}, err
+		return nil, err
 	}
 
-	return packageInfo{Fset: fset, Syntax: files, TypesInfo: info}, nil
+	return &pkg, nil
 }
 
-func parseAndTypeCheck(importPath, dir, moduleRoot, modulePath string) ([]*ast.File, *types.Info, *token.FileSet, error) {
+func parseAndTypeCheck(importPath, dir, moduleRoot, modulePath string) (packageInfo, error) {
 	buildPkg, err := build.Default.ImportDir(dir, 0)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to inspect directory %s: %w", dir, err)
+		return packageInfo{}, fmt.Errorf("failed to inspect directory %s: %w", dir, err)
 	}
 
 	fset := token.NewFileSet()
@@ -70,13 +70,13 @@ func parseAndTypeCheck(importPath, dir, moduleRoot, modulePath string) ([]*ast.F
 		filePath := filepath.Join(dir, name)
 		file, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to parse %s: %w", filePath, err)
+			return packageInfo{}, fmt.Errorf("failed to parse %s: %w", filePath, err)
 		}
 		files = append(files, file)
 	}
 
 	if len(files) == 0 {
-		return nil, nil, nil, fmt.Errorf("no Go files found in %s", dir)
+		return packageInfo{}, fmt.Errorf("no Go files found in %s", dir)
 	}
 
 	info := &types.Info{
@@ -96,10 +96,10 @@ func parseAndTypeCheck(importPath, dir, moduleRoot, modulePath string) ([]*ast.F
 	}
 
 	if _, err := conf.Check(importPath, fset, files, info); err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to type-check package %s: %w", importPath, err)
+		return packageInfo{}, fmt.Errorf("failed to type-check package %s: %w", importPath, err)
 	}
 
-	return files, info, fset, nil
+	return packageInfo{Fset: fset, Syntax: files, TypesInfo: info}, nil
 }
 
 func findModuleRoot(start string) (string, error) {
