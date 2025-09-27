@@ -22,13 +22,15 @@ type lasso struct {
 	Loop   []worldID `json:"loop"`
 }
 
-func (*lasso) temporalEvidence() {}
-
 func (m *model) checkLTL() []temporalRuleResult {
 	results := make([]temporalRuleResult, 0, len(m.ltlRules))
 	for _, r := range m.ltlRules {
 		holds, lasso := m.checkBA(r.ba())
-		results = append(results, temporalRuleResult{Rule: r.name(), Satisfied: holds, Evidence: lasso})
+		result := temporalRuleResult{Rule: r.name(), Satisfied: holds}
+		if lasso != nil {
+			result.Evidence = lasso
+		}
+		results = append(results, result)
 	}
 	return results
 }

@@ -22,8 +22,8 @@ type debugOutput struct {
 	TemporalRules []temporalRule `json:"temporal_rules"`
 }
 
-func TestTemporalRuleExample(t *testing.T) {
-	opts := createTemporalRuleModel()
+func TestTemporalRuleViolationExample(t *testing.T) {
+	opts := createTemporalRuleViolationModel()
 
 	var buf bytes.Buffer
 	if err := goat.Debug(&buf, opts...); err != nil {
@@ -37,12 +37,12 @@ func TestTemporalRuleExample(t *testing.T) {
 
 	expectedWorldsData, err := os.ReadFile("expected_worlds.json")
 	if err != nil {
-		t.Fatalf("Failed to read expected worlds file: %v", err)
+		t.Fatalf("Failed to read expected worlds JSON: %v", err)
 	}
 
 	var expectedWorlds any
 	if err := json.Unmarshal(expectedWorldsData, &expectedWorlds); err != nil {
-		t.Fatalf("Failed to parse expected worlds JSON: %v", err)
+		t.Fatalf("Failed to decode expected worlds JSON: %v", err)
 	}
 
 	cmpOpts := cmp.Options{
@@ -53,14 +53,14 @@ func TestTemporalRuleExample(t *testing.T) {
 	}
 
 	if diff := cmp.Diff(expectedWorlds, data.Worlds, cmpOpts...); diff != "" {
-		t.Errorf("Worlds mismatch (-expected +actual):\n%s", diff)
+		t.Fatalf("worlds mismatch (-expected +actual):\n%s", diff)
 	}
 
 	if len(data.TemporalRules) != 1 {
 		t.Fatalf("expected one temporal rule, got: %v", data.TemporalRules)
 	}
-	if !data.TemporalRules[0].Satisfied {
-		t.Fatalf("expected temporal rule to hold")
+	if data.TemporalRules[0].Satisfied {
+		t.Fatalf("expected temporal rule to be violated")
 	}
 
 	expectedTemporalRulesData, err := os.ReadFile("expected_temporal_rules.json")
