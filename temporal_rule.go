@@ -17,10 +17,14 @@ func (r ltlRule) name() string       { return r.n }
 func (ltlRule) isTemporalRule() bool { return true }
 func (r ltlRule) ba() *ba            { return r.b }
 
+type temporalEvidence interface {
+	temporalEvidence()
+}
+
 type temporalRuleResult struct {
-	Rule      string `json:"rule"`
-	Satisfied bool   `json:"satisfied"`
-	Evidence  any    `json:"evidence,omitempty"`
+	Rule      string           `json:"rule"`
+	Satisfied bool             `json:"satisfied"`
+	Evidence  temporalEvidence `json:"evidence,omitempty"`
 }
 
 // WithTemporalRules registers temporal rules for model checking.

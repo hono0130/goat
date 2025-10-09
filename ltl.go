@@ -22,6 +22,8 @@ type lasso struct {
 	Loop   []worldID `json:"loop"`
 }
 
+func (*lasso) temporalEvidence() {}
+
 func (m *model) checkLTL() []temporalRuleResult {
 	results := make([]temporalRuleResult, 0, len(m.ltlRules))
 	for _, r := range m.ltlRules {
