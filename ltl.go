@@ -1,9 +1,5 @@
 package goat
 
-// ltl.go contains internal logic for evaluating temporal rules using
-// Büchi automata. These details are hidden from users of the library but
-// exposed for contributors.
-
 type baState int
 
 type baTransition struct {

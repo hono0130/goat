@@ -15,9 +15,7 @@ import (
 // Parameters:
 //   - opts: Configuration options including state machines and invariants
 //
-// Returns an error if model creation, solving, or invariant checking fails.
-// Temporal rule violations are reported to stdout instead of being surfaced
-// as errors.
+// Returns an error if model creation or solving fails.
 //
 // Example:
 //
