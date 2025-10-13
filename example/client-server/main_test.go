@@ -45,4 +45,5 @@ func TestClientServer(t *testing.T) {
 	if diff := cmp.Diff(expectedWorlds, data["worlds"], cmpOpts...); diff != "" {
 		t.Errorf("Worlds mismatch (-expected +actual):\n%s", diff)
 	}
+
 }

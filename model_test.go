@@ -304,8 +304,8 @@ func TestInitialWorld(t *testing.T) {
 			for smID, sm := range got.env.machines {
 				innerSM := getInnerStateMachine(sm)
 
-				if innerSM.HandlerBuilders != nil {
-					t.Errorf("StateMachine %q: HandlerBuilders should be nil after initialization, got %v", smID, innerSM.HandlerBuilders)
+				if len(innerSM.HandlerBuilders) == 0 {
+					t.Errorf("StateMachine %q: HandlerBuilders should remain initialized", smID)
 				}
 
 				if innerSM.EventHandlers == nil {
@@ -450,3 +450,4 @@ func TestStepGlobal(t *testing.T) {
 		})
 	}
 }
+
