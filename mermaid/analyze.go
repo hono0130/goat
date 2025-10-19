@@ -17,18 +17,43 @@ const (
 	onExitHandler    = "OnExit"
 )
 
-type flow struct {
-	from             string
-	to               string
-	eventType        string
-	handlerType      string
-	handlerEventType string
-	handlerID        string
+// Diagram captures the intermediate representation of a Mermaid sequence diagram.
+type Diagram struct {
+	Participants []string
+	Elements     []Element
 }
 
-type element struct {
-	flows    []flow
-	branches [][]flow
+// Element models either a simple flow or an alternative branch in the diagram.
+type Element struct {
+	Flows    []Flow
+	Branches [][]Flow
+}
+
+// Flow represents a directed edge between two state machines triggered by an event.
+type Flow struct {
+	From             string
+	To               string
+	EventType        string
+	HandlerType      string
+	HandlerEventType string
+	HandlerID        string
+}
+
+// Analyze inspects the given package path and returns the diagram representation.
+func Analyze(packagePath string) (*Diagram, error) {
+	pkg, err := loadPackageWithTypes(packagePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load package with types: %w", err)
+	}
+
+	order := stateMachineOrder(pkg)
+	flows := communicationFlows(pkg)
+	elements := buildElements(flows)
+
+	return &Diagram{
+		Participants: orderedParticipants(elements, order),
+		Elements:     elements,
+	}, nil
 }
 
 func stateMachineOrder(pkg *packageInfo) []string {
@@ -70,8 +95,8 @@ func stateMachineOrder(pkg *packageInfo) []string {
 	return order
 }
 
-func communicationFlows(pkg *packageInfo) []flow {
-	var flows []flow
+func communicationFlows(pkg *packageInfo) []Flow {
+	var flows []Flow
 	for _, file := range pkg.Syntax {
 		ast.Inspect(file, func(n ast.Node) bool {
 			callExpr, ok := n.(*ast.CallExpr)
@@ -187,13 +212,13 @@ func buildHandlerID(stateMachine, kind, eventType string, handlerFunc *ast.FuncL
 		pos.Line)
 }
 
-func extractSendToFlow(callExpr *ast.CallExpr, pkg *packageInfo, ctx *handlerContext) (flow, bool) {
+func extractSendToFlow(callExpr *ast.CallExpr, pkg *packageInfo, ctx *handlerContext) (Flow, bool) {
 	selExpr, ok := callExpr.Fun.(*ast.SelectorExpr)
 	if !ok || !isFromGoat(selExpr, pkg.TypesInfo) || selExpr.Sel.Name != sendToFunction {
-		return flow{}, false
+		return Flow{}, false
 	}
 	if len(callExpr.Args) < 3 {
-		return flow{}, false
+		return Flow{}, false
 	}
 	toName := unknownType
 	if name, ok := namedTypeName(callExpr.Args[1], pkg.TypesInfo); ok {
@@ -203,21 +228,21 @@ func extractSendToFlow(callExpr *ast.CallExpr, pkg *packageInfo, ctx *handlerCon
 	if name, ok := namedTypeName(callExpr.Args[2], pkg.TypesInfo); ok {
 		evName = name
 	}
-	return flow{
-		from:             ctx.stateMachine,
-		to:               toName,
-		eventType:        evName,
-		handlerType:      ctx.kind,
-		handlerEventType: ctx.handlerEvent,
-		handlerID:        ctx.handlerID,
+	return Flow{
+		From:             ctx.stateMachine,
+		To:               toName,
+		EventType:        evName,
+		HandlerType:      ctx.kind,
+		HandlerEventType: ctx.handlerEvent,
+		HandlerID:        ctx.handlerID,
 	}, true
 }
 
-func uniqueFlows(flows []flow) []flow {
+func uniqueFlows(flows []Flow) []Flow {
 	seen := make(map[string]bool)
-	var unique []flow
+	var unique []Flow
 	for _, f := range flows {
-		key := fmt.Sprintf("%s->%s:%s:%s:%s", f.from, f.to, f.eventType, f.handlerType, f.handlerEventType)
+		key := fmt.Sprintf("%s->%s:%s:%s:%s", f.From, f.To, f.EventType, f.HandlerType, f.HandlerEventType)
 		if !seen[key] {
 			seen[key] = true
 			unique = append(unique, f)
@@ -226,37 +251,37 @@ func uniqueFlows(flows []flow) []flow {
 	return unique
 }
 
-func findNextFlows(f *flow, flows []flow) []flow {
-	var next []flow
+func findNextFlows(f *Flow, flows []Flow) []Flow {
+	var next []Flow
 	for _, candidate := range flows {
-		if candidate.handlerType == onEventHandler &&
-			candidate.handlerEventType == f.eventType &&
-			candidate.from == f.to {
+		if candidate.HandlerType == onEventHandler &&
+			candidate.HandlerEventType == f.EventType &&
+			candidate.From == f.To {
 			next = append(next, candidate)
 		}
 	}
 	return next
 }
 
-func findFlowPosition(target *flow, flows []flow) int {
+func findFlowPosition(target *Flow, flows []Flow) int {
 	for i, f := range flows {
-		if f.handlerID == target.handlerID &&
-			f.from == target.from &&
-			f.to == target.to &&
-			f.eventType == target.eventType {
+		if f.HandlerID == target.HandlerID &&
+			f.From == target.From &&
+			f.To == target.To &&
+			f.EventType == target.EventType {
 			return i
 		}
 	}
 	return len(flows)
 }
 
-func collectChain(f *flow, flows []flow, processed map[string]bool) []flow {
-	var chain []flow
+func collectChain(f *Flow, flows []Flow, processed map[string]bool) []Flow {
+	var chain []Flow
 	for _, next := range findNextFlows(f, flows) {
-		if processed[next.handlerID] {
+		if processed[next.HandlerID] {
 			continue
 		}
-		processed[next.handlerID] = true
+		processed[next.HandlerID] = true
 		chain = append(chain, next)
 		chain = append(chain, collectChain(&next, flows, processed)...)
 	}
@@ -264,33 +289,33 @@ func collectChain(f *flow, flows []flow, processed map[string]bool) []flow {
 }
 
 type elementBuilder struct {
-	flows         []flow
+	flows         []Flow
 	processed     map[string]bool
-	handlerGroups map[string][]flow
-	elements      []element
+	handlerGroups map[string][]Flow
+	elements      []Element
 }
 
-func (b *elementBuilder) process(f *flow) {
-	if b.processed[f.handlerID] {
+func (b *elementBuilder) process(f *Flow) {
+	if b.processed[f.HandlerID] {
 		return
 	}
-	handlerFlows := b.handlerGroups[f.handlerID]
+	handlerFlows := b.handlerGroups[f.HandlerID]
 	if len(handlerFlows) > 1 {
-		var trigger flow
+		var trigger Flow
 		triggerFound := false
 		for _, cand := range b.flows {
-			if cand.eventType == f.handlerEventType && cand.to == f.from {
+			if cand.EventType == f.HandlerEventType && cand.To == f.From {
 				trigger = cand
 				triggerFound = true
 				break
 			}
 		}
-		if triggerFound && !b.processed[trigger.handlerID] {
+		if triggerFound && !b.processed[trigger.HandlerID] {
 			// Add the triggering flow as a normal element before the branches
-			b.elements = append(b.elements, element{flows: []flow{trigger}})
-			b.processed[trigger.handlerID] = true
+			b.elements = append(b.elements, Element{Flows: []Flow{trigger}})
+			b.processed[trigger.HandlerID] = true
 		}
-		sorted := append([]flow(nil), handlerFlows...)
+		sorted := append([]Flow(nil), handlerFlows...)
 		sort.Slice(sorted, func(i, j int) bool {
 			fi, fj := sorted[i], sorted[j]
 			ci := len(findNextFlows(&fi, b.flows))
@@ -300,43 +325,43 @@ func (b *elementBuilder) process(f *flow) {
 			}
 			return findFlowPosition(&fi, b.flows) < findFlowPosition(&fj, b.flows)
 		})
-		var branchPaths [][]flow
+		var branchPaths [][]Flow
 		for _, h := range sorted {
-			path := append([]flow{h}, collectChain(&h, b.flows, b.processed)...)
+			path := append([]Flow{h}, collectChain(&h, b.flows, b.processed)...)
 			branchPaths = append(branchPaths, path)
 		}
-		b.elements = append(b.elements, element{branches: branchPaths})
-		b.processed[f.handlerID] = true
+		b.elements = append(b.elements, Element{Branches: branchPaths})
+		b.processed[f.HandlerID] = true
 		return
 	}
 	h := handlerFlows[0]
-	b.elements = append(b.elements, element{flows: []flow{h}})
-	b.processed[h.handlerID] = true
+	b.elements = append(b.elements, Element{Flows: []Flow{h}})
+	b.processed[h.HandlerID] = true
 	for _, next := range findNextFlows(&h, b.flows) {
 		nextCopy := next
 		b.process(&nextCopy)
 	}
 }
 
-func buildElements(flows []flow) []element {
+func buildElements(flows []Flow) []Element {
 	b := &elementBuilder{
 		flows:         flows,
 		processed:     make(map[string]bool),
-		handlerGroups: make(map[string][]flow),
+		handlerGroups: make(map[string][]Flow),
 	}
 	for i := range flows {
 		f := flows[i]
-		b.handlerGroups[f.handlerID] = append(b.handlerGroups[f.handlerID], f)
+		b.handlerGroups[f.HandlerID] = append(b.handlerGroups[f.HandlerID], f)
 	}
 	for i := range flows {
 		f := &flows[i]
-		if f.handlerType == onEntryHandler && !b.processed[f.handlerID] {
+		if f.HandlerType == onEntryHandler && !b.processed[f.HandlerID] {
 			b.process(f)
 		}
 	}
 	for i := range flows {
 		f := &flows[i]
-		if !b.processed[f.handlerID] {
+		if !b.processed[f.HandlerID] {
 			b.process(f)
 		}
 	}

@@ -35,13 +35,13 @@ func TestGenerate(t *testing.T) {
 }
 
 func TestOrderedParticipants(t *testing.T) {
-	elements := []element{
-		{flows: []flow{
-			{from: "Receiver", to: "Logger"},
-			{from: "ExtraB", to: "Sender"},
+	elements := []Element{
+		{Flows: []Flow{
+			{From: "Receiver", To: "Logger"},
+			{From: "ExtraB", To: "Sender"},
 		}},
-		{branches: [][]flow{{
-			{from: "Alpha", to: "Beta"},
+		{Branches: [][]Flow{{
+			{From: "Alpha", To: "Beta"},
 		}}},
 	}
 	order := []string{"Sender", "Receiver"}

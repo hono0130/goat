@@ -23,48 +23,44 @@ import (
 //	}
 //	fmt.Print(buf.String())
 func Generate(packagePath string, writer io.Writer) error {
-	pkg, err := loadPackageWithTypes(packagePath)
+	diagram, err := Analyze(packagePath)
 	if err != nil {
-		return fmt.Errorf("failed to load package with types: %w", err)
+		return err
 	}
-	order := stateMachineOrder(pkg)
-	flows := communicationFlows(pkg)
-	elements := buildElements(flows)
-	_, err = writer.Write([]byte(render(elements, order)))
+	_, err = writer.Write([]byte(render(diagram)))
 	return err
 }
 
-func render(elements []element, order []string) string {
-	participants := orderedParticipants(elements, order)
+func render(diagram *Diagram) string {
 	var sb strings.Builder
 	sb.WriteString("sequenceDiagram\n")
-	for _, p := range participants {
+	for _, p := range diagram.Participants {
 		sb.WriteString(fmt.Sprintf("    participant %s\n", p))
 	}
 	sb.WriteString("\n")
-	for _, e := range elements {
-		if len(e.branches) > 0 {
-			for i, br := range e.branches {
+	for _, e := range diagram.Elements {
+		if len(e.Branches) > 0 {
+			for i, br := range e.Branches {
 				if i == 0 {
 					sb.WriteString("    alt\n")
 				} else {
 					sb.WriteString("    else\n")
 				}
 				for _, f := range br {
-					sb.WriteString(fmt.Sprintf("        %s->>%s: %s\n", f.from, f.to, f.eventType))
+					sb.WriteString(fmt.Sprintf("        %s->>%s: %s\n", f.From, f.To, f.EventType))
 				}
 			}
 			sb.WriteString("    end\n")
 		} else {
-			for _, f := range e.flows {
-				sb.WriteString(fmt.Sprintf("    %s->>%s: %s\n", f.from, f.to, f.eventType))
+			for _, f := range e.Flows {
+				sb.WriteString(fmt.Sprintf("    %s->>%s: %s\n", f.From, f.To, f.EventType))
 			}
 		}
 	}
 	return sb.String()
 }
 
-func orderedParticipants(elements []element, order []string) []string {
+func orderedParticipants(elements []Element, order []string) []string {
 	seen := make(map[string]bool)
 	var participants []string
 	for _, p := range order {
@@ -75,26 +71,26 @@ func orderedParticipants(elements []element, order []string) []string {
 	}
 	var extras []string
 	for _, e := range elements {
-		for _, f := range e.flows {
-			if !seen[f.from] {
-				extras = append(extras, f.from)
-				seen[f.from] = true
+		for _, f := range e.Flows {
+			if !seen[f.From] {
+				extras = append(extras, f.From)
+				seen[f.From] = true
 			}
-			if !seen[f.to] {
-				extras = append(extras, f.to)
-				seen[f.to] = true
+			if !seen[f.To] {
+				extras = append(extras, f.To)
+				seen[f.To] = true
 			}
 		}
-		if len(e.branches) > 0 {
-			for _, br := range e.branches {
+		if len(e.Branches) > 0 {
+			for _, br := range e.Branches {
 				for _, f := range br {
-					if !seen[f.from] {
-						extras = append(extras, f.from)
-						seen[f.from] = true
+					if !seen[f.From] {
+						extras = append(extras, f.From)
+						seen[f.From] = true
 					}
-					if !seen[f.to] {
-						extras = append(extras, f.to)
-						seen[f.to] = true
+					if !seen[f.To] {
+						extras = append(extras, f.To)
+						seen[f.To] = true
 					}
 				}
 			}

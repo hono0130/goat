@@ -19,17 +19,17 @@ func TestStateMachineOrder(t *testing.T) {
 func TestCommunicationFlows(t *testing.T) {
 	pkg := loadWorkflowPackage(t)
 	got := communicationFlows(pkg)
-	want := []flow{
-		{from: "Sender", to: "Receiver", eventType: "PingEvent", handlerType: "OnEntry"},
-		{from: "Receiver", to: "Sender", eventType: "AckEvent", handlerType: "OnEvent", handlerEventType: "PingEvent"},
-		{from: "Receiver", to: "Logger", eventType: "NotifyEvent", handlerType: "OnEvent", handlerEventType: "PingEvent"},
-		{from: "Sender", to: "Receiver", eventType: "NotifyEvent", handlerType: "OnEvent", handlerEventType: "AckEvent"},
+	want := []Flow{
+		{From: "Sender", To: "Receiver", EventType: "PingEvent", HandlerType: "OnEntry"},
+		{From: "Receiver", To: "Sender", EventType: "AckEvent", HandlerType: "OnEvent", HandlerEventType: "PingEvent"},
+		{From: "Receiver", To: "Logger", EventType: "NotifyEvent", HandlerType: "OnEvent", HandlerEventType: "PingEvent"},
+		{From: "Sender", To: "Receiver", EventType: "NotifyEvent", HandlerType: "OnEvent", HandlerEventType: "AckEvent"},
 	}
-	if diff := cmp.Diff(want, got, cmp.AllowUnexported(flow{}), cmpopts.IgnoreFields(flow{}, "handlerID")); diff != "" {
+	if diff := cmp.Diff(want, got, cmpopts.IgnoreFields(Flow{}, "HandlerID")); diff != "" {
 		t.Fatalf("communicationFlows mismatch (-want +got):\n%s", diff)
 	}
 	for i, f := range got {
-		if f.handlerID == "" {
+		if f.HandlerID == "" {
 			t.Fatalf("flow[%d] handlerID is empty", i)
 		}
 	}
@@ -39,17 +39,17 @@ func TestBuildElements(t *testing.T) {
 	pkg := loadWorkflowPackage(t)
 	flows := communicationFlows(pkg)
 	got := buildElements(flows)
-	want := []element{
+	want := []Element{
 		{
-			flows: []flow{{from: "Sender", to: "Receiver", eventType: "PingEvent", handlerType: "OnEntry"}},
+			Flows: []Flow{{From: "Sender", To: "Receiver", EventType: "PingEvent", HandlerType: "OnEntry"}},
 		},
 		{
-			flows: nil,
-			branches: [][]flow{
-				{{from: "Receiver", to: "Logger", eventType: "NotifyEvent", handlerType: "OnEvent", handlerEventType: "PingEvent"}},
+			Flows: nil,
+			Branches: [][]Flow{
+				{{From: "Receiver", To: "Logger", EventType: "NotifyEvent", HandlerType: "OnEvent", HandlerEventType: "PingEvent"}},
 				{
-					{from: "Receiver", to: "Sender", eventType: "AckEvent", handlerType: "OnEvent", handlerEventType: "PingEvent"},
-					{from: "Sender", to: "Receiver", eventType: "NotifyEvent", handlerType: "OnEvent", handlerEventType: "AckEvent"},
+					{From: "Receiver", To: "Sender", EventType: "AckEvent", HandlerType: "OnEvent", HandlerEventType: "PingEvent"},
+					{From: "Sender", To: "Receiver", EventType: "NotifyEvent", HandlerType: "OnEvent", HandlerEventType: "AckEvent"},
 				},
 			},
 		},
@@ -57,9 +57,22 @@ func TestBuildElements(t *testing.T) {
 	if diff := cmp.Diff(
 		want,
 		got,
-		cmp.AllowUnexported(element{}, flow{}),
-		cmpopts.IgnoreFields(flow{}, "handlerID"),
+		cmpopts.IgnoreFields(Flow{}, "HandlerID"),
 	); diff != "" {
 		t.Fatalf("buildElements mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestAnalyze(t *testing.T) {
+	dir := writeWorkflowFixture(t)
+	diagram, err := Analyze(dir)
+	if err != nil {
+		t.Fatalf("Analyze returned error: %v", err)
+	}
+	if diff := cmp.Diff([]string{"Sender", "Receiver", "Logger"}, diagram.Participants); diff != "" {
+		t.Fatalf("participants mismatch (-want +got):\n%s", diff)
+	}
+	if len(diagram.Elements) == 0 {
+		t.Fatal("expected elements to be populated")
 	}
 }

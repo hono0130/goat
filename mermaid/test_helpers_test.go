@@ -1,11 +1,30 @@
 package mermaid
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 )
+
+func findModuleRoot(t *testing.T, start string) string {
+	t.Helper()
+	dir := start
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		} else if !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("failed to stat go.mod in %s: %v", dir, err)
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatalf("go.mod not found from %s", start)
+		}
+		dir = parent
+	}
+}
 
 func writeWorkflowFixture(t *testing.T) string {
 	t.Helper()
@@ -15,10 +34,7 @@ func writeWorkflowFixture(t *testing.T) string {
 		t.Fatal("runtime.Caller failed")
 	}
 
-	moduleRoot, err := findModuleRoot(filepath.Dir(filename))
-	if err != nil {
-		t.Fatalf("findModuleRoot returned error: %v", err)
-	}
+	moduleRoot := findModuleRoot(t, filepath.Dir(filename))
 
 	dir, err := os.MkdirTemp(moduleRoot, "workflow")
 	if err != nil {
