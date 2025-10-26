@@ -14,6 +14,7 @@ type model struct {
 	accessible map[worldID][]worldID
 	conds      map[ConditionName]Condition
 	invariants []ConditionName
+	ltlRules   []ltlRule
 	labels     map[worldID]map[ConditionName]bool
 }
 
@@ -186,6 +187,7 @@ func newModel(opts ...Option) (model, error) {
 		accessible: make(map[worldID][]worldID),
 		conds:      os.conds,
 		invariants: os.invariants,
+		ltlRules:   os.ltlRules,
 		labels:     make(map[worldID]map[ConditionName]bool),
 	}
 	m.labelWorld(initial)
@@ -246,6 +248,7 @@ type options struct {
 	sms        []AbstractStateMachine
 	conds      map[ConditionName]Condition
 	invariants []ConditionName
+	ltlRules   []ltlRule
 }
 
 // Option is a configuration option for model checking operations.

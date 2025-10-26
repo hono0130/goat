@@ -15,7 +15,7 @@ import (
 // Parameters:
 //   - opts: Configuration options including state machines and invariants
 //
-// Returns an error if model creation, solving, or invariant checking fails.
+// Returns an error if model creation or solving fails.
 //
 // Example:
 //
@@ -36,7 +36,10 @@ func Test(opts ...Option) error {
 	}
 	executionTime := time.Since(start).Milliseconds()
 
-	model.writeLog(os.Stdout, "invariant violation")
+	model.writeInvariantViolations(os.Stdout, "invariant violation")
+
+	trResults := model.checkLTL()
+	model.writeTemporalViolations(os.Stdout, trResults)
 
 	summary := model.summarize(executionTime)
 	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
@@ -134,10 +137,14 @@ func Debug(w io.Writer, opts ...Option) error {
 
 	worlds := model.worldsToJSON()
 	summary := model.summarize(executionTime)
+	temporal := model.checkLTL()
 
 	result := map[string]any{
 		"worlds":  worlds,
 		"summary": summary,
+	}
+	if len(temporal) > 0 {
+		result["temporal_rules"] = temporal
 	}
 
 	encoder := json.NewEncoder(w)
