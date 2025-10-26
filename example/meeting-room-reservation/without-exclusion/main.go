@@ -31,42 +31,39 @@ type State struct {
 }
 
 type ReservationRequestEvent struct {
-	goat.Event
+	goat.Event[*ClientStateMachine, *ServerStateMachine]
 	RoomID   int
 	ClientID int
-	Client   *ClientStateMachine
 }
 
 type ReservationResultEvent struct {
-	goat.Event
+	goat.Event[*ServerStateMachine, *ClientStateMachine]
 	RoomID    int
 	ClientID  int
 	Succeeded bool
 }
 
 type DBSelectEvent struct {
-	goat.Event
+	goat.Event[*ServerStateMachine, *DBStateMachine]
 	RoomID   int
 	ClientID int
-	Server   *ServerStateMachine
 }
 
 type DBSelectResultEvent struct {
-	goat.Event
+	goat.Event[*DBStateMachine, *ServerStateMachine]
 	RoomID     int
 	ClientID   int
 	IsReserved bool
 }
 
 type DBUpdateEvent struct {
-	goat.Event
+	goat.Event[*ServerStateMachine, *DBStateMachine]
 	RoomID   int
 	ClientID int
-	Server   *ServerStateMachine
 }
 
 type DBUpdateResultEvent struct {
-	goat.Event
+	goat.Event[*DBStateMachine, *ServerStateMachine]
 	RoomID    int
 	ClientID  int
 	Succeeded bool
@@ -118,7 +115,7 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 				IsReserved: isReserved,
 			}
 
-			goat.SendTo(ctx, event.Server, resultEvent)
+			goat.SendTo(ctx, event.Sender(), resultEvent)
 		})
 
 	goat.OnEvent(dbSpec, dbIdle, &DBUpdateEvent{},
@@ -134,7 +131,7 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 				Succeeded: true,
 			}
 
-			goat.SendTo(ctx, event.Server, resultEvent)
+			goat.SendTo(ctx, event.Sender(), resultEvent)
 		})
 
 	// === Server Spec ===
@@ -151,7 +148,6 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 			selectEvent := &DBSelectEvent{
 				RoomID:   event.RoomID,
 				ClientID: event.ClientID,
-				Server:   server,
 			}
 
 			goat.SendTo(ctx, server.DB, selectEvent)
@@ -172,7 +168,7 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 					Succeeded: false,
 				}
 
-				goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
+				goat.SendTo(ctx, server.CurrentRequest.Sender(), resultEvent)
 				server.CurrentRequest = nil
 				goat.Goto(ctx, serverIdle)
 				return
@@ -181,7 +177,6 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 			updateEvent := &DBUpdateEvent{
 				RoomID:   server.CurrentRequest.RoomID,
 				ClientID: server.CurrentRequest.ClientID,
-				Server:   server,
 			}
 
 			goat.SendTo(ctx, server.DB, updateEvent)
@@ -200,7 +195,7 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 				Succeeded: event.Succeeded,
 			}
 
-			goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
+			goat.SendTo(ctx, server.CurrentRequest.Sender(), resultEvent)
 			server.CurrentRequest = nil
 			goat.Goto(ctx, serverIdle)
 		})
@@ -218,7 +213,6 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 			requestEvent := &ReservationRequestEvent{
 				RoomID:   client.TargetRoom,
 				ClientID: client.ClientID,
-				Client:   client,
 			}
 
 			goat.SendTo(ctx, client.Server, requestEvent)

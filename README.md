@@ -83,6 +83,30 @@ func main() {
 - **`WithConditions()`** - Register named conditions
 - **`WithInvariants()`** - Configure conditions to check as invariants
 
+### Event routing metadata
+
+Events that embed `goat.Event` automatically record the sender and recipient
+when dispatched via `goat.SendTo`. Choose type parameters that match the
+expected sender and recipient so handlers receive strongly typed state machines
+without manual casting:
+
+```go
+type notifyServer struct {
+    goat.Event[*Client, *Server]
+    Payload string
+}
+
+goat.OnEvent(spec, serverIdle, &notifyServer{}, func(ctx context.Context, event *notifyServer, server *Server) {
+    client := event.Sender()
+    if client == nil {
+        // the event originated outside of a client handler
+        return
+    }
+
+    // ...
+})
+```
+
 ## Examples
 
 The `example/` directory contains several complete examples:

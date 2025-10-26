@@ -6,7 +6,7 @@ import (
 )
 
 type testEventWithPointer struct {
-	Event
+	Event[*testStateMachine, *testStateMachine]
 	ptr *testStruct
 }
 
@@ -18,6 +18,8 @@ func TestCloneEvent(t *testing.T) {
 	tests := []struct {
 		name     string
 		original AbstractEvent
+		setup    func(AbstractEvent)
+		validate func(*testing.T, AbstractEvent)
 	}{
 		{
 			name:     "testEvent",
@@ -43,25 +45,136 @@ func TestCloneEvent(t *testing.T) {
 			name:     "testEventWithPointer",
 			original: &testEventWithPointer{ptr: &testStruct{value: 100}},
 		},
+		func() struct {
+			name     string
+			original AbstractEvent
+			setup    func(AbstractEvent)
+			validate func(*testing.T, AbstractEvent)
+		} {
+			sender := newTestStateMachine(newTestState("sender"))
+			recipient := newTestStateMachine(newTestState("recipient"))
+			return struct {
+				name     string
+				original AbstractEvent
+				setup    func(AbstractEvent)
+				validate func(*testing.T, AbstractEvent)
+			}{
+				name:     "preserves routing metadata",
+				original: &testEvent{Value: 10},
+				setup: func(ev AbstractEvent) {
+					ev.(*testEvent).setRoutingInfo(sender, recipient)
+				},
+				validate: func(t *testing.T, cloned AbstractEvent) {
+					clonedEvent := cloned.(*testEvent)
+					if clonedEvent.Sender() != sender {
+						t.Errorf("expected cloned sender %p, got %p", sender, clonedEvent.Sender())
+					}
+					if clonedEvent.Recipient() != recipient {
+						t.Errorf("expected cloned recipient %p, got %p", recipient, clonedEvent.Recipient())
+					}
+				},
+			}
+		}(),
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cloned := cloneEvent(tt.original)
-
-			if reflect.ValueOf(tt.original).Pointer() == reflect.ValueOf(cloned).Pointer() {
-				t.Errorf("Expected different pointer addresses, but got the same: %p", tt.original)
+		tc := tt
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setup != nil {
+				tc.setup(tc.original)
 			}
 
-			if reflect.TypeOf(tt.original) != reflect.TypeOf(cloned) {
-				t.Errorf("Expected same type, but got different: %T vs %T", tt.original, cloned)
+			cloned := cloneEvent(tc.original)
+
+			if reflect.ValueOf(tc.original).Pointer() == reflect.ValueOf(cloned).Pointer() {
+				t.Errorf("Expected different pointer addresses, but got the same: %p", tc.original)
 			}
 
-			if !reflect.DeepEqual(tt.original, cloned) {
-				t.Errorf("Expected original and cloned events to be equal, but they are not: %v vs %v", tt.original, cloned)
+			if reflect.TypeOf(tc.original) != reflect.TypeOf(cloned) {
+				t.Errorf("Expected same type, but got different: %T vs %T", tc.original, cloned)
+			}
+
+			if !reflect.DeepEqual(tc.original, cloned) {
+				t.Errorf("Expected original and cloned events to be equal, but they are not: %v vs %v", tc.original, cloned)
+			}
+
+			if tc.validate != nil {
+				tc.validate(t, cloned)
 			}
 		})
 	}
+}
+
+func TestEvent_Sender(t *testing.T) {
+	t.Run("zero value", func(t *testing.T) {
+		var ev Event[*testStateMachine, *testStateMachine]
+		if ev.Sender() != nil {
+			t.Errorf("expected default sender to be nil")
+		}
+	})
+
+	t.Run("matching type", func(t *testing.T) {
+		sender := newTestStateMachine(newTestState("sender"))
+		recipient := newTestStateMachine(newTestState("recipient"))
+
+		var ev Event[*testStateMachine, *testStateMachine]
+		ev.setRoutingInfo(sender, recipient)
+
+		if ev.Sender() != sender {
+			t.Errorf("expected sender %p, got %p", sender, ev.Sender())
+		}
+	})
+
+	t.Run("mismatched type clears typed sender", func(t *testing.T) {
+		type otherTestStateMachine struct {
+			StateMachine
+		}
+		sender := &otherTestStateMachine{}
+		recipient := newTestStateMachine(newTestState("recipient"))
+
+		var ev Event[*testStateMachine, *testStateMachine]
+		ev.setRoutingInfo(sender, recipient)
+
+		if ev.Sender() != nil {
+			t.Errorf("expected typed sender to be nil when types do not match")
+		}
+	})
+}
+
+func TestEvent_Recipient(t *testing.T) {
+	t.Run("zero value", func(t *testing.T) {
+		var ev Event[*testStateMachine, *testStateMachine]
+		if ev.Recipient() != nil {
+			t.Errorf("expected default recipient to be nil")
+		}
+	})
+
+	t.Run("matching type", func(t *testing.T) {
+		sender := newTestStateMachine(newTestState("sender"))
+		recipient := newTestStateMachine(newTestState("recipient"))
+
+		var ev Event[*testStateMachine, *testStateMachine]
+		ev.setRoutingInfo(sender, recipient)
+
+		if ev.Recipient() != recipient {
+			t.Errorf("expected recipient %p, got %p", recipient, ev.Recipient())
+		}
+	})
+
+	t.Run("mismatched type clears typed recipient", func(t *testing.T) {
+		sender := newTestStateMachine(newTestState("sender"))
+		type otherTestStateMachine struct {
+			StateMachine
+		}
+		recipient := &otherTestStateMachine{}
+
+		var ev Event[*testStateMachine, *testStateMachine]
+		ev.setRoutingInfo(sender, recipient)
+
+		if ev.Recipient() != nil {
+			t.Errorf("expected typed recipient to be nil when types do not match")
+		}
+	})
 }
 
 func TestSameEvent(t *testing.T) {

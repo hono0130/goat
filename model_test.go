@@ -130,7 +130,18 @@ func TestModel_Solve(t *testing.T) {
 				opts := cmp.Options{
 					cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
 					cmpopts.IgnoreFields(model{}, "conds", "invariants", "labels"), // Ignore function pointers and maps
-					cmp.AllowUnexported(model{}, world{}, environment{}, StateMachine{}),
+					cmp.AllowUnexported(
+						model{},
+						world{},
+						environment{},
+						StateMachine{},
+						Event[AbstractStateMachine, AbstractStateMachine]{},
+						Event[*testStateMachine, *testStateMachine]{},
+						entryEvent{},
+						exitEvent{},
+						transitionEvent{},
+						haltEvent{},
+					),
 				}
 
 				if diff := cmp.Diff(expected, m, opts); diff != "" {
@@ -294,7 +305,17 @@ func TestInitialWorld(t *testing.T) {
 			opts := cmp.Options{
 				cmpopts.IgnoreFields(world{}, "id"),
 				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
-				cmp.AllowUnexported(world{}, environment{}, StateMachine{}),
+				cmp.AllowUnexported(
+					world{},
+					environment{},
+					StateMachine{},
+					Event[AbstractStateMachine, AbstractStateMachine]{},
+					Event[*testStateMachine, *testStateMachine]{},
+					entryEvent{},
+					exitEvent{},
+					transitionEvent{},
+					haltEvent{},
+				),
 			}
 
 			if diff := cmp.Diff(tt.want, got, opts); diff != "" {
@@ -440,7 +461,17 @@ func TestStepGlobal(t *testing.T) {
 				opts := cmp.Options{
 					cmpopts.IgnoreFields(world{}, "id"),
 					cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
-					cmp.AllowUnexported(world{}, environment{}, StateMachine{}),
+					cmp.AllowUnexported(
+						world{},
+						environment{},
+						StateMachine{},
+						Event[AbstractStateMachine, AbstractStateMachine]{},
+						Event[*testStateMachine, *testStateMachine]{},
+						entryEvent{},
+						exitEvent{},
+						transitionEvent{},
+						haltEvent{},
+					),
 				}
 
 				if diff := cmp.Diff(expected, got, opts); diff != "" {
