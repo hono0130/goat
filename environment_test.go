@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func TestEnvironmentClone(t *testing.T) {
+func TestEnvironment_clone(t *testing.T) {
 	sm1 := newTestStateMachine(newTestState("state1"))
 	sm2 := newTestStateMachine(newTestState("state2"))
 
@@ -24,7 +24,16 @@ func TestEnvironmentClone(t *testing.T) {
 	cloned := original.clone()
 
 	opts := cmp.Options{
-		cmp.AllowUnexported(environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+		cmp.AllowUnexported(
+			environment{},
+			testStateMachine{},
+			StateMachine{},
+			testState{},
+			State{},
+			testEvent{},
+			Event[*testStateMachine, *testStateMachine]{},
+			Event[AbstractStateMachine, AbstractStateMachine]{},
+		),
 		cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
 	}
 	if diff := cmp.Diff(original, cloned, opts); diff != "" {
@@ -49,7 +58,7 @@ func TestEnvironmentClone(t *testing.T) {
 
 }
 
-func TestEnvironmentEnqueueEvent(t *testing.T) {
+func TestEnvironment_enqueueEvent(t *testing.T) {
 	sm := newTestStateMachine(newTestState("initial"))
 	env := newTestEnvironment(sm)
 	event1 := &testEvent{Value: 1}
@@ -61,12 +70,12 @@ func TestEnvironmentEnqueueEvent(t *testing.T) {
 	env.enqueueEvent(sm, event1)
 	env.enqueueEvent(sm, event2)
 
-	if diff := cmp.Diff(expectedQueue, env.queue, cmp.AllowUnexported(testEvent{}, Event{})); diff != "" {
+	if diff := cmp.Diff(expectedQueue, env.queue, cmp.AllowUnexported(testEvent{}, Event[*testStateMachine, *testStateMachine]{}, Event[AbstractStateMachine, AbstractStateMachine]{})); diff != "" {
 		t.Errorf("Queue mismatch (-expected +actual):\n%s", diff)
 	}
 }
 
-func TestEnvironmentDequeueEvent(t *testing.T) {
+func TestEnvironment_dequeueEvent(t *testing.T) {
 	tests := []struct {
 		name          string
 		smID          string
@@ -118,10 +127,10 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 				return
 			}
 
-			if diff := cmp.Diff(tt.expectedEvent, event.(*testEvent), cmp.AllowUnexported(testEvent{}, Event{})); diff != "" {
+			if diff := cmp.Diff(tt.expectedEvent, event.(*testEvent), cmp.AllowUnexported(testEvent{}, Event[*testStateMachine, *testStateMachine]{}, Event[AbstractStateMachine, AbstractStateMachine]{})); diff != "" {
 				t.Errorf("Event mismatch (-expected +actual):\n%s", diff)
 			}
-			if diff := cmp.Diff(tt.expectedQueue, env.queue, cmp.AllowUnexported(testEvent{}, Event{})); diff != "" {
+			if diff := cmp.Diff(tt.expectedQueue, env.queue, cmp.AllowUnexported(testEvent{}, Event[*testStateMachine, *testStateMachine]{}, Event[AbstractStateMachine, AbstractStateMachine]{})); diff != "" {
 				t.Errorf("Queue mismatch (-expected +actual):\n%s", diff)
 			}
 
@@ -133,51 +142,110 @@ func TestEnvironmentDequeueEvent(t *testing.T) {
 func TestSendTo(t *testing.T) {
 	tests := []struct {
 		name     string
-		setupSMs func() ([]*testStateMachine, *testStateMachine)
+		setup    func(t *testing.T) (context.Context, *environment, *testStateMachine, *testStateMachine)
 		event    AbstractEvent
+		wantSize int
+		validate func(t *testing.T, queue []AbstractEvent, sender, recipient *testStateMachine)
 	}{
 		{
-			name: "send event to single state machine",
-			setupSMs: func() ([]*testStateMachine, *testStateMachine) {
-				return []*testStateMachine{newTestStateMachine(newTestState("initial"))}, newTestStateMachine(newTestState("initial"))
+			name: "enqueue event for single state machine",
+			setup: func(t *testing.T) (context.Context, *environment, *testStateMachine, *testStateMachine) {
+				sm := newTestStateMachine(newTestState("initial"))
+				env := newTestEnvironment(sm)
+				ctx := withEnvAndSM(&env, sm)
+				return ctx, &env, sm, sm
 			},
-			event: &testEvent{Value: 42},
+			event:    &testEvent{Value: 42},
+			wantSize: 1,
+			validate: func(t *testing.T, queue []AbstractEvent, _ *testStateMachine, _ *testStateMachine) {
+				ev, ok := queue[len(queue)-1].(*testEvent)
+				if !ok {
+					t.Fatalf("queued event mismatch: expected *testEvent, got %T", queue[len(queue)-1])
+				}
+				if ev.Value != 42 {
+					t.Fatalf("queued event value mismatch: got %d, want %d", ev.Value, 42)
+				}
+			},
 		},
 		{
-			name: "send event to specific state machine in multi-SM environment",
-			setupSMs: func() ([]*testStateMachine, *testStateMachine) {
-				return []*testStateMachine{
-					newTestStateMachine(newTestState("sm1")),
-					newTestStateMachine(newTestState("sm2")),
-					newTestStateMachine(newTestState("sm3")),
-				}, newTestStateMachine(newTestState("sm2"))
+			name: "enqueue event for specific machine in multi-environment",
+			setup: func(t *testing.T) (context.Context, *environment, *testStateMachine, *testStateMachine) {
+				sm1 := newTestStateMachine(newTestState("sm1"))
+				sm2 := newTestStateMachine(newTestState("sm2"))
+				sm3 := newTestStateMachine(newTestState("sm3"))
+				env := newTestEnvironment(sm1, sm2, sm3)
+				ctx := withEnvAndSM(&env, sm1)
+				return ctx, &env, sm2, sm1
 			},
-			event: &testEvent{Value: 123},
+			event:    &testEvent{Value: 123},
+			wantSize: 1,
+			validate: func(t *testing.T, queue []AbstractEvent, _ *testStateMachine, _ *testStateMachine) {
+				ev, ok := queue[len(queue)-1].(*testEvent)
+				if !ok {
+					t.Fatalf("queued event mismatch: expected *testEvent, got %T", queue[len(queue)-1])
+				}
+				if ev.Value != 123 {
+					t.Fatalf("queued event value mismatch: got %d, want %d", ev.Value, 123)
+				}
+			},
 		},
 		{
-			name: "send multiple events to same state machine",
-			setupSMs: func() ([]*testStateMachine, *testStateMachine) {
-				return []*testStateMachine{newTestStateMachine(newTestState("initial"))}, newTestStateMachine(newTestState("initial"))
+			name: "append event to existing queue",
+			setup: func(t *testing.T) (context.Context, *environment, *testStateMachine, *testStateMachine) {
+				sm := newTestStateMachine(newTestState("initial"))
+				env := newTestEnvironment(sm)
+				env.queue[sm.id()] = []AbstractEvent{&testEvent{Value: 1}}
+				ctx := withEnvAndSM(&env, sm)
+				return ctx, &env, sm, sm
 			},
-			event: &haltEvent{},
+			event:    &haltEvent{},
+			wantSize: 2,
+			validate: func(t *testing.T, queue []AbstractEvent, _ *testStateMachine, _ *testStateMachine) {
+				if _, ok := queue[len(queue)-1].(*haltEvent); !ok {
+					t.Fatalf("queued event mismatch: expected *haltEvent, got %T", queue[len(queue)-1])
+				}
+			},
+		},
+		{
+			name: "populates routing metadata when sender is available",
+			setup: func(t *testing.T) (context.Context, *environment, *testStateMachine, *testStateMachine) {
+				sender := newTestStateMachine(newTestState("sender"))
+				recipient := newTestStateMachine(newTestState("recipient"))
+				env := newTestEnvironment(sender, recipient)
+				ctx := withEnvAndSM(&env, sender)
+				return ctx, &env, recipient, sender
+			},
+			event:    &testEvent{Value: 1},
+			wantSize: 1,
+			validate: func(t *testing.T, queue []AbstractEvent, sender, recipient *testStateMachine) {
+				ev := queue[0].(*testEvent)
+				if ev.Sender() != sender {
+					t.Errorf("expected sender %p, got %p", sender, ev.Sender())
+				}
+				if ev.Recipient() != recipient {
+					t.Errorf("expected recipient %p, got %p", recipient, ev.Recipient())
+				}
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sms, target := tt.setupSMs()
-			env := newTestEnvironment(sms...)
-
-			ctx := context.WithValue(t.Context(), envKey{}, &env)
-
+			ctx, env, target, sender := tt.setup(t)
 			SendTo(ctx, target, tt.event)
 
 			queue := env.queue[target.id()]
-			if len(queue) != 1 {
-				t.Errorf("Expected 1 event in queue, got %d", len(queue))
+			if len(queue) != tt.wantSize {
+				t.Fatalf("expected %d events in queue, got %d", tt.wantSize, len(queue))
 			}
-			if !cmp.Equal(queue[len(queue)-1], tt.event) {
-				t.Errorf("Last queued event mismatch: %v", cmp.Diff(tt.event, queue[len(queue)-1]))
+
+			if tt.validate != nil {
+				tt.validate(t, queue, sender, target)
+				return
+			}
+
+			if queue[len(queue)-1] != tt.event {
+				t.Fatalf("queued event mismatch: got %v, want %v", queue[len(queue)-1], tt.event)
 			}
 		})
 	}
@@ -223,8 +291,15 @@ func TestGoto(t *testing.T) {
 			Goto(ctx, tt.targetState)
 
 			queue := env.queue[sm.id()]
-			if !cmp.Equal(queue, tt.wantEvents) {
-				t.Errorf("Queue mismatch: %v", cmp.Diff(tt.wantEvents, queue))
+			opts := cmp.AllowUnexported(
+				Event[AbstractStateMachine, AbstractStateMachine]{},
+				Event[*testStateMachine, *testStateMachine]{},
+				exitEvent{},
+				transitionEvent{},
+				entryEvent{},
+			)
+			if !cmp.Equal(queue, tt.wantEvents, opts) {
+				t.Errorf("Queue mismatch: %v", cmp.Diff(tt.wantEvents, queue, opts))
 			}
 		})
 	}
@@ -242,8 +317,13 @@ func TestHalt(t *testing.T) {
 		queue := env.queue[sm.id()]
 		wantEvents := []AbstractEvent{&haltEvent{}}
 
-		if !cmp.Equal(queue, wantEvents) {
-			t.Errorf("Queue mismatch: %v", cmp.Diff(wantEvents, queue))
+		opts := cmp.AllowUnexported(
+			Event[AbstractStateMachine, AbstractStateMachine]{},
+			Event[*testStateMachine, *testStateMachine]{},
+			haltEvent{},
+		)
+		if !cmp.Equal(queue, wantEvents, opts) {
+			t.Errorf("Queue mismatch: %v", cmp.Diff(wantEvents, queue, opts))
 		}
 	})
 }

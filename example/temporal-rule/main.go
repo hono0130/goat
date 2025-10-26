@@ -19,10 +19,11 @@ const (
 
 type (
 	eShipRequest struct {
-		goat.Event
-		From *Order
+		goat.Event[*Order, *Shipper]
 	}
-	eShipResponse struct{ goat.Event }
+	eShipResponse struct {
+		goat.Event[*Shipper, *Order]
+	}
 )
 
 type (
@@ -47,7 +48,7 @@ func createTemporalRuleModel() []goat.Option {
 	idle := &shipperState{}
 	shipperSpec.DefineStates(idle).SetInitialState(idle)
 	goat.OnEvent(shipperSpec, idle, &eShipRequest{}, func(ctx context.Context, e *eShipRequest, _ *Shipper) {
-		goat.SendTo(ctx, e.From, &eShipResponse{})
+		goat.SendTo(ctx, e.Sender(), &eShipResponse{})
 	})
 
 	// === Order Spec ===
@@ -62,7 +63,7 @@ func createTemporalRuleModel() []goat.Option {
 		goat.Goto(ctx, paid)
 	})
 	goat.OnEntry(orderSpec, paid, func(ctx context.Context, o *Order) {
-		goat.SendTo(ctx, o.Shipper, &eShipRequest{From: o})
+		goat.SendTo(ctx, o.Shipper, &eShipRequest{})
 	})
 	goat.OnEvent(orderSpec, paid, &eShipResponse{}, func(ctx context.Context, _ *eShipResponse, o *Order) {
 		goat.Goto(ctx, shipped)

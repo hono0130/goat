@@ -335,7 +335,17 @@ func TestTransitionHandlers_handle(t *testing.T) {
 			}
 
 			opts := cmp.Options{
-				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmp.AllowUnexported(
+					localState{},
+					environment{},
+					testStateMachine{},
+					StateMachine{},
+					testState{},
+					State{},
+					testEvent{},
+					Event[*testStateMachine, *testStateMachine]{},
+					Event[AbstractStateMachine, AbstractStateMachine]{},
+				),
 				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
 			}
 			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {
@@ -427,7 +437,17 @@ func TestHaltHandlers_handle(t *testing.T) {
 			}
 
 			opts := cmp.Options{
-				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmp.AllowUnexported(
+					localState{},
+					environment{},
+					testStateMachine{},
+					StateMachine{},
+					testState{},
+					State{},
+					testEvent{},
+					Event[*testStateMachine, *testStateMachine]{},
+					Event[AbstractStateMachine, AbstractStateMachine]{},
+				),
 				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
 			}
 			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {
@@ -516,7 +536,17 @@ func TestEntryHandlers_handle(t *testing.T) {
 			}
 
 			opts := cmp.Options{
-				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmp.AllowUnexported(
+					localState{},
+					environment{},
+					testStateMachine{},
+					StateMachine{},
+					testState{},
+					State{},
+					testEvent{},
+					Event[*testStateMachine, *testStateMachine]{},
+					Event[AbstractStateMachine, AbstractStateMachine]{},
+				),
 				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
 			}
 			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {
@@ -601,7 +631,17 @@ func TestExitHandlers_handle(t *testing.T) {
 			}
 
 			opts := cmp.Options{
-				cmp.AllowUnexported(localState{}, environment{}, testStateMachine{}, StateMachine{}, testState{}, State{}, testEvent{}, Event{}),
+				cmp.AllowUnexported(
+					localState{},
+					environment{},
+					testStateMachine{},
+					StateMachine{},
+					testState{},
+					State{},
+					testEvent{},
+					Event[*testStateMachine, *testStateMachine]{},
+					Event[AbstractStateMachine, AbstractStateMachine]{},
+				),
 				cmpopts.IgnoreFields(StateMachine{}, "EventHandlers", "HandlerBuilders"),
 			}
 			if diff := cmp.Diff(tt.wantStates, states, opts); diff != "" {

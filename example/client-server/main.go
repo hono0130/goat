@@ -22,17 +22,16 @@ type (
 	// eCheckMenuExistenceRequest is an event for checking the existence of the menu.
 	// This event is sent from the client to the server.
 	eCheckMenuExistenceRequest struct {
-		goat.Event // [MUST] Embed the Event struct.
-		Ctx        Context
-		MenuID     string
-		From       *Client
+		goat.Event[*Client, *Server] // [MUST] Embed the Event struct.
+		Ctx                          Context
+		MenuID                       string
 	}
 	// eCheckMenuExistenceResponse is an event for the response of checking the existence of the menu.
 	// This event is sent from the server to the client.
 	eCheckMenuExistenceResponse struct {
-		goat.Event // [MUST] Embed the Event struct.
-		Exists     bool
-		Err        bool
+		goat.Event[*Server, *Client] // [MUST] Embed the Event struct.
+		Exists                       bool
+		Err                          bool
 	}
 )
 
@@ -101,7 +100,7 @@ func createClientServerModel() []goat.Option {
 
 	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
-			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
+			goat.SendTo(ctx, event.Sender(), &eCheckMenuExistenceResponse{
 				Exists: true,
 			})
 		},
@@ -109,7 +108,7 @@ func createClientServerModel() []goat.Option {
 
 	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
-			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
+			goat.SendTo(ctx, event.Sender(), &eCheckMenuExistenceResponse{
 				Exists: false,
 				Err:    false,
 			})
@@ -118,7 +117,7 @@ func createClientServerModel() []goat.Option {
 
 	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
-			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
+			goat.SendTo(ctx, event.Sender(), &eCheckMenuExistenceResponse{
 				Exists: false,
 				Err:    true,
 			})
@@ -137,7 +136,6 @@ func createClientServerModel() []goat.Option {
 	goat.OnEntry(clientSpec, clientIdle, func(ctx context.Context, client *Client) {
 		reqCtx := Context{RequestID: randomRequestID()}
 		goat.SendTo(ctx, client.Server, &eCheckMenuExistenceRequest{
-			From:   client,
 			Ctx:    reqCtx,
 			MenuID: "menu_id",
 		})
