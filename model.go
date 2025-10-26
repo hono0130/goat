@@ -98,7 +98,6 @@ func initialWorld(sms ...AbstractStateMachine) world {
 				})
 			}
 		}
-		innerSM.HandlerBuilders = nil
 
 		machines[finalID] = sm
 		queue[finalID] = []AbstractEvent{&entryEvent{}}
