@@ -93,6 +93,15 @@ func (e *environment) dequeueEvent(smID string) (AbstractEvent, bool) {
 //	})
 func SendTo(ctx context.Context, target AbstractStateMachine, event AbstractEvent) {
 	env := getEnvFromContext(ctx)
+
+	if event != nil {
+		var sender AbstractStateMachine
+		if sm, ok := ctx.Value(smKey{}).(AbstractStateMachine); ok {
+			sender = sm
+		}
+		event.setRoutingInfo(sender, target)
+	}
+
 	env.enqueueEvent(target, event)
 }
 

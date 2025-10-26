@@ -10,7 +10,7 @@ type AbstractProtobufMessage interface {
 }
 
 type ProtobufMessage struct {
-	goat.Event
+	goat.Event[goat.AbstractStateMachine, goat.AbstractStateMachine]
 	// this is needed to make ProtobufMessage copyable
 	_ rune
 }

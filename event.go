@@ -6,14 +6,9 @@ import (
 	"strings"
 )
 
-// AbstractEvent is the base interface for all events in the state machine.
-// Events trigger state transitions and handler executions, representing
-// things that happen to or within the state machine.
-//
-// Most users will work with the built-in event types (entryEvent, exitEvent, etc.)
-// or create simple custom events for specific scenarios.
 type AbstractEvent interface {
 	isEvent() bool
+	setRoutingInfo(AbstractStateMachine, AbstractStateMachine)
 }
 
 // Event is the base struct that should be embedded in all event implementations.
@@ -22,34 +17,81 @@ type AbstractEvent interface {
 //
 // Example:
 //
-//	type MyCustomEvent struct {
-//	    Event
-//	    Payload string
-//	}
-type Event struct {
+// type MyCustomEvent struct {
+// goat.Event[*ProducerStateMachine, *ConsumerStateMachine]
+// Payload string
+// }
+type Event[Sender AbstractStateMachine, Recipient AbstractStateMachine] struct {
 	// this is needed to make Event copyable
 	_ rune
+
+	sender    Sender
+	recipient Recipient
 }
 
-func (*Event) isEvent() bool {
-	return true
+// UnTypedEvent is a convenience alias for an Event that does not specify
+// concrete sender or recipient types.
+type UnTypedEvent = Event[AbstractStateMachine, AbstractStateMachine]
+
+func (*Event[Sender, Recipient]) isEvent() bool { return true }
+
+// Sender returns the sender using the concrete type specified by the event's
+// type parameters. If the actual sender does not match the requested type, the
+// zero value for Sender is returned.
+func (e *Event[Sender, Recipient]) Sender() Sender {
+	if e == nil {
+		var zero Sender
+		return zero
+	}
+	return e.sender
+}
+
+// Recipient returns the recipient using the concrete type specified by the
+// event's type parameters. If the actual recipient does not match the requested
+// type, the zero value for Recipient is returned.
+func (e *Event[Sender, Recipient]) Recipient() Recipient {
+	if e == nil {
+		var zero Recipient
+		return zero
+	}
+	return e.recipient
+}
+
+func (e *Event[Sender, Recipient]) setRoutingInfo(sender, recipient AbstractStateMachine) {
+	if e == nil {
+		return
+	}
+
+	if typed, ok := sender.(Sender); ok {
+		e.sender = typed
+	} else {
+		var zero Sender
+		e.sender = zero
+	}
+
+	if typed, ok := recipient.(Recipient); ok {
+		e.recipient = typed
+	} else {
+		var zero Recipient
+		e.recipient = zero
+	}
 }
 
 type entryEvent struct {
-	Event
+	UnTypedEvent
 }
 
 type exitEvent struct {
-	Event
+	UnTypedEvent
 }
 
 type transitionEvent struct {
-	Event
+	UnTypedEvent
 	To AbstractState
 }
 
 type haltEvent struct {
-	Event
+	UnTypedEvent
 }
 
 // WARNING: cloneEvent performs shallow copy, so nested pointers are shared
@@ -105,7 +147,7 @@ func getEventDetails(e AbstractEvent) string {
 			continue
 		}
 
-		if fieldName != "Event" {
+		if fieldName != "Event" && fieldName != "UnTypedEvent" {
 			if field.CanInterface() {
 				fieldType := field.Type().String()
 				fieldValue := field.Interface()

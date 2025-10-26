@@ -10,7 +10,7 @@ type testState struct {
 }
 
 type testEvent struct {
-	Event
+	Event[*testStateMachine, *testStateMachine]
 	Value int
 }
 
