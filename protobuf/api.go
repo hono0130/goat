@@ -73,10 +73,10 @@ func analyzeMessage[M AbstractProtobufMessage](instance M) *protoMessage {
 		if !field.IsExported() {
 			continue
 		}
-		if field.Type.String() == "protobuf.ProtobufMessage" {
+		if field.Type == reflect.TypeOf(ProtobufMessage[goat.AbstractStateMachine, goat.AbstractStateMachine]{}) {
 			continue
 		}
-		if field.Type.String() == "goat.Event" {
+		if isGoatEventType(field.Type) {
 			continue
 		}
 		if field.Name == "_" {
@@ -101,6 +101,14 @@ func analyzeMessage[M AbstractProtobufMessage](instance M) *protoMessage {
 		Name:   msgType.Name(),
 		Fields: fields,
 	}
+}
+
+func isGoatEventType(t reflect.Type) bool {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+
+	return t.Kind() == reflect.Struct && t.Name() == "Event" && t.PkgPath() == "github.com/goatx/goat"
 }
 
 func mapGoFieldToProto(goType reflect.Type) (string, bool) {

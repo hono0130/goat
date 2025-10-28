@@ -13,26 +13,26 @@ type UserService struct {
 }
 
 type CreateUserRequest struct {
-	protobuf.ProtobufMessage
+	protobuf.ProtobufMessage[*UserService, *UserService]
 	Username string
 	Email    string
 	Tags     []string
 }
 
 type CreateUserResponse struct {
-	protobuf.ProtobufMessage
+	protobuf.ProtobufMessage[*UserService, *UserService]
 	UserID    string
 	Success   bool
 	ErrorCode int64
 }
 
 type GetUserRequest struct {
-	protobuf.ProtobufMessage
+	protobuf.ProtobufMessage[*UserService, *UserService]
 	UserID string
 }
 
 type GetUserResponse struct {
-	protobuf.ProtobufMessage
+	protobuf.ProtobufMessage[*UserService, *UserService]
 	Username string
 	Email    string
 	Found    bool

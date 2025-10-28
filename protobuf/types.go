@@ -9,13 +9,13 @@ type AbstractProtobufMessage interface {
 	goat.AbstractEvent
 }
 
-type ProtobufMessage struct {
-	goat.Event
+type ProtobufMessage[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
+	goat.Event[Sender, Recipient]
 	// this is needed to make ProtobufMessage copyable
 	_ rune
 }
 
-func (*ProtobufMessage) isProtobufMessage() bool {
+func (*ProtobufMessage[Sender, Recipient]) isProtobufMessage() bool {
 	return true
 }
 

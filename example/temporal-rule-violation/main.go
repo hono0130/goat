@@ -19,10 +19,11 @@ const (
 
 type (
 	eShipRequest struct {
-		goat.Event
-		From *Order
+		goat.Event[*Order, *FailingShipper]
 	}
-	eShipResponse struct{ goat.Event }
+	eShipResponse struct {
+		goat.Event[*FailingShipper, *Order]
+	}
 )
 
 type (
@@ -62,7 +63,7 @@ func createTemporalRuleViolationModel() []goat.Option {
 		goat.Goto(ctx, paid)
 	})
 	goat.OnEntry(orderSpec, paid, func(ctx context.Context, o *Order) {
-		goat.SendTo(ctx, o.Shipper, &eShipRequest{From: o})
+		goat.SendTo(ctx, o.Shipper, &eShipRequest{})
 	})
 	goat.OnEvent(orderSpec, paid, &eShipResponse{}, func(ctx context.Context, _ *eShipResponse, o *Order) {
 		goat.Goto(ctx, shipped)
