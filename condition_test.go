@@ -310,8 +310,7 @@ func TestConvenienceConditions_Integration(t *testing.T) {
 
 		m, err := newModel(
 			WithStateMachines(sm1, sm2),
-			WithConditions(condSingle, condPair),
-			WithInvariants(condSingle, condPair),
+			WithRules(Always(condSingle), Always(condPair)),
 		)
 		if err != nil {
 			t.Fatalf("newModel() error: %v", err)

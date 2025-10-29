@@ -44,8 +44,7 @@ testStateMachine << entryEvent;" ];
 				inv := BoolCondition("inv", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				_ = m.Solve()
 				return m
@@ -139,8 +138,7 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				_ = m.Solve()
 				return m
@@ -155,8 +153,7 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				_ = m.Solve()
 				return m
@@ -192,8 +189,7 @@ func TestModel_writeTemporalViolations(t *testing.T) {
 	cFalse := BoolCondition("c", false)
 	m, err := newModel(
 		WithStateMachines(sm),
-		WithConditions(cFalse),
-		WithTemporalRules(EventuallyAlways(cFalse)),
+		WithRules(EventuallyAlways(cFalse)),
 	)
 	if err != nil {
 		t.Fatalf("newModel error: %v", err)
@@ -236,8 +232,7 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				inv := BoolCondition("pass", true)
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				if err != nil {
 					panic(err)
@@ -254,8 +249,7 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				inv := BoolCondition("fail", false)
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				if err != nil {
 					panic(err)
@@ -298,8 +292,7 @@ func TestModel_findPathsToViolations(t *testing.T) {
 
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				if err != nil {
 					panic(err)
@@ -560,8 +553,7 @@ func TestModel_summarize(t *testing.T) {
 				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				_ = m.Solve()
 				return m
@@ -586,8 +578,7 @@ func TestModel_summarize(t *testing.T) {
 				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithConditions(inv),
-					WithInvariants(inv),
+					WithRules(Always(inv)),
 				)
 				_ = m.Solve()
 				return m

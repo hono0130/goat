@@ -62,9 +62,8 @@ func main() {
 
     err = goat.Test(
         goat.WithStateMachines(sm),
-        goat.WithConditions(cond),
-        goat.WithInvariants(cond),
-        goat.WithTemporalRules(
+        goat.WithRules(
+            goat.Always(cond),
             goat.WheneverPEventuallyQ(cond, cond),
             goat.EventuallyAlways(cond),
             goat.AlwaysEventually(cond),
@@ -85,9 +84,7 @@ func main() {
 - **`Test()`** - Run model checking with invariant verification
 - **`Debug()`** - Output detailed JSON results for debugging
 - **`WithStateMachines()`** - Configure which state machines to test
-- **`WithConditions()`** - Register named conditions
-- **`WithInvariants()`** - Configure conditions to check as invariants
-- **`WithTemporalRules()`** - Register temporal rules to verify temporal properties
+- **`WithRules()`** - Register rules created with helpers like `Always` and `WheneverPEventuallyQ` in one place
 
 ## Examples
 
