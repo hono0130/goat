@@ -30,36 +30,32 @@ type State struct {
 }
 
 type ReservationRequestEvent struct {
-	goat.Event
+	goat.Event[*ClientStateMachine, *ServerStateMachine]
 	RoomID   int
 	ClientID int
-	Client   *ClientStateMachine
 }
 
 type ReservationResultEvent struct {
-	goat.Event
+	goat.Event[*ServerStateMachine, *ClientStateMachine]
 	RoomID    int
 	ClientID  int
 	Succeeded bool
 }
 
 type ReservationRetryEvent struct {
-	goat.Event
+	goat.Event[*ServerStateMachine, *ClientStateMachine]
 	RoomID   int
 	ClientID int
-	Client   *ClientStateMachine
-	Server   *ServerStateMachine
 }
 
 type DBSelectEvent struct {
-	goat.Event
+	goat.Event[*ServerStateMachine, *DBStateMachine]
 	RoomID   int
 	ClientID int
-	Server   *ServerStateMachine
 }
 
 type DBSelectResultEvent struct {
-	goat.Event
+	goat.Event[*DBStateMachine, *ServerStateMachine]
 	RoomID     int
 	ClientID   int
 	IsReserved bool
@@ -67,14 +63,13 @@ type DBSelectResultEvent struct {
 }
 
 type DBUpdateEvent struct {
-	goat.Event
+	goat.Event[*ServerStateMachine, *DBStateMachine]
 	RoomID   int
 	ClientID int
-	Server   *ServerStateMachine
 }
 
 type DBUpdateResultEvent struct {
-	goat.Event
+	goat.Event[*DBStateMachine, *ServerStateMachine]
 	RoomID    int
 	ClientID  int
 	Succeeded bool
@@ -133,7 +128,6 @@ func createMeetingRoomWithExclusionModel() {
 			requestEvent := &ReservationRequestEvent{
 				RoomID:   client.TargetRoom,
 				ClientID: client.ClientID,
-				Client:   client,
 			}
 
 			goat.SendTo(ctx, client.Server, requestEvent)
@@ -147,7 +141,6 @@ func createMeetingRoomWithExclusionModel() {
 			selectEvent := &DBSelectEvent{
 				RoomID:   event.RoomID,
 				ClientID: event.ClientID,
-				Server:   server,
 			}
 
 			goat.SendTo(ctx, server.DB, selectEvent)
@@ -177,7 +170,7 @@ func createMeetingRoomWithExclusionModel() {
 				IsLocked:   isLocked,
 			}
 
-			goat.SendTo(ctx, event.Server, resultEvent)
+			goat.SendTo(ctx, event.Sender(), resultEvent)
 		})
 
 	goat.OnEvent(serverSpec, serverProcessing, &DBSelectResultEvent{},
@@ -192,7 +185,6 @@ func createMeetingRoomWithExclusionModel() {
 					updateEvent := &DBUpdateEvent{
 						RoomID:   server.CurrentRequest.RoomID,
 						ClientID: server.CurrentRequest.ClientID,
-						Server:   server,
 					}
 
 					goat.SendTo(ctx, server.DB, updateEvent)
@@ -203,7 +195,7 @@ func createMeetingRoomWithExclusionModel() {
 						Succeeded: false,
 					}
 
-					goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
+					goat.SendTo(ctx, server.CurrentRequest.Sender(), resultEvent)
 					server.CurrentRequest = nil
 					goat.Goto(ctx, serverIdle)
 				}
@@ -214,7 +206,7 @@ func createMeetingRoomWithExclusionModel() {
 					Succeeded: false,
 				}
 
-				goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
+				goat.SendTo(ctx, server.CurrentRequest.Sender(), resultEvent)
 				server.CurrentRequest = nil
 				goat.Goto(ctx, serverIdle)
 			}
@@ -242,7 +234,7 @@ func createMeetingRoomWithExclusionModel() {
 				Succeeded: succeeded,
 			}
 
-			goat.SendTo(ctx, event.Server, resultEvent)
+			goat.SendTo(ctx, event.Sender(), resultEvent)
 		})
 
 	goat.OnEvent(serverSpec, serverProcessing, &DBUpdateResultEvent{},
@@ -259,16 +251,14 @@ func createMeetingRoomWithExclusionModel() {
 					Succeeded: true,
 				}
 
-				goat.SendTo(ctx, server.CurrentRequest.Client, resultEvent)
+				goat.SendTo(ctx, server.CurrentRequest.Sender(), resultEvent)
 			} else {
 				retryEvent := &ReservationRetryEvent{
 					RoomID:   server.CurrentRequest.RoomID,
 					ClientID: server.CurrentRequest.ClientID,
-					Client:   server.CurrentRequest.Client,
-					Server:   server,
 				}
 
-				goat.SendTo(ctx, server.CurrentRequest.Client, retryEvent)
+				goat.SendTo(ctx, server.CurrentRequest.Sender(), retryEvent)
 			}
 
 			server.CurrentRequest = nil
@@ -292,10 +282,9 @@ func createMeetingRoomWithExclusionModel() {
 				requestEvent := &ReservationRequestEvent{
 					RoomID:   client.TargetRoom,
 					ClientID: client.ClientID,
-					Client:   client,
 				}
 
-				goat.SendTo(ctx, event.Server, requestEvent)
+				goat.SendTo(ctx, event.Sender(), requestEvent)
 			}
 		})
 

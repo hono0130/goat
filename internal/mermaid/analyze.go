@@ -311,8 +311,8 @@ func extractSendToFlow(callExpr *ast.CallExpr, pkg *load.PackageInfo, info *hand
 		return flow{}, false, fmt.Errorf("send to flow call expression has %d arguments, expected 3", len(callExpr.Args))
 	}
 
-	var toName string
-	if name, ok := namedTypeName(callExpr.Args[1], pkg.TypesInfo); ok {
+	toName := "UnknownStatemachine"
+	if name, ok := namedTypeName(callExpr.Args[1], pkg.TypesInfo); ok && name != "AbstractStateMachine" {
 		toName = name
 	}
 
