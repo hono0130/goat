@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/goatx/goat/releases/tag/v0.3.0) - 2025-10-30
+
+### Added
+- Temporal rule support
+- Implemented sender and recipient in event model
+
+### Changed
+- Unified rule registration via WithRules helpers
+- Replaced invariants with conditions
+
+### Fixed
+- Fixed initialWorld clearing each state machine’s handler builders
+
 ## [0.2.0](https://github.com/goatx/goat/releases/tag/v0.2.0) - 2025-09-14
 
 ### Added
