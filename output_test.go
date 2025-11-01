@@ -127,10 +127,9 @@ testStateMachine << entryEvent;" ];
 
 func TestModel_writeInvariantViolations(t *testing.T) {
 	tests := []struct {
-		name        string
-		setup       func() model
-		description string
-		want        string
+		name  string
+		setup func() model
+		want  string
 	}{
 		{
 			name: "no invariant violations",
@@ -145,8 +144,7 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			description: "test invariant",
-			want:        "No invariant violations found.\n",
+			want: "No invariant violations found.\n",
 		},
 		{
 			name: "with invariant violation",
@@ -161,8 +159,7 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			description: "failing test invariant",
-			want: `InvariantError:  failing test invariant   ✘
+			want: `Condition failed. Not Always fail.
 Path (length = 1):
   [0] <-- violation here
   StateMachines:
@@ -177,7 +174,7 @@ Path (length = 1):
 		t.Run(tt.name, func(t *testing.T) {
 			m := tt.setup()
 			var buf bytes.Buffer
-			m.writeInvariantViolations(&buf, tt.description)
+			m.writeInvariantViolations(&buf)
 			got := buf.String()
 
 			if got != tt.want {
@@ -205,7 +202,7 @@ func TestModel_writeTemporalViolations(t *testing.T) {
 	m.writeTemporalViolations(&buf, results)
 	got := buf.String()
 
-	want := `TemporalRuleViolation:  eventually always c   ✘
+	want := `Condition failed. Not eventually always c.
 Violation path (length = 2):
   [0]
   StateMachines:
@@ -223,11 +220,11 @@ Violation path (length = 2):
 	}
 }
 
-func TestModel_findPathsToViolations(t *testing.T) {
+func TestModel_collectInvariantViolations(t *testing.T) {
 	tests := []struct {
-		name          string
-		setup         func() model
-		expectedPaths [][]worldID
+		name     string
+		setup    func() model
+		expected []invariantViolationWitness
 	}{
 		{
 			name: "no violations",
@@ -245,7 +242,7 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			expectedPaths: nil,
+			expected: nil,
 		},
 		{
 			name: "single violation",
@@ -263,7 +260,12 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			expectedPaths: [][]worldID{{8682599965454615616}},
+			expected: []invariantViolationWitness{
+				{
+					path:   []worldID{8682599965454615616},
+					failed: []ConditionName{"fail"},
+				},
+			},
 		},
 		{
 			name: "violation after transition",
@@ -307,8 +309,17 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			expectedPaths: [][]worldID{
-				{5790322525083387874, 15591947093441390666, 10703074720578030081, 15159594575768829045, 8395799135532667686},
+			expected: []invariantViolationWitness{
+				{
+					path: []worldID{
+						5790322525083387874,
+						15591947093441390666,
+						10703074720578030081,
+						15159594575768829045,
+						8395799135532667686,
+					},
+					failed: []ConditionName{"count<=1"},
+				},
 			},
 		},
 	}
@@ -316,10 +327,10 @@ func TestModel_findPathsToViolations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := tt.setup()
-			actualPaths := m.findPathsToViolations()
+			actual := m.collectInvariantViolations()
 
-			if diff := cmp.Diff(tt.expectedPaths, actualPaths); diff != "" {
-				t.Errorf("Violation paths mismatch (-expected +actual):\n%s", diff)
+			if diff := cmp.Diff(tt.expected, actual, cmp.AllowUnexported(invariantViolationWitness{})); diff != "" {
+				t.Errorf("Invariant violations mismatch (-expected +actual):\n%s", diff)
 			}
 		})
 	}

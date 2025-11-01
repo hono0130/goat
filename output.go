@@ -42,7 +42,7 @@ func (m *model) writeDot(w io.Writer) {
 			sb.WriteString(fmt.Sprintf("%d", id))
 			sb.WriteString(" [ penwidth=5 ];\n")
 		}
-		if wld.invariantViolation {
+		if len(wld.failedInvariants) > 0 {
 			sb.WriteString("  ")
 			sb.WriteString(fmt.Sprintf("%d", id))
 			sb.WriteString(" [ color=red, penwidth=3 ];\n")
@@ -74,30 +74,44 @@ func (m *model) writeDot(w io.Writer) {
 	_, _ = io.WriteString(w, sb.String())
 }
 
-func (m *model) writeInvariantViolations(w io.Writer, invariantDescription string) {
+func (m *model) writeInvariantViolations(w io.Writer) {
 	var sb strings.Builder
-	paths := m.findPathsToViolations()
+	violations := m.collectInvariantViolations()
 
-	if len(paths) == 0 {
+	if len(violations) == 0 {
 		sb.WriteString("No invariant violations found.\n")
 		_, _ = io.WriteString(w, sb.String())
 		return
 	}
 
-	for i, path := range paths {
+	for i, violation := range violations {
 		if i > 0 {
 			sb.WriteString("\n")
 		}
 
-		sb.WriteString("InvariantError:  ")
-		sb.WriteString(invariantDescription)
-		sb.WriteString("   ✘\n")
+		if len(violation.failed) == 0 {
+			sb.WriteString("Condition failed.\n")
+		} else {
+			for _, name := range violation.failed {
+				trimmed := strings.TrimSpace(string(name))
+				if trimmed == "" {
+					sb.WriteString("Condition failed. A required condition is not always satisfied.\n")
+					continue
+				}
+				sb.WriteString("Condition failed. Not Always ")
+				sb.WriteString(trimmed)
+				sb.WriteString(".\n")
+			}
+		}
+
+		pathLen := len(violation.path)
 		sb.WriteString("Path (length = ")
-		sb.WriteString(fmt.Sprintf("%d", len(path)))
+		sb.WriteString(fmt.Sprintf("%d", pathLen))
 		sb.WriteString("):\n")
 
-		m.writeWorldSequence(&sb, path, func(idx int, w world) string {
-			if idx == len(path)-1 && w.invariantViolation {
+		lastIdx := pathLen - 1
+		m.writeWorldSequence(&sb, violation.path, func(idx int, w world) string {
+			if lastIdx >= 0 && idx == lastIdx && len(w.failedInvariants) > 0 {
 				return "<-- violation here"
 			}
 			return ""
@@ -126,9 +140,14 @@ func (m *model) writeTemporalViolations(w io.Writer, results []temporalRuleResul
 		}
 		block++
 
-		sb.WriteString("TemporalRuleViolation:  ")
-		sb.WriteString(res.Rule)
-		sb.WriteString("   ✘\n")
+		rule := strings.TrimSpace(res.Rule)
+		if rule == "" {
+			sb.WriteString("Condition failed.\n")
+		} else {
+			sb.WriteString("Condition failed. Not ")
+			sb.WriteString(rule)
+			sb.WriteString(".\n")
+		}
 
 		prefixLen := len(lasso.Prefix)
 		loopLen := len(lasso.Loop)
@@ -202,8 +221,13 @@ func (m *model) writeWorldSequence(sb *strings.Builder, worldIDs []worldID, anno
 	}
 }
 
-func (m *model) findPathsToViolations() [][]worldID {
-	var paths [][]worldID
+type invariantViolationWitness struct {
+	path   []worldID
+	failed []ConditionName
+}
+
+func (m *model) collectInvariantViolations() []invariantViolationWitness {
+	var violations []invariantViolationWitness
 
 	visited := make(map[worldID]bool)
 
@@ -220,8 +244,15 @@ func (m *model) findPathsToViolations() [][]worldID {
 		}
 		visited[currentID] = true
 
-		if m.worlds[currentID].invariantViolation {
-			paths = append(paths, path)
+		world := m.worlds[currentID]
+
+		if len(world.failedInvariants) > 0 {
+			copiedPath := append([]worldID(nil), path...)
+			copiedFailed := append([]ConditionName(nil), world.failedInvariants...)
+			violations = append(violations, invariantViolationWitness{
+				path:   copiedPath,
+				failed: copiedFailed,
+			})
 			continue
 		}
 
@@ -235,7 +266,7 @@ func (m *model) findPathsToViolations() [][]worldID {
 		}
 	}
 
-	return paths
+	return violations
 }
 
 func (w world) label() string {
@@ -386,7 +417,7 @@ func (*model) worldToJSON(w world) worldJSON {
 	})
 
 	return worldJSON{
-		InvariantViolation: w.invariantViolation,
+		InvariantViolation: len(w.failedInvariants) > 0,
 		StateMachines:      stateMachines,
 		QueuedEvents:       queuedEvents,
 	}
@@ -400,7 +431,7 @@ func (m *model) summarize(executionTimeMs int64) *modelSummary {
 
 	violationCount := 0
 	for _, world := range m.worlds {
-		if world.invariantViolation {
+		if len(world.failedInvariants) > 0 {
 			violationCount++
 		}
 	}
