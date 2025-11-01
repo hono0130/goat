@@ -36,7 +36,7 @@ func Test(opts ...Option) error {
 	}
 	executionTime := time.Since(start).Milliseconds()
 
-	model.writeInvariantViolations(os.Stdout, "invariant violation")
+	model.writeInvariantViolations(os.Stdout)
 
 	trResults := model.checkLTL()
 	model.writeTemporalViolations(os.Stdout, trResults)

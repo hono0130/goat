@@ -317,8 +317,8 @@ func TestConvenienceConditions_Integration(t *testing.T) {
 			t.Fatalf("newModel() error: %v", err)
 		}
 
-		if ok := m.evaluateInvariants(m.initial); !ok {
-			t.Errorf("evaluateInvariants() = false, want true")
+		if failed := m.evaluateInvariants(m.initial); len(failed) != 0 {
+			t.Errorf("evaluateInvariants() returned failures %v, want none", failed)
 		}
 	})
 }
