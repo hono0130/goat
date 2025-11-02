@@ -3,6 +3,7 @@ package goat
 import (
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -103,7 +104,7 @@ func (m *model) writeInvariantViolations(w io.Writer) {
 		sb.WriteString("):\n")
 
 		m.writeWorldSequence(&sb, violation.path, func(idx int, w world) string {
-			if len(violation.path) > 0 && idx == len(violation.path)-1 {
+			if idx == len(violation.path)-1 {
 				return "<-- violation here"
 			}
 			return ""
@@ -247,7 +248,7 @@ func (m *model) collectInvariantViolations() []invariantViolationWitness {
 				}
 				seen[name.String()] = true
 
-				copyPath := append([]worldID(nil), path...)
+				copyPath := slices.Clone(path)
 				violations = append(violations, invariantViolationWitness{
 					path:      copyPath,
 					condition: name,
