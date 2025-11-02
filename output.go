@@ -89,19 +89,13 @@ func (m *model) writeInvariantViolations(w io.Writer) {
 			sb.WriteString("\n")
 		}
 
-		if len(violation.failed) == 0 {
-			sb.WriteString("Condition failed.\n")
+		trimmed := strings.TrimSpace(string(violation.condition))
+		if trimmed == "" {
+			sb.WriteString("Condition failed. A required condition is not always satisfied.\n")
 		} else {
-			for _, name := range violation.failed {
-				trimmed := strings.TrimSpace(string(name))
-				if trimmed == "" {
-					sb.WriteString("Condition failed. A required condition is not always satisfied.\n")
-					continue
-				}
-				sb.WriteString("Condition failed. Not Always ")
-				sb.WriteString(trimmed)
-				sb.WriteString(".\n")
-			}
+			sb.WriteString("Condition failed. Not Always ")
+			sb.WriteString(trimmed)
+			sb.WriteString(".\n")
 		}
 
 		pathLen := len(violation.path)
@@ -222,14 +216,15 @@ func (m *model) writeWorldSequence(sb *strings.Builder, worldIDs []worldID, anno
 }
 
 type invariantViolationWitness struct {
-	path   []worldID
-	failed []ConditionName
+	path      []worldID
+	condition ConditionName
 }
 
 func (m *model) collectInvariantViolations() []invariantViolationWitness {
 	var violations []invariantViolationWitness
 
 	visited := make(map[worldID]bool)
+	seen := make(map[string]bool)
 
 	queue := [][]worldID{{m.initial.id}}
 
@@ -247,13 +242,24 @@ func (m *model) collectInvariantViolations() []invariantViolationWitness {
 		world := m.worlds[currentID]
 
 		if len(world.failedInvariants) > 0 {
-			copiedPath := append([]worldID(nil), path...)
-			copiedFailed := append([]ConditionName(nil), world.failedInvariants...)
-			violations = append(violations, invariantViolationWitness{
-				path:   copiedPath,
-				failed: copiedFailed,
-			})
-			continue
+			recorded := false
+			for _, name := range world.failedInvariants {
+				trimmed := strings.TrimSpace(string(name))
+				if seen[trimmed] {
+					continue
+				}
+				seen[trimmed] = true
+
+				copyPath := append([]worldID(nil), path...)
+				violations = append(violations, invariantViolationWitness{
+					path:      copyPath,
+					condition: name,
+				})
+				recorded = true
+			}
+			if recorded {
+				continue
+			}
 		}
 
 		for _, nextID := range m.accessible[currentID] {

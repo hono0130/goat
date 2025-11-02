@@ -227,6 +227,34 @@ func TestModel_collectInvariantViolations(t *testing.T) {
 		expected []invariantViolationWitness
 	}{
 		{
+			name: "deduplicates paths per invariant",
+			setup: func() model {
+				initial := world{id: 1}
+				violationA := world{id: 2, failedInvariants: []ConditionName{"dup"}}
+				violationB := world{id: 3, failedInvariants: []ConditionName{"dup"}}
+
+				return model{
+					initial: initial,
+					worlds: worlds{
+						1: initial,
+						2: violationA,
+						3: violationB,
+					},
+					accessible: map[worldID][]worldID{
+						1: []worldID{2, 3},
+						2: nil,
+						3: nil,
+					},
+				}
+			},
+			expected: []invariantViolationWitness{
+				{
+					path:      []worldID{1, 2},
+					condition: "dup",
+				},
+			},
+		},
+		{
 			name: "no violations",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
@@ -262,8 +290,8 @@ func TestModel_collectInvariantViolations(t *testing.T) {
 			},
 			expected: []invariantViolationWitness{
 				{
-					path:   []worldID{8682599965454615616},
-					failed: []ConditionName{"fail"},
+					path:      []worldID{8682599965454615616},
+					condition: "fail",
 				},
 			},
 		},
@@ -318,7 +346,7 @@ func TestModel_collectInvariantViolations(t *testing.T) {
 						15159594575768829045,
 						8395799135532667686,
 					},
-					failed: []ConditionName{"count<=1"},
+					condition: "count<=1",
 				},
 			},
 		},
