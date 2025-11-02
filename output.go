@@ -242,10 +242,10 @@ func (m *model) collectInvariantViolations() []invariantViolationWitness {
 		if len(world.failedInvariants) > 0 {
 			recorded := false
 			for _, name := range world.failedInvariants {
-				if seen[string(name)] {
+				if seen[name.String()] {
 					continue
 				}
-				seen[string(name)] = true
+				seen[name.String()] = true
 
 				copyPath := append([]worldID(nil), path...)
 				violations = append(violations, invariantViolationWitness{
