@@ -89,12 +89,12 @@ func (m *model) writeInvariantViolations(w io.Writer) {
 			sb.WriteString("\n")
 		}
 
-		trimmed := strings.TrimSpace(string(violation.condition))
-		if trimmed == "" {
+		name := violation.condition.String()
+		if name == "" {
 			sb.WriteString("Condition failed.\n")
 		} else {
 			sb.WriteString("Condition failed. Not Always ")
-			sb.WriteString(trimmed)
+			sb.WriteString(name)
 			sb.WriteString(".\n")
 		}
 

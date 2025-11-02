@@ -1,7 +1,14 @@
 package goat
 
+import "strings"
+
 // ConditionName represents the identifier for a condition.
 type ConditionName string
+
+// String returns a trimmed representation of the condition name.
+func (c ConditionName) String() string {
+	return strings.TrimSpace(string(c))
+}
 
 // Condition represents a named predicate evaluated against a world.
 // Implementations must return true when the condition holds for the

@@ -220,6 +220,38 @@ func TestNewMultiCondition(t *testing.T) {
 	})
 }
 
+func TestConditionName_String(t *testing.T) {
+	tests := []struct {
+		name string
+		in   ConditionName
+		want string
+	}{
+		{
+			name: "trims surrounding whitespace",
+			in:   ConditionName("  spaced  "),
+			want: "spaced",
+		},
+		{
+			name: "empty when name is blank",
+			in:   ConditionName("   "),
+			want: "",
+		},
+		{
+			name: "unchanged when already clean",
+			in:   ConditionName("clean"),
+			want: "clean",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.in.String(); got != tt.want {
+				t.Errorf("ConditionName.String() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestNewCondition2(t *testing.T) {
 	t.Run("basic two machines", func(t *testing.T) {
 		sm1 := newTestStateMachine(newTestState(stateInitial1))
