@@ -91,21 +91,19 @@ func (m *model) writeInvariantViolations(w io.Writer) {
 
 		trimmed := strings.TrimSpace(string(violation.condition))
 		if trimmed == "" {
-			sb.WriteString("Condition failed. A required condition is not always satisfied.\n")
+			sb.WriteString("Condition failed.\n")
 		} else {
 			sb.WriteString("Condition failed. Not Always ")
 			sb.WriteString(trimmed)
 			sb.WriteString(".\n")
 		}
 
-		pathLen := len(violation.path)
 		sb.WriteString("Path (length = ")
-		sb.WriteString(fmt.Sprintf("%d", pathLen))
+		sb.WriteString(fmt.Sprintf("%d", len(violation.path)))
 		sb.WriteString("):\n")
 
-		lastIdx := pathLen - 1
 		m.writeWorldSequence(&sb, violation.path, func(idx int, w world) string {
-			if lastIdx >= 0 && idx == lastIdx && len(w.failedInvariants) > 0 {
+			if len(violation.path) > 0 && idx == len(violation.path)-1 {
 				return "<-- violation here"
 			}
 			return ""
@@ -244,11 +242,11 @@ func (m *model) collectInvariantViolations() []invariantViolationWitness {
 		if len(world.failedInvariants) > 0 {
 			recorded := false
 			for _, name := range world.failedInvariants {
-				trimmed := strings.TrimSpace(string(name))
-				if seen[trimmed] {
+				key := string(name)
+				if seen[key] {
 					continue
 				}
-				seen[trimmed] = true
+				seen[key] = true
 
 				copyPath := append([]worldID(nil), path...)
 				violations = append(violations, invariantViolationWitness{
