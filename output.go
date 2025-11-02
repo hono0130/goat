@@ -241,7 +241,6 @@ func (m *model) collectInvariantViolations() []invariantViolationWitness {
 		world := m.worlds[currentID]
 
 		if len(world.failedInvariants) > 0 {
-			recorded := false
 			for _, name := range world.failedInvariants {
 				if seen[name.String()] {
 					continue
@@ -253,10 +252,6 @@ func (m *model) collectInvariantViolations() []invariantViolationWitness {
 					path:      copyPath,
 					condition: name,
 				})
-				recorded = true
-			}
-			if recorded {
-				continue
 			}
 		}
 

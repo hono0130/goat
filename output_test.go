@@ -255,6 +255,38 @@ func TestModel_collectInvariantViolations(t *testing.T) {
 			},
 		},
 		{
+			name: "finds deeper violations after early failure",
+			setup: func() model {
+				initial := world{id: 1}
+				first := world{id: 2, failedInvariants: []ConditionName{"first"}}
+				second := world{id: 3, failedInvariants: []ConditionName{"second"}}
+
+				return model{
+					initial: initial,
+					worlds: worlds{
+						1: initial,
+						2: first,
+						3: second,
+					},
+					accessible: map[worldID][]worldID{
+						1: []worldID{2},
+						2: []worldID{3},
+						3: nil,
+					},
+				}
+			},
+			expected: []invariantViolationWitness{
+				{
+					path:      []worldID{1, 2},
+					condition: "first",
+				},
+				{
+					path:      []worldID{1, 2, 3},
+					condition: "second",
+				},
+			},
+		},
+		{
 			name: "no violations",
 			setup: func() model {
 				sm := newTestStateMachine(newTestState("initial"))
