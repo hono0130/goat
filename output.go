@@ -222,12 +222,28 @@ type invariantViolationWitness struct {
 func (m *model) collectInvariantViolations() []invariantViolationWitness {
 	var violations []invariantViolationWitness
 
+	targets := make(map[string]struct{})
+	for _, world := range m.worlds {
+		for _, name := range world.failedInvariants {
+			targets[name.String()] = struct{}{}
+		}
+	}
+
+	totalTargets := len(targets)
+	if totalTargets == 0 {
+		return nil
+	}
+
 	visited := make(map[worldID]bool)
 	seen := make(map[string]bool)
 
 	queue := [][]worldID{{m.initial.id}}
 
 	for len(queue) > 0 {
+		if len(seen) == totalTargets {
+			break
+		}
+
 		path := queue[0]
 		queue = queue[1:]
 
