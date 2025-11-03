@@ -106,6 +106,32 @@ func (e *E2ETestRecorder) GetTestCase() *E2ETestCase {
 	return e.recorder.ToTestCase(e.name, e.description)
 }
 
+// GenerateGoTest generates Go test code from the recorded traces.
+//
+// Example:
+//
+//	code, err := recorder.GenerateGoTest("main")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	os.WriteFile("user_service_test.go", []byte(code), 0644)
+func (e *E2ETestRecorder) GenerateGoTest(packageName string) (string, error) {
+	testCase := e.GetTestCase()
+	generator := NewGoTestGenerator(packageName)
+	return generator.Generate(testCase)
+}
+
+// GenerateGoTestToFile generates Go test code and saves it to a file.
+//
+// Example:
+//
+//	err := recorder.GenerateGoTestToFile("main", "user_service_test.go")
+func (e *E2ETestRecorder) GenerateGoTestToFile(packageName, filepath string) error {
+	testCase := e.GetTestCase()
+	generator := NewGoTestGenerator(packageName)
+	return generator.GenerateToFile(testCase, filepath)
+}
+
 // E2ETestRunner provides a simple interface for replaying E2E tests.
 type E2ETestRunner struct {
 	eventRegistry map[string]reflect.Type

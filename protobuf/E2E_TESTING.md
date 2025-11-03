@@ -1,14 +1,15 @@
 # E2E Testing for Protocol Buffers
 
-この機能は、Protocol Buffer生成用のgoatの記述を用いて、e2eテストを記録・再生できるようにします。
+この機能は、Protocol Buffer生成用のgoatの記述を用いて、e2eテストを記録し、Goのテストコードを自動生成します。
 
 ## 概要
 
 この機能により、以下のことが可能になります：
 
 1. **トレース記録**: RPC呼び出しとその入出力を記録
-2. **テストケース生成**: 記録したトレースをJSONファイルとして保存
-3. **テスト再生**: 保存したテストケースを再実行して、出力が期待通りか検証
+2. **Goテストコード生成**: 記録したトレースからGoの`_test.go`ファイルを自動生成 **← NEW!**
+3. **JSON保存**: 記録したトレースをJSONファイルとして保存（言語非依存の中間フォーマット）
+4. **テスト再生**: 保存したテストケースを再実行して、出力が期待通りか検証
 
 ## 主な機能
 
@@ -59,7 +60,91 @@ recorder.Record("CreateUser", userService, userService,
 recorder.SaveToFile("testdata/user_service_test.json")
 ```
 
-### 3. テスト再生 (Test Replay)
+### 3. Goテストコード生成 (Go Test Code Generation) **← NEW!**
+
+記録したトレースから、Goのテストコード（`_test.go`ファイル）を自動生成します。
+
+```go
+// E2Eテストレコーダーを作成
+recorder := protobuf.NewE2ETestRecorder(
+    "user_service_e2e",
+    "E2E tests for user service",
+)
+
+// イベント型を登録
+recorder.RegisterEventType(&CreateUserRequest{})
+recorder.RegisterEventType(&CreateUserResponse{})
+
+// RPC呼び出しを記録
+recorder.Record("CreateUser", userService, userService,
+    &CreateUserRequest{Username: "alice", Email: "alice@example.com"},
+    &CreateUserResponse{UserID: "123", Success: true},
+    1)
+
+// Goのテストコードを生成
+code, err := recorder.GenerateGoTest("main")
+if err != nil {
+    log.Fatal(err)
+}
+
+// ファイルに保存
+os.WriteFile("user_service_test.go", []byte(code), 0644)
+
+// または、直接ファイルに生成
+err = recorder.GenerateGoTestToFile("main", "user_service_test.go")
+```
+
+**生成されるコード：**
+
+```go
+package main
+
+import (
+	"reflect"
+	"testing"
+)
+
+// TestUser_service_e2e_0_CreateUser tests the CreateUser RPC call.
+// This test was automatically generated from recorded trace.
+func TestUser_service_e2e_0_CreateUser(t *testing.T) {
+	// Input: CreateUserRequest
+	input := &CreateUserRequest{
+		Email:    "alice@example.com",
+		Username: "alice",
+	}
+
+	// Expected output: CreateUserResponse
+	expected := &CreateUserResponse{
+		Success: true,
+		UserID:  "123",
+	}
+
+	// TODO: Execute the RPC call to get actual output
+	// Example:
+	//   service := &UserService{}
+	//   ctx := context.Background()
+	//   output := service.CreateUser(ctx, input)
+	//
+	// For now, this is a placeholder that will fail until you implement the execution.
+	var output interface{}
+	_ = input // Use input when implementing
+
+	// Verify the output matches expected
+	if !compareE2EOutput(expected, output) {
+		t.Errorf("CreateUser output mismatch:\nexpected: %+v\ngot:      %+v", expected, output)
+	}
+}
+
+// compareE2EOutput compares two values for equality in E2E tests.
+// This is a helper function automatically generated for E2E testing.
+func compareE2EOutput(expected, actual interface{}) bool {
+	return reflect.DeepEqual(expected, actual)
+}
+```
+
+生成されたテストコードは、実際のRPC実行部分（`// TODO:`の部分）を実装することで、完全に動作するテストになります。
+
+### 4. テスト再生 (Test Replay)
 
 保存したテストケースを読み込んで再生し、出力を検証します。
 
@@ -93,7 +178,7 @@ if result.FailureCount > 0 {
 }
 ```
 
-### 4. クイック記録 (Quick Record)
+### 5. クイック記録 (Quick Record)
 
 単一のRPC呼び出しを簡単に記録する便利関数です。
 
@@ -106,8 +191,14 @@ testCase := protobuf.QuickRecord(
     &CreateUserResponse{UserID: "456", Success: true},
 )
 
+// JSONに保存
 data, _ := protobuf.SaveTestCase(testCase)
 os.WriteFile("quick_test.json", data, 0600)
+
+// または、Goテストコードを生成
+generator := protobuf.NewGoTestGenerator("main")
+code, _ := generator.Generate(testCase)
+os.WriteFile("quick_test.go", []byte(code), 0644)
 ```
 
 ## 使用例
@@ -237,8 +328,17 @@ ctx := recorder.GetContext(context.Background(), worldID)
 - `RegisterEventType(event)` - イベント型を登録
 - `Record(methodName, sender, recipient, input, output, worldID)` - RPC呼び出しを記録
 - `GetContext(ctx, worldID)` - トレース記録用のcontextを取得
-- `SaveToFile(filepath)` - テストケースをファイルに保存
+- `SaveToFile(filepath)` - テストケースをJSONファイルに保存
 - `GetTestCase()` - 現在のテストケースを取得
+- **`GenerateGoTest(packageName)`** - Goのテストコードを生成 **← NEW!**
+- **`GenerateGoTestToFile(packageName, filepath)`** - Goのテストコードをファイルに生成 **← NEW!**
+
+### GoTestGenerator **← NEW!**
+
+- `NewGoTestGenerator(packageName)` - 新しいGoテストコードジェネレーターを作成
+- `AddImport(importPath)` - カスタムimportを追加
+- `Generate(testCase)` - テストケースからGoコードを生成
+- `GenerateToFile(testCase, filepath)` - Goコードをファイルに生成
 
 ### E2ETestRunner
 
