@@ -24,6 +24,9 @@ func (m *model) checkLTL() []temporalRuleResult {
 	results := make([]temporalRuleResult, 0, len(m.ltlRules))
 	for _, r := range m.ltlRules {
 		holds, lasso := m.checkBA(r.ba())
+		if !holds {
+			m.hasLTLViolation = true
+		}
 		result := temporalRuleResult{Rule: r.name(), Satisfied: holds}
 		if lasso != nil {
 			result.Evidence = lasso

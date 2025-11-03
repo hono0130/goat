@@ -126,10 +126,9 @@ testStateMachine << entryEvent;" ];
 
 func TestModel_writeInvariantViolations(t *testing.T) {
 	tests := []struct {
-		name        string
-		setup       func() model
-		description string
-		want        string
+		name  string
+		setup func() model
+		want  string
 	}{
 		{
 			name: "no invariant violations",
@@ -143,8 +142,7 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			description: "test invariant",
-			want:        "No invariant violations found.\n",
+			want: "",
 		},
 		{
 			name: "with invariant violation",
@@ -158,8 +156,7 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			description: "failing test invariant",
-			want: `InvariantError:  failing test invariant   ✘
+			want: `Condition failed. Not Always fail.
 Path (length = 1):
   [0] <-- violation here
   StateMachines:
@@ -174,7 +171,7 @@ Path (length = 1):
 		t.Run(tt.name, func(t *testing.T) {
 			m := tt.setup()
 			var buf bytes.Buffer
-			m.writeInvariantViolations(&buf, tt.description)
+			m.writeInvariantViolations(&buf)
 			got := buf.String()
 
 			if got != tt.want {
@@ -201,7 +198,7 @@ func TestModel_writeTemporalViolations(t *testing.T) {
 	m.writeTemporalViolations(&buf, results)
 	got := buf.String()
 
-	want := `TemporalRuleViolation:  eventually always c   ✘
+	want := `Condition failed. Not eventually always c.
 Violation path (length = 2):
   [0]
   StateMachines:
@@ -219,12 +216,72 @@ Violation path (length = 2):
 	}
 }
 
-func TestModel_findPathsToViolations(t *testing.T) {
+func TestModel_collectInvariantViolations(t *testing.T) {
 	tests := []struct {
-		name          string
-		setup         func() model
-		expectedPaths [][]worldID
+		name     string
+		setup    func() model
+		expected []invariantViolationWitness
 	}{
+		{
+			name: "deduplicates paths per invariant",
+			setup: func() model {
+				initial := world{id: 1}
+				violationA := world{id: 2, failedInvariants: []ConditionName{"dup"}}
+				violationB := world{id: 3, failedInvariants: []ConditionName{"dup"}}
+
+				return model{
+					initial: initial,
+					worlds: worlds{
+						1: initial,
+						2: violationA,
+						3: violationB,
+					},
+					accessible: map[worldID][]worldID{
+						1: {2, 3},
+						2: nil,
+						3: nil,
+					},
+				}
+			},
+			expected: []invariantViolationWitness{
+				{
+					path:      []worldID{1, 2},
+					condition: "dup",
+				},
+			},
+		},
+		{
+			name: "finds deeper violations after early failure",
+			setup: func() model {
+				initial := world{id: 1}
+				first := world{id: 2, failedInvariants: []ConditionName{"first"}}
+				second := world{id: 3, failedInvariants: []ConditionName{"second"}}
+
+				return model{
+					initial: initial,
+					worlds: worlds{
+						1: initial,
+						2: first,
+						3: second,
+					},
+					accessible: map[worldID][]worldID{
+						1: {2},
+						2: {3},
+						3: nil,
+					},
+				}
+			},
+			expected: []invariantViolationWitness{
+				{
+					path:      []worldID{1, 2},
+					condition: "first",
+				},
+				{
+					path:      []worldID{1, 2, 3},
+					condition: "second",
+				},
+			},
+		},
 		{
 			name: "no violations",
 			setup: func() model {
@@ -240,7 +297,7 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			expectedPaths: nil,
+			expected: nil,
 		},
 		{
 			name: "single violation",
@@ -257,7 +314,12 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			expectedPaths: [][]worldID{{8682599965454615616}},
+			expected: []invariantViolationWitness{
+				{
+					path:      []worldID{8682599965454615616},
+					condition: "fail",
+				},
+			},
 		},
 		{
 			name: "violation after transition",
@@ -300,8 +362,17 @@ func TestModel_findPathsToViolations(t *testing.T) {
 				_ = m.Solve()
 				return m
 			},
-			expectedPaths: [][]worldID{
-				{5790322525083387874, 15591947093441390666, 10703074720578030081, 15159594575768829045, 8395799135532667686},
+			expected: []invariantViolationWitness{
+				{
+					path: []worldID{
+						5790322525083387874,
+						15591947093441390666,
+						10703074720578030081,
+						15159594575768829045,
+						8395799135532667686,
+					},
+					condition: "count<=1",
+				},
 			},
 		},
 	}
@@ -309,10 +380,10 @@ func TestModel_findPathsToViolations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := tt.setup()
-			actualPaths := m.findPathsToViolations()
+			actual := m.collectInvariantViolations()
 
-			if diff := cmp.Diff(tt.expectedPaths, actualPaths); diff != "" {
-				t.Errorf("Violation paths mismatch (-expected +actual):\n%s", diff)
+			if diff := cmp.Diff(tt.expected, actual, cmp.AllowUnexported(invariantViolationWitness{})); diff != "" {
+				t.Errorf("Invariant violations mismatch (-expected +actual):\n%s", diff)
 			}
 		})
 	}
@@ -562,13 +633,6 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     2,
 				ExecutionTimeMs: 150,
-				InvariantViolations: struct {
-					Found bool `json:"found"`
-					Count int  `json:"count"`
-				}{
-					Found: false,
-					Count: 0,
-				},
 			},
 		},
 		{
@@ -587,13 +651,6 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     2,
 				ExecutionTimeMs: 250,
-				InvariantViolations: struct {
-					Found bool `json:"found"`
-					Count int  `json:"count"`
-				}{
-					Found: true,
-					Count: 2,
-				},
 			},
 		},
 		{
@@ -606,17 +663,10 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     0,
 				ExecutionTimeMs: 0,
-				InvariantViolations: struct {
-					Found bool `json:"found"`
-					Count int  `json:"count"`
-				}{
-					Found: false,
-					Count: 0,
-				},
 			},
 		},
 		{
-			name: "multiple worlds without violations",
+			name: "multiple worlds",
 			setupModel: func() model {
 				sm1 := newTestStateMachine(newTestState("state1"))
 				sm2 := newTestStateMachine(newTestState("state2"))
@@ -628,13 +678,6 @@ func TestModel_summarize(t *testing.T) {
 			wantSummary: &modelSummary{
 				TotalWorlds:     4,
 				ExecutionTimeMs: 500,
-				InvariantViolations: struct {
-					Found bool `json:"found"`
-					Count int  `json:"count"`
-				}{
-					Found: false,
-					Count: 0,
-				},
 			},
 		},
 	}

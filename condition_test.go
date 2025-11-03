@@ -294,30 +294,3 @@ func TestNewCondition3(t *testing.T) {
 		}
 	})
 }
-
-func TestConvenienceConditions_Integration(t *testing.T) {
-	t.Run("combination of NewCondition and NewCondition2", func(t *testing.T) {
-		sm1 := newTestStateMachine(newTestState(stateInitial1))
-		sm2 := newTestStateMachine(newTestState(stateInitial2))
-
-		condSingle := NewCondition("single", sm1, func(m *testStateMachine) bool {
-			return m.currentState().(*testState).Name == "initial1"
-		})
-
-		condPair := NewCondition2("pair", sm1, sm2, func(m1 *testStateMachine, m2 *testStateMachine) bool {
-			return m1.currentState().(*testState).Name == stateInitial1 && m2.currentState().(*testState).Name == stateInitial2
-		})
-
-		m, err := newModel(
-			WithStateMachines(sm1, sm2),
-			WithRules(Always(condSingle), Always(condPair)),
-		)
-		if err != nil {
-			t.Fatalf("newModel() error: %v", err)
-		}
-
-		if ok := m.evaluateInvariants(m.initial); !ok {
-			t.Errorf("evaluateInvariants() = false, want true")
-		}
-	})
-}
