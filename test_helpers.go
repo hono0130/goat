@@ -14,6 +14,11 @@ type testEvent struct {
 	Value int
 }
 
+type genericTestEvent[T any] struct {
+	Event
+	Payload T
+}
+
 const testStateMachineID = "testStateMachine"
 
 func newTestState(name string) *testState {

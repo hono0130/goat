@@ -37,21 +37,20 @@ type handler interface {
 // Parameters:
 //   - spec: The state machine specification to register the handler with
 //   - state: The state in which this handler should be active
-//   - event: The specific event instance to handle
 //   - fn: The function to call when the event occurs
 //
 // Example:
 //
-//	goat.OnEvent(spec, IdleState{}, Event{Name: "START"}, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	goat.OnEvent(spec, IdleState{}, func(ctx context.Context, event Event, sm *MyStateMachine) {
 //	    // Handle start event
 //	    goat.Goto(ctx, &ActiveState{})
 //	})
 func OnEvent[T AbstractEvent, SM AbstractStateMachine](
 	spec *StateMachineSpec[SM],
 	state AbstractState,
-	event T,
 	fn EventHandler[T, SM],
 ) {
+	event := newEventPrototype[T]()
 	builder := func(smID string) handler {
 		return &eventHandlers{
 			fs:    []eventHandler{handleEvent[T, SM](smID, fn)},

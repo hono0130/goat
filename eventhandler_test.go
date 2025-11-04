@@ -15,9 +15,7 @@ func TestOnEvent(t *testing.T) {
 			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
 		}
 		state := &testState{Name: "test"}
-		event := &testEvent{Value: 1}
-
-		OnEvent(spec, state, event, func(ctx context.Context, e *testEvent, sm *testStateMachine) {})
+		OnEvent(spec, state, func(ctx context.Context, e *testEvent, sm *testStateMachine) {})
 
 		builders, exists := spec.handlerBuilders[state]
 		if !exists {
@@ -28,10 +26,32 @@ func TestOnEvent(t *testing.T) {
 		}
 
 		builderInfo := builders[0]
-		if !sameEvent(builderInfo.event, event) {
+		if !sameEvent(builderInfo.event, &testEvent{}) {
 			t.Error("Handler builder should be registered for the specified event")
 		}
 
+	})
+
+	t.Run("supports generic event types", func(t *testing.T) {
+		spec := &StateMachineSpec[*testStateMachine]{
+			prototype:       &testStateMachine{},
+			handlerBuilders: make(map[AbstractState][]handlerBuilderInfo),
+		}
+		state := &testState{Name: "generic"}
+
+		OnEvent(spec, state, func(ctx context.Context, e *genericTestEvent[string], sm *testStateMachine) {})
+
+		builders, exists := spec.handlerBuilders[state]
+		if !exists {
+			t.Fatal("Handler builder should be registered for the specified state")
+		}
+		if len(builders) != 1 {
+			t.Fatalf("expected 1 builder, got %d", len(builders))
+		}
+
+		if !sameEvent(builders[0].event, &genericTestEvent[string]{}) {
+			t.Error("Handler builder should store prototype of the generic event")
+		}
 	})
 }
 

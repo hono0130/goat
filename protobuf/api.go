@@ -55,7 +55,7 @@ func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O
 		_ = response
 	}
 
-	goat.OnEvent(spec.StateMachineSpec, state, inputEvent, wrappedHandler)
+	goat.OnEvent(spec.StateMachineSpec, state, wrappedHandler)
 }
 
 func analyzeMessage[M AbstractProtobufMessage](instance M) *protoMessage {

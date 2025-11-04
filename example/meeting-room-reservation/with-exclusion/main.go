@@ -105,7 +105,7 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 
 	dbSpec.DefineStates(dbIdle).SetInitialState(dbIdle)
 
-	goat.OnEvent(dbSpec, dbIdle, &DBSelectEvent{},
+	goat.OnEvent(dbSpec, dbIdle,
 		func(ctx context.Context, event *DBSelectEvent, db *DBStateMachine) {
 			isReserved := false
 			for _, res := range db.Reservations {
@@ -131,7 +131,7 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 			goat.SendTo(ctx, event.Server, resultEvent)
 		})
 
-	goat.OnEvent(dbSpec, dbIdle, &DBUpdateEvent{},
+	goat.OnEvent(dbSpec, dbIdle,
 		func(ctx context.Context, event *DBUpdateEvent, db *DBStateMachine) {
 			hasLock := false
 			if clientID, exists := db.LockedRooms[event.RoomID]; exists && clientID == event.ClientID {
@@ -163,7 +163,7 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 
 	serverSpec.DefineStates(serverIdle, serverProcessing).SetInitialState(serverIdle)
 
-	goat.OnEvent(serverSpec, serverIdle, &ReservationRequestEvent{},
+	goat.OnEvent(serverSpec, serverIdle,
 		func(ctx context.Context, event *ReservationRequestEvent, server *ServerStateMachine) {
 			server.CurrentRequest = event
 
@@ -177,7 +177,7 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 			goat.Goto(ctx, serverProcessing)
 		})
 
-	goat.OnEvent(serverSpec, serverProcessing, &DBSelectResultEvent{},
+	goat.OnEvent(serverSpec, serverProcessing,
 		func(ctx context.Context, event *DBSelectResultEvent, server *ServerStateMachine) {
 			if server.CurrentRequest == nil {
 				goat.Goto(ctx, serverIdle)
@@ -217,7 +217,7 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 			}
 		})
 
-	goat.OnEvent(serverSpec, serverProcessing, &DBUpdateResultEvent{},
+	goat.OnEvent(serverSpec, serverProcessing,
 		func(ctx context.Context, event *DBUpdateResultEvent, server *ServerStateMachine) {
 			if server.CurrentRequest == nil {
 				goat.Goto(ctx, serverIdle)
@@ -255,7 +255,7 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 			goat.Goto(ctx, clientRequesting)
 		})
 
-	goat.OnEvent(clientSpec, clientRequesting, &ReservationResultEvent{},
+	goat.OnEvent(clientSpec, clientRequesting,
 		func(ctx context.Context, event *ReservationResultEvent, client *ClientStateMachine) {
 			if event.ClientID == client.ClientID {
 				if event.Succeeded {

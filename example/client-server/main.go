@@ -99,7 +99,7 @@ func createClientServerModel() []goat.Option {
 		goat.Goto(ctx, serverRunning)
 	})
 
-	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
+	goat.OnEvent(serverSpec, serverRunning,
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
 			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
 				Exists: true,
@@ -107,7 +107,7 @@ func createClientServerModel() []goat.Option {
 		},
 	)
 
-	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
+	goat.OnEvent(serverSpec, serverRunning,
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
 			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
 				Exists: false,
@@ -116,7 +116,7 @@ func createClientServerModel() []goat.Option {
 		},
 	)
 
-	goat.OnEvent(serverSpec, serverRunning, &eCheckMenuExistenceRequest{},
+	goat.OnEvent(serverSpec, serverRunning,
 		func(ctx context.Context, event *eCheckMenuExistenceRequest, server *Server) {
 			goat.SendTo(ctx, event.From, &eCheckMenuExistenceResponse{
 				Exists: false,
@@ -144,7 +144,7 @@ func createClientServerModel() []goat.Option {
 		goat.Goto(ctx, clientWaiting)
 	})
 
-	goat.OnEvent(clientSpec, clientWaiting, &eCheckMenuExistenceResponse{},
+	goat.OnEvent(clientSpec, clientWaiting,
 		func(ctx context.Context, event *eCheckMenuExistenceResponse, client *Client) {
 			if event.Err {
 				goat.Goto(ctx, clientIdle)
