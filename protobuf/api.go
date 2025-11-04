@@ -7,37 +7,6 @@ import (
 	"github.com/goatx/goat"
 )
 
-type (
-	traceRecorderKey struct{}
-	worldIDKey       struct{}
-)
-
-// WithTraceRecorder attaches a TraceRecorder to the context.
-func WithTraceRecorder(ctx context.Context, recorder *TraceRecorder) context.Context {
-	return context.WithValue(ctx, traceRecorderKey{}, recorder)
-}
-
-// getTraceRecorderFromContext retrieves the TraceRecorder from the context.
-func getTraceRecorderFromContext(ctx context.Context) *TraceRecorder {
-	if recorder, ok := ctx.Value(traceRecorderKey{}).(*TraceRecorder); ok {
-		return recorder
-	}
-	return nil
-}
-
-// WithWorldID attaches a world ID to the context.
-func WithWorldID(ctx context.Context, worldID uint64) context.Context {
-	return context.WithValue(ctx, worldIDKey{}, worldID)
-}
-
-// getWorldIDFromContext retrieves the world ID from the context.
-func getWorldIDFromContext(ctx context.Context) uint64 {
-	if worldID, ok := ctx.Value(worldIDKey{}).(uint64); ok {
-		return worldID
-	}
-	return 0
-}
-
 type ProtobufResponse[O AbstractProtobufMessage] struct {
 	event O
 }
@@ -83,15 +52,6 @@ func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O
 
 	wrappedHandler := func(ctx context.Context, event I, sm T) {
 		response := handler(ctx, event, sm)
-
-		// Record trace if recorder is present in context
-		if recorder := getTraceRecorderFromContext(ctx); recorder != nil {
-			// Use the state machine as both sender and recipient for RPC calls
-			// In most cases, RPCs are handled within the same service instance
-			worldID := getWorldIDFromContext(ctx)
-			_ = recorder.RecordRPC(methodName, sm, sm, event, response.event, worldID)
-		}
-
 		_ = response
 	}
 

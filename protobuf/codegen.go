@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"os"
 	"strings"
 	"text/template"
 )
@@ -31,19 +30,19 @@ func (g *GoTestGenerator) AddImport(importPath string) {
 	g.Imports = append(g.Imports, importPath)
 }
 
-// Generate generates Go test code from an E2E test case.
+// GenerateMultiple generates Go test code from multiple E2E test cases.
 //
 // Example:
 //
 //	generator := protobuf.NewGoTestGenerator("main")
-//	code, err := generator.Generate(testCase)
+//	code, err := generator.GenerateMultiple(testCases)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //	os.WriteFile("user_service_test.go", []byte(code), 0644)
-func (g *GoTestGenerator) Generate(testCase *E2ETestCase) (string, error) {
-	if testCase == nil {
-		return "", fmt.Errorf("test case cannot be nil")
+func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, error) {
+	if len(testCases) == 0 {
+		return "", fmt.Errorf("no test cases provided")
 	}
 
 	var buf bytes.Buffer
@@ -61,9 +60,9 @@ func (g *GoTestGenerator) Generate(testCase *E2ETestCase) (string, error) {
 
 	buf.WriteString(")\n\n")
 
-	// Generate test functions for each trace
-	for i, trace := range testCase.Traces {
-		testFunc, err := g.generateTestFunction(testCase.Name, i, trace)
+	// Generate test functions for each test case
+	for i, testCase := range testCases {
+		testFunc, err := g.generateTestFunction(i, testCase)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate test function %d: %w", i, err)
 		}
@@ -84,11 +83,11 @@ func (g *GoTestGenerator) Generate(testCase *E2ETestCase) (string, error) {
 	return string(formatted), nil
 }
 
-// generateTestFunction generates a single test function from an RPC trace.
-func (g *GoTestGenerator) generateTestFunction(testName string, index int, trace RPCTrace) (string, error) {
-	tmpl := `// Test{{.TestName}}_{{.Index}} tests the {{.MethodName}} RPC call.
-// This test was automatically generated from recorded trace.
-func Test{{.TestName}}_{{.Index}}_{{.MethodName}}(t *testing.T) {
+// generateTestFunction generates a single test function from an E2E test case.
+func (g *GoTestGenerator) generateTestFunction(index int, testCase E2ETestCase) (string, error) {
+	tmpl := `// Test{{.MethodName}}_{{.Index}} tests the {{.MethodName}} RPC call.
+// This test was automatically generated from model checking execution.
+func Test{{.MethodName}}_{{.Index}}(t *testing.T) {
 	// Input: {{.InputType}}
 	input := {{.InputValue}}
 
@@ -113,7 +112,6 @@ func Test{{.TestName}}_{{.Index}}_{{.MethodName}}(t *testing.T) {
 `
 
 	data := struct {
-		TestName    string
 		Index       int
 		MethodName  string
 		InputType   string
@@ -121,13 +119,12 @@ func Test{{.TestName}}_{{.Index}}_{{.MethodName}}(t *testing.T) {
 		OutputType  string
 		OutputValue string
 	}{
-		TestName:    toTestName(testName),
 		Index:       index,
-		MethodName:  trace.MethodName,
-		InputType:   trace.InputType,
-		InputValue:  g.formatStructLiteral(trace.InputType, trace.Input),
-		OutputType:  trace.OutputType,
-		OutputValue: g.formatStructLiteral(trace.OutputType, trace.Output),
+		MethodName:  testCase.MethodName,
+		InputType:   testCase.InputType,
+		InputValue:  g.formatStructLiteral(testCase.InputType, testCase.Input),
+		OutputType:  testCase.OutputType,
+		OutputValue: g.formatStructLiteral(testCase.OutputType, testCase.Output),
 	}
 
 	t := template.Must(template.New("test").Parse(tmpl))
@@ -208,24 +205,4 @@ func toTestName(name string) string {
 	}
 
 	return result
-}
-
-// GenerateToFile generates Go test code and writes it to a file.
-//
-// Example:
-//
-//	generator := protobuf.NewGoTestGenerator("main")
-//	err := generator.GenerateToFile(testCase, "user_service_test.go")
-func (g *GoTestGenerator) GenerateToFile(testCase *E2ETestCase, filepath string) error {
-	code, err := g.Generate(testCase)
-	if err != nil {
-		return fmt.Errorf("failed to generate code: %w", err)
-	}
-
-	// #nosec G306 - test files can be world-readable
-	if err := os.WriteFile(filepath, []byte(code), 0644); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
-	}
-
-	return nil
 }
