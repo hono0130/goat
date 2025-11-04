@@ -1,7 +1,5 @@
 package goat
 
-import "context"
-
 type testStateMachine struct {
 	StateMachine
 }
@@ -47,17 +45,4 @@ func newTestEnvironment(machines ...*testStateMachine) environment {
 
 func newTestWorld(env environment) world {
 	return newWorld(env)
-}
-
-// NewTestContext creates a context with a minimal environment for testing.
-// This is useful for executing handlers outside of the normal model checking flow.
-func NewTestContext(sm AbstractStateMachine) context.Context {
-	env := environment{
-		machines: make(map[string]AbstractStateMachine),
-		queue:    make(map[string][]AbstractEvent),
-	}
-	if sm != nil {
-		env.machines[sm.id()] = sm
-	}
-	return withEnvAndSM(&env, sm)
 }
