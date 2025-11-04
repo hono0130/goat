@@ -23,12 +23,17 @@ type AbstractProtobufServiceSpec interface {
 	isProtobufServiceSpec() bool
 	GetRPCMethods() []rpcMethod
 	GetMessages() map[string]*protoMessage
+	GetHandlers() map[string]any
+	GetStateMachinePrototype() goat.AbstractStateMachine
+	GetSpec() any
 }
 
 type ProtobufServiceSpec[T goat.AbstractStateMachine] struct {
 	*goat.StateMachineSpec[T]
+	prototype  T
 	rpcMethods []rpcMethod
 	messages   map[string]*protoMessage
+	handlers   map[string]any // methodName -> handler function
 }
 
 func (*ProtobufServiceSpec[T]) isProtobufServiceSpec() bool {
@@ -41,6 +46,18 @@ func (ps *ProtobufServiceSpec[T]) GetRPCMethods() []rpcMethod {
 
 func (ps *ProtobufServiceSpec[T]) GetMessages() map[string]*protoMessage {
 	return ps.messages
+}
+
+func (ps *ProtobufServiceSpec[T]) GetHandlers() map[string]any {
+	return ps.handlers
+}
+
+func (ps *ProtobufServiceSpec[T]) GetStateMachinePrototype() goat.AbstractStateMachine {
+	return ps.prototype
+}
+
+func (ps *ProtobufServiceSpec[T]) GetSpec() any {
+	return ps.StateMachineSpec
 }
 
 func (ps *ProtobufServiceSpec[T]) addRPCMethod(metadata rpcMethod) {
