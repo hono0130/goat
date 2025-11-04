@@ -23,7 +23,6 @@ func ProtobufSendTo[O AbstractProtobufMessage](ctx context.Context, target goat.
 func NewProtobufServiceSpec[T goat.AbstractStateMachine](prototype T) *ProtobufServiceSpec[T] {
 	return &ProtobufServiceSpec[T]{
 		StateMachineSpec: goat.NewStateMachineSpec(prototype),
-		prototype:        prototype,
 		rpcMethods:       []rpcMethod{},
 		messages:         make(map[string]*protoMessage),
 		handlers:         make(map[string]any),

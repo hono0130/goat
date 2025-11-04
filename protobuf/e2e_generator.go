@@ -73,30 +73,12 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 		opts.Filename = "generated_e2e_test.go"
 	}
 
-	// Get handlers from spec
-	handlers := opts.Spec.GetHandlers()
-	if handlers == nil {
-		return fmt.Errorf("no handlers found in spec")
-	}
-
-	// Get the state machine spec to create instances
-	spec := opts.Spec.GetSpec()
-	if spec == nil {
-		return fmt.Errorf("no state machine spec found")
-	}
-
-	// Generate test cases
+	// Generate test cases by executing handlers
 	testCases := make([]E2ETestCase, 0, len(opts.TestCases))
 
 	for i, tc := range opts.TestCases {
-		// Look up handler for this method
-		handler, ok := handlers[tc.MethodName]
-		if !ok {
-			return fmt.Errorf("test case %d: no handler found for method %s", i, tc.MethodName)
-		}
-
 		// Execute handler to get output
-		output, err := executeHandler(handler, tc.Input, spec)
+		output, err := executeHandler(opts.Spec, tc.MethodName, tc.Input)
 		if err != nil {
 			return fmt.Errorf("test case %d (%s): failed to execute handler: %w", i, tc.MethodName, err)
 		}
@@ -145,73 +127,35 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 	return nil
 }
 
-// executeHandler executes a handler function using reflection and returns the output event.
-// The handler has signature: func(context.Context, I, T) ProtobufResponse[O]
-func executeHandler(handler any, input AbstractProtobufMessage, spec any) (AbstractProtobufMessage, error) {
-	// Get the handler function value
-	handlerValue := reflect.ValueOf(handler)
-	if handlerValue.Kind() != reflect.Func {
-		return nil, fmt.Errorf("handler is not a function")
+// executeHandler executes a handler for the given method and input, returning the output event.
+func executeHandler(spec AbstractProtobufServiceSpec, methodName string, input AbstractProtobufMessage) (AbstractProtobufMessage, error) {
+	// Get handler for this method
+	handlers := spec.GetHandlers()
+	handler, ok := handlers[methodName]
+	if !ok {
+		return nil, fmt.Errorf("no handler found for method %s", methodName)
 	}
 
-	// Create a state machine instance using reflection
-	// Call spec.NewInstance() to get a proper instance
-	specValue := reflect.ValueOf(spec)
-	newInstanceMethod := specValue.MethodByName("NewInstance")
-	if !newInstanceMethod.IsValid() {
-		return nil, fmt.Errorf("spec does not have NewInstance method")
+	// Create state machine instance
+	instance, err := spec.NewStateMachineInstance()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create state machine instance: %w", err)
 	}
 
-	results := newInstanceMethod.Call(nil)
-	if len(results) != 2 {
-		return nil, fmt.Errorf("NewInstance returned %d values, expected 2 (instance, error)", len(results))
-	}
-
-	// Check for error
-	if !results[1].IsNil() {
-		return nil, fmt.Errorf("failed to create state machine instance: %v", results[1].Interface())
-	}
-
-	instance := results[0].Interface().(goat.AbstractStateMachine)
-
-	// Create a test context with environment for handler execution
+	// Create context for handler execution
 	ctx := goat.NewTestContext(instance)
 
-	// Call the handler with (ctx, input, instance)
-	args := []reflect.Value{
+	// Call handler using reflection: handler(ctx, input, instance)
+	handlerValue := reflect.ValueOf(handler)
+	results := handlerValue.Call([]reflect.Value{
 		reflect.ValueOf(ctx),
 		reflect.ValueOf(input),
 		reflect.ValueOf(instance),
-	}
+	})
 
-	handlerResults := handlerValue.Call(args)
-	if len(handlerResults) != 1 {
-		return nil, fmt.Errorf("handler returned %d values, expected 1", len(handlerResults))
-	}
+	// Extract event from ProtobufResponse using GetEvent()
+	response := results[0]
+	eventResults := response.MethodByName("GetEvent").Call(nil)
 
-	// The result is a ProtobufResponse[O]
-	// Call GetEvent() to extract the event
-	response := handlerResults[0]
-	if !response.IsValid() {
-		return nil, fmt.Errorf("handler returned invalid value")
-	}
-
-	// Call GetEvent() method to get the event
-	getEventMethod := response.MethodByName("GetEvent")
-	if !getEventMethod.IsValid() {
-		return nil, fmt.Errorf("response does not have GetEvent method")
-	}
-
-	eventResults := getEventMethod.Call(nil)
-	if len(eventResults) != 1 {
-		return nil, fmt.Errorf("GetEvent returned %d values, expected 1", len(eventResults))
-	}
-
-	// Convert to AbstractProtobufMessage
-	output, ok := eventResults[0].Interface().(AbstractProtobufMessage)
-	if !ok {
-		return nil, fmt.Errorf("event is not an AbstractProtobufMessage")
-	}
-
-	return output, nil
+	return eventResults[0].Interface().(AbstractProtobufMessage), nil
 }
