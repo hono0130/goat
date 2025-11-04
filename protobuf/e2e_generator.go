@@ -143,7 +143,7 @@ func executeHandler(spec AbstractProtobufServiceSpec, methodName string, input A
 	}
 
 	// Create context for handler execution
-	ctx := goat.NewTestContext(instance)
+	ctx := goat.NewHandlerContext(instance)
 
 	// Call handler using reflection: handler(ctx, input, instance)
 	handlerValue := reflect.ValueOf(handler)

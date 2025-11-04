@@ -220,7 +220,7 @@ protobuf.GenerateE2ETest(protobuf.E2ETestOptions{
 ### シンプルな実装
 
 - ハンドラの実行は`spec.NewStateMachineInstance()`でインスタンスを作成
-- `goat.NewTestContext()`で実行環境を準備
+- `goat.NewHandlerContext()`で実行環境を準備
 - リフレクションでハンドラを呼び出し
 - `ProtobufResponse.GetEvent()`で結果を取得
 

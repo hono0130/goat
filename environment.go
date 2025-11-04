@@ -146,9 +146,9 @@ func Halt(ctx context.Context, target AbstractStateMachine) {
 	env.enqueueEvent(target, &haltEvent{})
 }
 
-// NewTestContext creates a context with a minimal environment for handler execution.
-// This is useful for executing handlers outside of the normal model checking flow,
-// such as when generating test cases or running isolated handler tests.
+// NewHandlerContext creates a context with a minimal environment for executing handlers.
+// This is used when you need to execute handlers outside of the normal model checking flow,
+// such as for E2E test generation or isolated handler testing.
 //
 // Parameters:
 //   - sm: The state machine instance to include in the context
@@ -158,9 +158,9 @@ func Halt(ctx context.Context, target AbstractStateMachine) {
 // Example:
 //
 //	instance, _ := spec.NewInstance()
-//	ctx := goat.NewTestContext(instance)
+//	ctx := goat.NewHandlerContext(instance)
 //	response := handler(ctx, input, instance)
-func NewTestContext(sm AbstractStateMachine) context.Context {
+func NewHandlerContext(sm AbstractStateMachine) context.Context {
 	env := environment{
 		machines: make(map[string]AbstractStateMachine),
 		queue:    make(map[string][]AbstractEvent),
