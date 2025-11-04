@@ -6,6 +6,7 @@ import (
 	"go/types"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/goatx/goat-cli/internal/load"
 )
@@ -237,9 +238,14 @@ func extractHandlerInfo(callExpr *ast.CallExpr, pkg *load.PackageInfo) (*handler
 	}
 
 	eventType := ""
-	if kind == onEventHandler && len(callExpr.Args) >= 4 {
-		if name, ok := namedTypeName(callExpr.Args[2], pkg.TypesInfo); ok {
-			eventType = name
+	if kind == onEventHandler {
+		if len(callExpr.Args) >= 4 {
+			if name, ok := namedTypeName(callExpr.Args[2], pkg.TypesInfo); ok {
+				eventType = name
+			}
+		}
+		if eventType == "" {
+			eventType = handlerEventTypeFromSignature(handlerFunc, pkg.TypesInfo)
 		}
 	}
 	handlerID := buildHandlerID(stateMachine, kind, eventType, handlerFunc, pkg)
@@ -452,6 +458,34 @@ func uniqueNextHandlers(current flow, flows []flow) []string {
 		}
 	}
 	return result
+}
+
+func handlerEventTypeFromSignature(handlerFunc *ast.FuncLit, info *types.Info) string {
+	if handlerFunc.Type == nil || handlerFunc.Type.Params == nil {
+		return ""
+	}
+
+	var fallback string
+	for _, field := range handlerFunc.Type.Params.List {
+		name, ok := namedTypeName(field.Type, info)
+		if !ok || name == "" {
+			continue
+		}
+		if strings.HasSuffix(name, "Event") {
+			return name
+		}
+		if name == "Context" {
+			continue
+		}
+		if strings.HasSuffix(name, stateMachineType) {
+			continue
+		}
+		if fallback == "" {
+			fallback = name
+		}
+	}
+
+	return fallback
 }
 
 func isFromGoat(sel *ast.SelectorExpr, info *types.Info) (bool, error) {
