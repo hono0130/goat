@@ -129,7 +129,7 @@ func (spec *StateMachineSpec[T]) validate() error {
 //		return err
 //	}
 //	instance2, err := spec.NewInstance() // Independent instance
-func (spec *StateMachineSpec[T]) NewInstance() (T, error) {
+func (spec *StateMachineSpec[T]) NewInstance(initializers ...func(T)) (T, error) {
 	var zero T
 	if err := spec.validate(); err != nil {
 		return zero, err
@@ -146,6 +146,13 @@ func (spec *StateMachineSpec[T]) NewInstance() (T, error) {
 
 	for state, builders := range spec.handlerBuilders {
 		innerSM.HandlerBuilders[state] = append([]handlerBuilderInfo{}, builders...)
+	}
+
+	for _, initializer := range initializers {
+		if initializer == nil {
+			continue
+		}
+		initializer(instance)
 	}
 
 	return instance, nil
