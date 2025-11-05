@@ -32,6 +32,7 @@ func (g *GoTestGenerator) AddImport(importPath string) {
 }
 
 // GenerateMultiple generates Go test code from multiple E2E test cases.
+// Test cases with the same MethodName are grouped into a single table-driven test.
 //
 // Example:
 //
@@ -51,8 +52,8 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 	// Generate package and imports
 	buf.WriteString(fmt.Sprintf("package %s\n\n", g.PackageName))
 	buf.WriteString("import (\n")
-	buf.WriteString("\t\"testing\"\n")
 	buf.WriteString("\t\"reflect\"\n")
+	buf.WriteString("\t\"testing\"\n")
 
 	// Add custom imports
 	for _, imp := range g.Imports {
@@ -61,11 +62,22 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 
 	buf.WriteString(")\n\n")
 
-	// Generate test functions for each test case
-	for i, testCase := range testCases {
-		testFunc, err := g.generateTestFunction(i, testCase)
+	// Group test cases by method name
+	grouped := g.groupByMethod(testCases)
+
+	// Get sorted method names for stable output
+	methodNames := make([]string, 0, len(grouped))
+	for methodName := range grouped {
+		methodNames = append(methodNames, methodName)
+	}
+	sort.Strings(methodNames)
+
+	// Generate table-driven test for each method
+	for _, methodName := range methodNames {
+		cases := grouped[methodName]
+		testFunc, err := g.generateTableTest(methodName, cases)
 		if err != nil {
-			return "", fmt.Errorf("failed to generate test function %d: %w", i, err)
+			return "", fmt.Errorf("failed to generate test for %s: %w", methodName, err)
 		}
 		buf.WriteString(testFunc)
 		buf.WriteString("\n\n")
@@ -84,51 +96,89 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 	return string(formatted), nil
 }
 
-// generateTestFunction generates a single test function from an E2E test case.
-func (g *GoTestGenerator) generateTestFunction(index int, testCase E2ETestCase) (string, error) {
-	tmpl := `// Test{{.MethodName}}_{{.Index}} tests the {{.MethodName}} RPC call.
+// groupByMethod groups test cases by their method name.
+func (g *GoTestGenerator) groupByMethod(testCases []E2ETestCase) map[string][]E2ETestCase {
+	grouped := make(map[string][]E2ETestCase)
+	for _, tc := range testCases {
+		grouped[tc.MethodName] = append(grouped[tc.MethodName], tc)
+	}
+	return grouped
+}
+
+// generateTableTest generates a table-driven test for a specific method.
+func (g *GoTestGenerator) generateTableTest(methodName string, testCases []E2ETestCase) (string, error) {
+	if len(testCases) == 0 {
+		return "", fmt.Errorf("no test cases for method %s", methodName)
+	}
+
+	// Get input and output types from first test case
+	inputType := testCases[0].InputType
+	outputType := testCases[0].OutputType
+
+	tmpl := `// Test{{.MethodName}} tests the {{.MethodName}} RPC call.
 // This test was automatically generated from model checking execution.
-func Test{{.MethodName}}_{{.Index}}(t *testing.T) {
-	// Input: {{.InputType}}
-	input := {{.InputValue}}
+func Test{{.MethodName}}(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    *{{.InputType}}
+		expected *{{.OutputType}}
+	}{
+{{range .Cases}}		{
+			name: "{{.Name}}",
+			input: {{.InputValue}},
+			expected: {{.OutputValue}},
+		},
+{{end}}	}
 
-	// Expected output: {{.OutputType}}
-	expected := {{.OutputValue}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// TODO: Execute the RPC call to get actual output
+			// Example:
+			//   service := &UserService{}
+			//   ctx := context.Background()
+			//   output := service.{{.MethodName}}(ctx, tt.input)
+			//
+			// For now, this is a placeholder that will fail until you implement the execution.
+			var output interface{}
+			_ = tt.input // Use input when implementing
 
-	// TODO: Execute the RPC call to get actual output
-	// Example:
-	//   service := &UserService{}
-	//   ctx := context.Background()
-	//   output := service.{{.MethodName}}(ctx, input)
-	//
-	// For now, this is a placeholder that will fail until you implement the execution.
-	var output interface{}
-	_ = input // Use input when implementing
-
-	// Verify the output matches expected
-	if !compareE2EOutput(expected, output) {
-		t.Errorf("{{.MethodName}} output mismatch:\nexpected: %+v\ngot:      %+v", expected, output)
+			// Verify the output matches expected
+			if !compareE2EOutput(tt.expected, output) {
+				t.Errorf("{{.MethodName}} output mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, output)
+			}
+		})
 	}
 }
 `
 
-	data := struct {
-		Index       int
-		MethodName  string
-		InputType   string
+	type caseData struct {
+		Name        string
 		InputValue  string
-		OutputType  string
 		OutputValue string
-	}{
-		Index:       index,
-		MethodName:  testCase.MethodName,
-		InputType:   testCase.InputType,
-		InputValue:  g.formatStructLiteral(testCase.InputType, testCase.Input),
-		OutputType:  testCase.OutputType,
-		OutputValue: g.formatStructLiteral(testCase.OutputType, testCase.Output),
 	}
 
-	t := template.Must(template.New("test").Parse(tmpl))
+	cases := make([]caseData, len(testCases))
+	for i, tc := range testCases {
+		cases[i] = caseData{
+			Name:        fmt.Sprintf("case_%d", i),
+			InputValue:  g.formatStructLiteral(tc.InputType, tc.Input),
+			OutputValue: g.formatStructLiteral(tc.OutputType, tc.Output),
+		}
+	}
+
+	data := struct {
+		MethodName string
+		InputType  string
+		OutputType string
+		Cases      []caseData
+	}{
+		MethodName: methodName,
+		InputType:  inputType,
+		OutputType: outputType,
+		Cases:      cases,
+	}
+
+	t := template.Must(template.New("tabletest").Parse(tmpl))
 	var buf bytes.Buffer
 	if err := t.Execute(&buf, data); err != nil {
 		return "", err

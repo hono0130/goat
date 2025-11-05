@@ -122,6 +122,49 @@ func TestGenerateE2ETest(t *testing.T) {
 			},
 			golden: "multiple_test_cases.golden",
 		},
+		{
+			name: "multiple_inputs_same_method",
+			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
+				spec := NewProtobufServiceSpec(&E2ETestService{})
+				idleState := &TestIdleState{}
+				spec.DefineStates(idleState).SetInitialState(idleState)
+
+				OnProtobufMessage(spec, idleState, "CreateUser",
+					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
+						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+							UserID:  "user_" + req.Username,
+							Success: true,
+						})
+					})
+
+				return spec
+			},
+			testCases: []TestCase{
+				{
+					MethodName: "CreateUser",
+					Input: &E2ECreateUserRequest{
+						Username: "alice",
+						Email:    "alice@example.com",
+					},
+				},
+				{
+					MethodName: "CreateUser",
+					Input: &E2ECreateUserRequest{
+						Username: "bob",
+						Email:    "bob@example.com",
+					},
+				},
+				{
+					MethodName: "CreateUser",
+					Input: &E2ECreateUserRequest{
+						Username: "charlie",
+						Email:    "charlie@example.com",
+					},
+				},
+			},
+			golden: "multiple_inputs_same_method.golden",
+		},
 	}
 
 	for _, tt := range tests {

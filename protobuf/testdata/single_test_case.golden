@@ -5,34 +5,44 @@ import (
 	"testing"
 )
 
-// TestCreateUser_0 tests the CreateUser RPC call.
+// TestCreateUser tests the CreateUser RPC call.
 // This test was automatically generated from model checking execution.
-func TestCreateUser_0(t *testing.T) {
-	// Input: E2ECreateUserRequest
-	input := &E2ECreateUserRequest{
-		Email:    "alice@example.com",
-		Username: "alice",
+func TestCreateUser(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    *E2ECreateUserRequest
+		expected *E2ECreateUserResponse
+	}{
+		{
+			name: "case_0",
+			input: &E2ECreateUserRequest{
+				Email:    "alice@example.com",
+				Username: "alice",
+			},
+			expected: &E2ECreateUserResponse{
+				Success: true,
+				UserID:  "user_123",
+			},
+		},
 	}
 
-	// Expected output: E2ECreateUserResponse
-	expected := &E2ECreateUserResponse{
-		Success: true,
-		UserID:  "user_123",
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// TODO: Execute the RPC call to get actual output
+			// Example:
+			//   service := &UserService{}
+			//   ctx := context.Background()
+			//   output := service.CreateUser(ctx, tt.input)
+			//
+			// For now, this is a placeholder that will fail until you implement the execution.
+			var output interface{}
+			_ = tt.input // Use input when implementing
 
-	// TODO: Execute the RPC call to get actual output
-	// Example:
-	//   service := &UserService{}
-	//   ctx := context.Background()
-	//   output := service.CreateUser(ctx, input)
-	//
-	// For now, this is a placeholder that will fail until you implement the execution.
-	var output interface{}
-	_ = input // Use input when implementing
-
-	// Verify the output matches expected
-	if !compareE2EOutput(expected, output) {
-		t.Errorf("CreateUser output mismatch:\nexpected: %+v\ngot:      %+v", expected, output)
+			// Verify the output matches expected
+			if !compareE2EOutput(tt.expected, output) {
+				t.Errorf("CreateUser output mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, output)
+			}
+		})
 	}
 }
 
