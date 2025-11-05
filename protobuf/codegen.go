@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
+	"sort"
 	"strings"
 	"text/template"
 )
@@ -142,9 +143,16 @@ func (g *GoTestGenerator) formatStructLiteral(typeName string, data map[string]a
 		return fmt.Sprintf("&%s{}", typeName)
 	}
 
+	// Sort keys for stable output
+	keys := make([]string, 0, len(data))
+	for key := range data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
 	var fields []string
-	for key, value := range data {
-		fields = append(fields, fmt.Sprintf("\t\t%s: %s", key, g.formatValue(value)))
+	for _, key := range keys {
+		fields = append(fields, fmt.Sprintf("\t\t%s: %s", key, g.formatValue(data[key])))
 	}
 
 	return fmt.Sprintf("&%s{\n%s,\n\t}", typeName, strings.Join(fields, ",\n"))

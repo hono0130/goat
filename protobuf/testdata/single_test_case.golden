@@ -1,0 +1,43 @@
+package testpkg
+
+import (
+	"reflect"
+	"testing"
+)
+
+// TestCreateUser_0 tests the CreateUser RPC call.
+// This test was automatically generated from model checking execution.
+func TestCreateUser_0(t *testing.T) {
+	// Input: E2ECreateUserRequest
+	input := &E2ECreateUserRequest{
+		Email:    "alice@example.com",
+		Username: "alice",
+	}
+
+	// Expected output: E2ECreateUserResponse
+	expected := &E2ECreateUserResponse{
+		Success: true,
+		UserID:  "user_123",
+	}
+
+	// TODO: Execute the RPC call to get actual output
+	// Example:
+	//   service := &UserService{}
+	//   ctx := context.Background()
+	//   output := service.CreateUser(ctx, input)
+	//
+	// For now, this is a placeholder that will fail until you implement the execution.
+	var output interface{}
+	_ = input // Use input when implementing
+
+	// Verify the output matches expected
+	if !compareE2EOutput(expected, output) {
+		t.Errorf("CreateUser output mismatch:\nexpected: %+v\ngot:      %+v", expected, output)
+	}
+}
+
+// compareE2EOutput compares two values for equality in E2E tests.
+// This is a helper function automatically generated for E2E testing.
+func compareE2EOutput(expected, actual interface{}) bool {
+	return reflect.DeepEqual(expected, actual)
+}
