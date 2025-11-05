@@ -59,7 +59,6 @@ func createUserServiceModel() *protobuf.ProtobufServiceSpec[*UserService] {
 
 	// Register RPC methods using OnProtobufMessage
 	protobuf.OnProtobufMessage(spec, idleState, "CreateUser",
-		&CreateUserRequest{}, &CreateUserResponse{},
 		func(ctx context.Context, event *CreateUserRequest, service *UserService) protobuf.ProtobufResponse[*CreateUserResponse] {
 			response := &CreateUserResponse{
 				UserID:    "user_123",
@@ -70,7 +69,6 @@ func createUserServiceModel() *protobuf.ProtobufServiceSpec[*UserService] {
 		})
 
 	protobuf.OnProtobufMessage(spec, idleState, "GetUser",
-		&GetUserRequest{}, &GetUserResponse{},
 		func(ctx context.Context, event *GetUserRequest, service *UserService) protobuf.ProtobufResponse[*GetUserResponse] {
 			response := &GetUserResponse{
 				Username: "testuser",

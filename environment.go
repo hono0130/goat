@@ -116,7 +116,7 @@ func SendTo(ctx context.Context, target AbstractStateMachine, event AbstractEven
 //
 // Example:
 //
-//	goat.OnEvent(spec, IdleState{}, startEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	goat.OnEvent(spec, IdleState{}, func(ctx context.Context, event Event, sm *MyStateMachine) {
 //	    goat.Goto(ctx, &ActiveState{Ready: true})
 //	})
 func Goto(ctx context.Context, state AbstractState) {
@@ -138,7 +138,7 @@ func Goto(ctx context.Context, state AbstractState) {
 //
 // Example:
 //
-//	goat.OnEvent(spec, ActiveState{}, errorEvent, func(ctx context.Context, event Event, sm *MyStateMachine) {
+//	goat.OnEvent(spec, ActiveState{}, func(ctx context.Context, event Event, sm *MyStateMachine) {
 //	    goat.Halt(ctx, sm) // Stop this state machine
 //	})
 func Halt(ctx context.Context, target AbstractStateMachine) {

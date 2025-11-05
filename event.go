@@ -116,6 +116,39 @@ type haltEvent struct {
 	UnTypedEvent
 }
 
+func newEventPrototype[T AbstractEvent]() AbstractEvent {
+	var zero T
+	eventType := reflect.TypeOf(zero)
+	if eventType == nil {
+		eventType = reflect.TypeFor[T]()
+	}
+
+	if eventType.Kind() == reflect.Interface {
+		panic(fmt.Sprintf("cannot use interface type %s as event type parameter; use a concrete event type instead", eventType))
+	}
+
+	if eventType.Kind() == reflect.Pointer {
+		elem := eventType.Elem()
+		if elem.Kind() == reflect.Interface {
+			panic(fmt.Sprintf("cannot use interface type %s as event type parameter; use a concrete event type instead", elem))
+		}
+
+		prototype := reflect.New(elem).Interface()
+		evt, ok := prototype.(AbstractEvent)
+		if !ok {
+			panic(fmt.Sprintf("type %s does not implement AbstractEvent", eventType))
+		}
+		return evt
+	}
+
+	value := reflect.New(eventType).Elem().Interface()
+	evt, ok := value.(AbstractEvent)
+	if !ok {
+		panic(fmt.Sprintf("type %s does not implement AbstractEvent", eventType))
+	}
+	return evt
+}
+
 // WARNING: cloneEvent performs shallow copy, so nested pointers are shared
 // This is a potential bug - modifications to nested structs will affect both instances
 func cloneEvent(event AbstractEvent) AbstractEvent {
