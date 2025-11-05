@@ -84,7 +84,6 @@ func TestModel_Solve(t *testing.T) {
 						testStateMachineID: {&entryEvent{}},
 					},
 				})
-				initialWorld.invariantViolation = false
 
 				processedWorld := newWorld(environment{
 					machines: map[string]AbstractStateMachine{
@@ -94,10 +93,10 @@ func TestModel_Solve(t *testing.T) {
 						testStateMachineID: {},
 					},
 				})
-				processedWorld.invariantViolation = true
+				processedWorld.failedInvariants = []ConditionName{"inv"}
 
 				initialWorldInMap := initialWorld
-				initialWorldInMap.invariantViolation = true
+				initialWorldInMap.failedInvariants = []ConditionName{"inv"}
 
 				return model{
 					worlds: worlds{
@@ -109,6 +108,7 @@ func TestModel_Solve(t *testing.T) {
 						initialWorld.id:   {processedWorld.id},
 						processedWorld.id: {},
 					},
+					hasInvariantViolation: true,
 				}
 			},
 			wantErr: false,
@@ -157,9 +157,9 @@ func TestModel_Solve(t *testing.T) {
 
 func TestModel_evaluateInvariants(t *testing.T) {
 	tests := []struct {
-		name          string
-		setup         func() (model, world)
-		wantViolation bool
+		name       string
+		setup      func() (model, world)
+		wantFailed []ConditionName
 	}{
 		{
 			name: "no invariants",
@@ -169,7 +169,7 @@ func TestModel_evaluateInvariants(t *testing.T) {
 				w := initialWorld(sm)
 				return m, w
 			},
-			wantViolation: false,
+			wantFailed: []ConditionName{},
 		},
 		{
 			name: "passing invariant",
@@ -183,7 +183,7 @@ func TestModel_evaluateInvariants(t *testing.T) {
 				w := initialWorld(sm)
 				return m, w
 			},
-			wantViolation: false,
+			wantFailed: []ConditionName{},
 		},
 		{
 			name: "failing invariant",
@@ -197,7 +197,7 @@ func TestModel_evaluateInvariants(t *testing.T) {
 				w := initialWorld(sm)
 				return m, w
 			},
-			wantViolation: true,
+			wantFailed: []ConditionName{"fail"},
 		},
 		{
 			name: "multiple invariants with one failing",
@@ -213,7 +213,7 @@ func TestModel_evaluateInvariants(t *testing.T) {
 				w := initialWorld(sm)
 				return m, w
 			},
-			wantViolation: true,
+			wantFailed: []ConditionName{"i2"},
 		},
 	}
 
@@ -221,8 +221,8 @@ func TestModel_evaluateInvariants(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			m, w := tt.setup()
 			result := m.evaluateInvariants(w)
-			if result == tt.wantViolation {
-				t.Errorf("evaluateInvariants() returned %v, but expected %v", result, !tt.wantViolation)
+			if diff := cmp.Diff(tt.wantFailed, result); diff != "" {
+				t.Errorf("evaluateInvariants() failures mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -250,7 +250,6 @@ func TestInitialWorld(t *testing.T) {
 						testStateMachineID: {&entryEvent{}},
 					},
 				},
-				invariantViolation: false,
 			},
 		},
 		{
@@ -278,7 +277,6 @@ func TestInitialWorld(t *testing.T) {
 						"testStateMachine_1": {&entryEvent{}},
 					},
 				},
-				invariantViolation: false,
 			},
 		},
 		{
@@ -289,7 +287,6 @@ func TestInitialWorld(t *testing.T) {
 					machines: map[string]AbstractStateMachine{},
 					queue:    map[string][]AbstractEvent{},
 				},
-				invariantViolation: false,
 			},
 		},
 	}

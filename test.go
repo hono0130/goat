@@ -33,21 +33,24 @@ func Test(opts ...Option) error {
 	if err := model.Solve(); err != nil {
 		return err
 	}
+	trResults := model.checkLTL()
 	executionTime := time.Since(start).Milliseconds()
 
-	model.writeInvariantViolations(os.Stdout, "invariant violation")
-
-	trResults := model.checkLTL()
-	model.writeTemporalViolations(os.Stdout, trResults)
+	if model.hasInvariantViolation {
+		model.writeInvariantViolations(os.Stdout)
+	}
+	if model.hasLTLViolation {
+		model.writeTemporalViolations(os.Stdout, trResults)
+	}
+	if !model.hasInvariantViolation && !model.hasLTLViolation {
+		if _, err := os.Stdout.WriteString("No violations found.\n"); err != nil {
+			return err
+		}
+	}
 
 	summary := model.summarize(executionTime)
 	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
 	_, _ = fmt.Fprintf(os.Stdout, "Total Worlds: %d\n", summary.TotalWorlds)
-	if summary.InvariantViolations.Found {
-		_, _ = fmt.Fprintf(os.Stdout, "Invariant Violations: %d found\n", summary.InvariantViolations.Count)
-	} else {
-		_, _ = fmt.Fprintln(os.Stdout, "Invariant Violations: None")
-	}
 	_, _ = fmt.Fprintf(os.Stdout, "Execution Time: %dms\n", summary.ExecutionTimeMs)
 
 	return nil
