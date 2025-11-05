@@ -31,7 +31,6 @@ func TestTypeAnalyzer_analyzeSpecs(t *testing.T) {
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
 					OnProtobufMessage(spec, state, "TestMethod",
-						&TestRequest1{}, &TestResponse1{},
 						func(ctx context.Context, event *TestRequest1, sm *TestService1) ProtobufResponse[*TestResponse1] {
 							return ProtobufSendTo(ctx, sm, &TestResponse1{Result: "test"})
 						})
@@ -76,12 +75,10 @@ func TestTypeAnalyzer_analyzeSpecs(t *testing.T) {
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
 					OnProtobufMessage(spec, state, "Method1",
-						&TestRequest1{}, &TestResponse1{},
 						func(ctx context.Context, event *TestRequest1, sm *TestService1) ProtobufResponse[*TestResponse1] {
 							return ProtobufSendTo(ctx, sm, &TestResponse1{})
 						})
 					OnProtobufMessage(spec, state, "Method2",
-						&TestRequest2{}, &TestResponse2{},
 						func(ctx context.Context, event *TestRequest2, sm *TestService1) ProtobufResponse[*TestResponse2] {
 							return ProtobufSendTo(ctx, sm, &TestResponse2{})
 						})
@@ -92,7 +89,6 @@ func TestTypeAnalyzer_analyzeSpecs(t *testing.T) {
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
 					OnProtobufMessage(spec, state, "Method3",
-						&TestRequest3{}, &TestResponse3{},
 						func(ctx context.Context, event *TestRequest3, sm *TestService2) ProtobufResponse[*TestResponse3] {
 							return ProtobufSendTo(ctx, sm, &TestResponse3{})
 						})

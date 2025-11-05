@@ -46,7 +46,6 @@ func TestOnProtobufMessage(t *testing.T) {
 			initialMethodCount := len(spec.GetRPCMethods())
 
 			OnProtobufMessage(spec, state, tt.methodName,
-				&TestRequest1{}, &TestResponse1{},
 				func(ctx context.Context, event *TestRequest1, sm *TestService1) ProtobufResponse[*TestResponse1] {
 					return ProtobufSendTo(ctx, sm, &TestResponse1{Result: "test"})
 				})
