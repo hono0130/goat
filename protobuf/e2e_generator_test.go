@@ -69,9 +69,11 @@ func TestGenerateE2ETest(t *testing.T) {
 			testCases: []TestCase{
 				{
 					MethodName: "CreateUser",
-					Input: &E2ECreateUserRequest{
-						Username: "alice",
-						Email:    "alice@example.com",
+					Inputs: []AbstractProtobufMessage{
+						&E2ECreateUserRequest{
+							Username: "alice",
+							Email:    "alice@example.com",
+						},
 					},
 				},
 			},
@@ -108,15 +110,19 @@ func TestGenerateE2ETest(t *testing.T) {
 			testCases: []TestCase{
 				{
 					MethodName: "CreateUser",
-					Input: &E2ECreateUserRequest{
-						Username: "bob",
-						Email:    "bob@example.com",
+					Inputs: []AbstractProtobufMessage{
+						&E2ECreateUserRequest{
+							Username: "bob",
+							Email:    "bob@example.com",
+						},
 					},
 				},
 				{
 					MethodName: "GetUser",
-					Input: &E2EGetUserRequest{
-						UserID: "user_456",
+					Inputs: []AbstractProtobufMessage{
+						&E2EGetUserRequest{
+							UserID: "user_456",
+						},
 					},
 				},
 			},
@@ -143,23 +149,19 @@ func TestGenerateE2ETest(t *testing.T) {
 			testCases: []TestCase{
 				{
 					MethodName: "CreateUser",
-					Input: &E2ECreateUserRequest{
-						Username: "alice",
-						Email:    "alice@example.com",
-					},
-				},
-				{
-					MethodName: "CreateUser",
-					Input: &E2ECreateUserRequest{
-						Username: "bob",
-						Email:    "bob@example.com",
-					},
-				},
-				{
-					MethodName: "CreateUser",
-					Input: &E2ECreateUserRequest{
-						Username: "charlie",
-						Email:    "charlie@example.com",
+					Inputs: []AbstractProtobufMessage{
+						&E2ECreateUserRequest{
+							Username: "alice",
+							Email:    "alice@example.com",
+						},
+						&E2ECreateUserRequest{
+							Username: "bob",
+							Email:    "bob@example.com",
+						},
+						&E2ECreateUserRequest{
+							Username: "charlie",
+							Email:    "charlie@example.com",
+						},
 					},
 				},
 			},

@@ -9,14 +9,15 @@ import (
 	"github.com/goatx/goat"
 )
 
-// TestCase represents a single test case with input event.
-// The expected output is automatically calculated by executing the handler from the spec.
+// TestCase represents test cases for a specific RPC method.
+// Multiple inputs can be provided for the same method, and the expected output
+// is automatically calculated by executing the handler from the spec.
 type TestCase struct {
 	// MethodName is the RPC method to test
 	MethodName string
 
-	// Input is the actual input event with field values populated
-	Input AbstractProtobufMessage
+	// Inputs are the actual input events with field values populated
+	Inputs []AbstractProtobufMessage
 }
 
 // E2ETestOptions configures E2E test generation.
@@ -58,7 +59,10 @@ type E2ETestOptions struct {
 //	    TestCases: []protobuf.TestCase{
 //	        {
 //	            MethodName: "CreateUser",
-//	            Input: &CreateUserRequest{Username: "alice", Email: "alice@example.com"},
+//	            Inputs: []protobuf.AbstractProtobufMessage{
+//	                &CreateUserRequest{Username: "alice", Email: "alice@example.com"},
+//	                &CreateUserRequest{Username: "bob", Email: "bob@example.com"},
+//	            },
 //	        },
 //	    },
 //	})
@@ -74,35 +78,38 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 	}
 
 	// Generate test cases by executing handlers
-	testCases := make([]E2ETestCase, 0, len(opts.TestCases))
+	testCases := make([]E2ETestCase, 0)
 
 	for i, tc := range opts.TestCases {
-		// Execute handler to get output
-		output, err := executeHandler(opts.Spec, tc.MethodName, tc.Input)
-		if err != nil {
-			return fmt.Errorf("test case %d (%s): failed to execute handler: %w", i, tc.MethodName, err)
-		}
+		// Process each input for this method
+		for j, input := range tc.Inputs {
+			// Execute handler to get output
+			output, err := executeHandler(opts.Spec, tc.MethodName, input)
+			if err != nil {
+				return fmt.Errorf("test case %d (%s) input %d: failed to execute handler: %w", i, tc.MethodName, j, err)
+			}
 
-		// Serialize input and output
-		inputData, err := serializeMessage(tc.Input)
-		if err != nil {
-			return fmt.Errorf("test case %d (%s): failed to serialize input: %w", i, tc.MethodName, err)
-		}
+			// Serialize input and output
+			inputData, err := serializeMessage(input)
+			if err != nil {
+				return fmt.Errorf("test case %d (%s) input %d: failed to serialize input: %w", i, tc.MethodName, j, err)
+			}
 
-		outputData, err := serializeMessage(output)
-		if err != nil {
-			return fmt.Errorf("test case %d (%s): failed to serialize output: %w", i, tc.MethodName, err)
-		}
+			outputData, err := serializeMessage(output)
+			if err != nil {
+				return fmt.Errorf("test case %d (%s) input %d: failed to serialize output: %w", i, tc.MethodName, j, err)
+			}
 
-		testCase := E2ETestCase{
-			MethodName: tc.MethodName,
-			InputType:  getTypeName(tc.Input),
-			Input:      inputData,
-			OutputType: getTypeName(output),
-			Output:     outputData,
-		}
+			testCase := E2ETestCase{
+				MethodName: tc.MethodName,
+				InputType:  getTypeName(input),
+				Input:      inputData,
+				OutputType: getTypeName(output),
+				Output:     outputData,
+			}
 
-		testCases = append(testCases, testCase)
+			testCases = append(testCases, testCase)
+		}
 	}
 
 	// Generate Go test code

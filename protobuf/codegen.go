@@ -130,21 +130,30 @@ func Test{{.MethodName}}(t *testing.T) {
 		},
 {{end}}	}
 
+	// TODO: Setup your gRPC client
+	// conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	// if err != nil {
+	//     t.Fatalf("Failed to connect: %v", err)
+	// }
+	// defer conn.Close()
+	// client := pb.NewYourServiceClient(conn)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// TODO: Execute the RPC call to get actual output
-			// Example:
-			//   service := &UserService{}
-			//   ctx := context.Background()
-			//   output := service.{{.MethodName}}(ctx, tt.input)
-			//
-			// For now, this is a placeholder that will fail until you implement the execution.
-			var output interface{}
-			_ = tt.input // Use input when implementing
+			// TODO: Execute the RPC call
+			// ctx := context.Background()
+			// actual, err := client.{{.MethodName}}(ctx, tt.input)
+			// if err != nil {
+			//     t.Fatalf("RPC call failed: %v", err)
+			// }
+
+			// Placeholder - replace with actual RPC call above
+			var actual *{{.OutputType}}
+			_ = tt.input // Remove this line after implementing RPC call
 
 			// Verify the output matches expected
-			if !compareE2EOutput(tt.expected, output) {
-				t.Errorf("{{.MethodName}} output mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, output)
+			if !compareE2EOutput(tt.expected, actual) {
+				t.Errorf("{{.MethodName}} output mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, actual)
 			}
 		})
 	}
