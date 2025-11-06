@@ -19,22 +19,13 @@ type GoTestGenerator struct {
 
 	// ServicePackage is the import path for the generated protobuf package
 	ServicePackage string
-
-	// Imports are additional imports to include (beyond the standard ones)
-	Imports []string
 }
 
 // NewGoTestGenerator creates a new Go test code generator.
 func NewGoTestGenerator(packageName string) *GoTestGenerator {
 	return &GoTestGenerator{
 		PackageName: packageName,
-		Imports:     []string{},
 	}
-}
-
-// AddImport adds an import to the generated test file.
-func (g *GoTestGenerator) AddImport(importPath string) {
-	g.Imports = append(g.Imports, importPath)
 }
 
 // GenerateMultiple generates Go test code from multiple E2E test cases.
@@ -73,11 +64,6 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 		buf.WriteString("\n")
 		buf.WriteString("\t\"google.golang.org/grpc\"\n")
 		buf.WriteString(fmt.Sprintf("\tpb \"%s\"\n", g.ServicePackage))
-	}
-
-	// Add custom imports
-	for _, imp := range g.Imports {
-		buf.WriteString(fmt.Sprintf("\t\"%s\"\n", imp))
 	}
 
 	buf.WriteString(")\n\n")
@@ -376,22 +362,4 @@ func TestMain(m *testing.M) {
 	}
 
 	return buf.String()
-}
-
-// toTestName converts a test case name to a valid Go test function name.
-func toTestName(name string) string {
-	// Replace non-alphanumeric characters with underscores
-	result := strings.Map(func(r rune) rune {
-		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
-			return r
-		}
-		return '_'
-	}, name)
-
-	// Capitalize first letter
-	if len(result) > 0 {
-		result = strings.ToUpper(result[:1]) + result[1:]
-	}
-
-	return result
 }

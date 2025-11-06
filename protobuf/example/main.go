@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/goatx/goat"
@@ -86,6 +87,9 @@ func createUserServiceModel() *protobuf.ProtobufServiceSpec[*UserService] {
 func main() {
 	spec := createUserServiceModel()
 
+	// Example 1: Generate Protobuf specification
+	fmt.Println("Example 1: Generating Protobuf Specification")
+	fmt.Println("=============================================")
 	opts := protobuf.GenerateOptions{
 		OutputDir:   "./proto",
 		PackageName: "user.service",
@@ -97,4 +101,36 @@ func main() {
 	if err != nil {
 		log.Fatalf("GenerateProtobuf() error = %v", err)
 	}
+	fmt.Println("✓ Protobuf specification generated successfully")
+	fmt.Println()
+
+	// Example 2: Generate E2E test code
+	fmt.Println("Example 2: Generating E2E Test Code")
+	fmt.Println("====================================")
+	err = protobuf.GenerateE2ETest(protobuf.E2ETestOptions{
+		Spec:        spec,
+		OutputDir:   "./testdata",
+		PackageName: "main",
+		Filename:    "user_service_e2e_test.go",
+		TestCases: []protobuf.TestCase{
+			{
+				MethodName: "CreateUser",
+				Inputs: []protobuf.AbstractProtobufMessage{
+					&CreateUserRequest{Username: "alice", Email: "alice@example.com"},
+				},
+			},
+			{
+				MethodName: "GetUser",
+				Inputs: []protobuf.AbstractProtobufMessage{
+					&GetUserRequest{UserID: "user_123"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.Fatalf("GenerateE2ETest() error = %v", err)
+	}
+	fmt.Println("✓ E2E test code generated successfully")
+	fmt.Println()
+	fmt.Println("All examples completed successfully!")
 }
