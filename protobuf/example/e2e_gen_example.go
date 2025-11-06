@@ -28,11 +28,15 @@ func generateE2ETestExample() {
 		TestCases: []protobuf.TestCase{
 			{
 				MethodName: "CreateUser",
-				Input:      &CreateUserRequest{Username: "alice", Email: "alice@example.com"},
+				Inputs: []protobuf.AbstractProtobufMessage{
+					&CreateUserRequest{Username: "alice", Email: "alice@example.com"},
+				},
 			},
 			{
 				MethodName: "GetUser",
-				Input:      &GetUserRequest{UserID: "user_123"},
+				Inputs: []protobuf.AbstractProtobufMessage{
+					&GetUserRequest{UserID: "user_123"},
+				},
 			},
 		},
 	})

@@ -26,14 +26,7 @@ func TestCreateUser(t *testing.T) {
 		},
 	}
 
-	// TODO: Setup your gRPC client
-	// conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
-	// if err != nil {
-	//     t.Fatalf("Failed to connect: %v", err)
-	// }
-	// defer conn.Close()
-	// client := pb.NewYourServiceClient(conn)
-
+	// TODO: Setup your gRPC client and implement RPC calls
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// TODO: Execute the RPC call

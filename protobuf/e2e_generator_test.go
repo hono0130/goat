@@ -43,10 +43,12 @@ type E2EGetUserResponse struct {
 
 func TestGenerateE2ETest(t *testing.T) {
 	tests := []struct {
-		name      string
-		setupSpec func() *ProtobufServiceSpec[*E2ETestService]
-		testCases []TestCase
-		golden    string
+		name           string
+		setupSpec      func() *ProtobufServiceSpec[*E2ETestService]
+		testCases      []TestCase
+		serviceName    string
+		servicePackage string
+		golden         string
 	}{
 		{
 			name: "single_test_case",
@@ -167,6 +169,39 @@ func TestGenerateE2ETest(t *testing.T) {
 			},
 			golden: "multiple_inputs_same_method.golden",
 		},
+		{
+			name: "with_grpc_client_setup",
+			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
+				spec := NewProtobufServiceSpec(&E2ETestService{})
+				idleState := &TestIdleState{}
+				spec.DefineStates(idleState).SetInitialState(idleState)
+
+				OnProtobufMessage(spec, idleState, "CreateUser",
+					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
+						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+							UserID:  "user_" + req.Username,
+							Success: true,
+						})
+					})
+
+				return spec
+			},
+			testCases: []TestCase{
+				{
+					MethodName: "CreateUser",
+					Inputs: []AbstractProtobufMessage{
+						&E2ECreateUserRequest{
+							Username: "alice",
+							Email:    "alice@example.com",
+						},
+					},
+				},
+			},
+			serviceName:    "UserService",
+			servicePackage: "github.com/example/proto/user",
+			golden:         "with_grpc_client_setup.golden",
+		},
 	}
 
 	for _, tt := range tests {
@@ -178,11 +213,13 @@ func TestGenerateE2ETest(t *testing.T) {
 
 			// Generate E2E test
 			err := GenerateE2ETest(E2ETestOptions{
-				Spec:        spec,
-				OutputDir:   tmpDir,
-				PackageName: "testpkg",
-				Filename:    outputFile,
-				TestCases:   tt.testCases,
+				Spec:           spec,
+				OutputDir:      tmpDir,
+				PackageName:    "testpkg",
+				Filename:       outputFile,
+				ServiceName:    tt.serviceName,
+				ServicePackage: tt.servicePackage,
+				TestCases:      tt.testCases,
 			})
 			if err != nil {
 				t.Fatalf("GenerateE2ETest() error = %v", err)

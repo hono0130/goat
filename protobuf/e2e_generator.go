@@ -34,6 +34,12 @@ type E2ETestOptions struct {
 	// Filename is the name of the generated test file
 	Filename string
 
+	// ServiceName is the gRPC service name (e.g., "UserService")
+	ServiceName string
+
+	// ServicePackage is the import path for the generated protobuf package (e.g., "github.com/example/proto/user")
+	ServicePackage string
+
 	// TestCases are the test cases to generate
 	TestCases []TestCase
 }
@@ -114,6 +120,8 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 
 	// Generate Go test code
 	generator := NewGoTestGenerator(opts.PackageName)
+	generator.ServiceName = opts.ServiceName
+	generator.ServicePackage = opts.ServicePackage
 
 	// Generate code for all test cases
 	code, err := generator.GenerateMultiple(testCases)

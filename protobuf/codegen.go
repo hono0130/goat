@@ -14,6 +14,12 @@ type GoTestGenerator struct {
 	// PackageName is the package name for the generated test file
 	PackageName string
 
+	// ServiceName is the gRPC service name (e.g., "UserService")
+	ServiceName string
+
+	// ServicePackage is the import path for the generated protobuf package
+	ServicePackage string
+
 	// Imports are additional imports to include (beyond the standard ones)
 	Imports []string
 }
@@ -52,8 +58,22 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 	// Generate package and imports
 	buf.WriteString(fmt.Sprintf("package %s\n\n", g.PackageName))
 	buf.WriteString("import (\n")
+
+	// Add required imports for gRPC testing
+	if g.ServicePackage != "" {
+		buf.WriteString("\t\"context\"\n")
+		buf.WriteString("\t\"log\"\n")
+		buf.WriteString("\t\"net\"\n")
+		buf.WriteString("\t\"os\"\n")
+	}
 	buf.WriteString("\t\"reflect\"\n")
 	buf.WriteString("\t\"testing\"\n")
+
+	if g.ServicePackage != "" {
+		buf.WriteString("\n")
+		buf.WriteString("\t\"google.golang.org/grpc\"\n")
+		buf.WriteString(fmt.Sprintf("\tpb \"%s\"\n", g.ServicePackage))
+	}
 
 	// Add custom imports
 	for _, imp := range g.Imports {
@@ -61,6 +81,18 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 	}
 
 	buf.WriteString(")\n\n")
+
+	// Generate global client variable
+	if g.ServicePackage != "" && g.ServiceName != "" {
+		buf.WriteString(fmt.Sprintf("var client pb.%sClient\n\n", g.ServiceName))
+	}
+
+	// Generate TestMain if service is configured
+	if g.ServicePackage != "" && g.ServiceName != "" {
+		testMain := g.generateTestMain()
+		buf.WriteString(testMain)
+		buf.WriteString("\n\n")
+	}
 
 	// Group test cases by method name
 	grouped := g.groupByMethod(testCases)
@@ -115,7 +147,44 @@ func (g *GoTestGenerator) generateTableTest(methodName string, testCases []E2ETe
 	inputType := testCases[0].InputType
 	outputType := testCases[0].OutputType
 
-	tmpl := `// Test{{.MethodName}} tests the {{.MethodName}} RPC call.
+	// Check if client is configured
+	useClient := g.ServicePackage != "" && g.ServiceName != ""
+
+	var tmpl string
+	if useClient {
+		tmpl = `// Test{{.MethodName}} tests the {{.MethodName}} RPC call.
+// This test was automatically generated from model checking execution.
+func Test{{.MethodName}}(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    *pb.{{.InputType}}
+		expected *pb.{{.OutputType}}
+	}{
+{{range .Cases}}		{
+			name: "{{.Name}}",
+			input: {{.InputValue}},
+			expected: {{.OutputValue}},
+		},
+{{end}}	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			actual, err := client.{{.MethodName}}(ctx, tt.input)
+			if err != nil {
+				t.Fatalf("RPC call failed: %v", err)
+			}
+
+			// Verify the output matches expected
+			if !compareE2EOutput(tt.expected, actual) {
+				t.Errorf("{{.MethodName}} output mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, actual)
+			}
+		})
+	}
+}
+`
+	} else {
+		tmpl = `// Test{{.MethodName}} tests the {{.MethodName}} RPC call.
 // This test was automatically generated from model checking execution.
 func Test{{.MethodName}}(t *testing.T) {
 	tests := []struct {
@@ -130,14 +199,7 @@ func Test{{.MethodName}}(t *testing.T) {
 		},
 {{end}}	}
 
-	// TODO: Setup your gRPC client
-	// conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
-	// if err != nil {
-	//     t.Fatalf("Failed to connect: %v", err)
-	// }
-	// defer conn.Close()
-	// client := pb.NewYourServiceClient(conn)
-
+	// TODO: Setup your gRPC client and implement RPC calls
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// TODO: Execute the RPC call
@@ -159,6 +221,7 @@ func Test{{.MethodName}}(t *testing.T) {
 	}
 }
 `
+	}
 
 	type caseData struct {
 		Name        string
@@ -198,8 +261,14 @@ func Test{{.MethodName}}(t *testing.T) {
 
 // formatStructLiteral formats a map as a Go struct literal.
 func (g *GoTestGenerator) formatStructLiteral(typeName string, data map[string]any) string {
+	// Add pb. prefix if using protobuf package
+	prefix := ""
+	if g.ServicePackage != "" {
+		prefix = "pb."
+	}
+
 	if len(data) == 0 {
-		return fmt.Sprintf("&%s{}", typeName)
+		return fmt.Sprintf("&%s%s{}", prefix, typeName)
 	}
 
 	// Sort keys for stable output
@@ -214,7 +283,7 @@ func (g *GoTestGenerator) formatStructLiteral(typeName string, data map[string]a
 		fields = append(fields, fmt.Sprintf("\t\t%s: %s", key, g.formatValue(data[key])))
 	}
 
-	return fmt.Sprintf("&%s{\n%s,\n\t}", typeName, strings.Join(fields, ",\n"))
+	return fmt.Sprintf("&%s%s{\n%s,\n\t}", prefix, typeName, strings.Join(fields, ",\n"))
 }
 
 // formatValue formats a value as a Go literal.
@@ -254,6 +323,59 @@ func compareE2EOutput(expected, actual interface{}) bool {
 	return reflect.DeepEqual(expected, actual)
 }
 `
+}
+
+// generateTestMain generates the TestMain function for gRPC server setup.
+func (g *GoTestGenerator) generateTestMain() string {
+	tmpl := `// TestMain sets up the gRPC server and client for testing.
+func TestMain(m *testing.M) {
+	// Start gRPC server
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	// TODO: Register your service implementation here
+	// pb.Register{{.ServiceName}}Server(grpcServer, &yourServiceImplementation{})
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	}()
+
+	// Create client
+	conn, err := grpc.Dial(lis.Addr().String(), grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to dial: %v", err)
+	}
+	client = pb.New{{.ServiceName}}Client(conn)
+
+	// Run tests
+	code := m.Run()
+
+	// Cleanup
+	conn.Close()
+	grpcServer.Stop()
+
+	os.Exit(code)
+}
+`
+
+	data := struct {
+		ServiceName string
+	}{
+		ServiceName: g.ServiceName,
+	}
+
+	t := template.Must(template.New("testmain").Parse(tmpl))
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		return ""
+	}
+
+	return buf.String()
 }
 
 // toTestName converts a test case name to a valid Go test function name.
