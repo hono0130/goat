@@ -92,7 +92,7 @@ func (w *fileWriter) writeMessage(builder *strings.Builder, message *protoMessag
 			fieldType = "repeated " + fieldType
 		}
 
-		fieldName := w.toSnakeCase(field.Name)
+		fieldName := toSnakeCase(field.Name)
 		builder.WriteString("  ")
 		builder.WriteString(fieldType)
 		builder.WriteString(" ")
@@ -123,7 +123,9 @@ func (*fileWriter) writeService(builder *strings.Builder, service *protoService)
 	builder.WriteString("}")
 }
 
-func (*fileWriter) toSnakeCase(name string) string {
+// toSnakeCase converts a PascalCase or camelCase string to snake_case.
+// Handles cases like HTTPRequest -> http_request and userID -> user_id.
+func toSnakeCase(name string) string {
 	var result strings.Builder
 
 	for i, r := range name {

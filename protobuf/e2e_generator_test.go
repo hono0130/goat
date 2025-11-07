@@ -114,9 +114,9 @@ func TestGenerateE2ETest(t *testing.T) {
 		t.Errorf("main_test.go was not generated")
 	}
 
-	serviceTestPath := filepath.Join(tmpDir, "e2_etest_service_test.go")
+	serviceTestPath := filepath.Join(tmpDir, "e2e_test_service_test.go")
 	if _, err := os.Stat(serviceTestPath); os.IsNotExist(err) {
-		t.Errorf("e2_etest_service_test.go was not generated")
+		t.Errorf("e2e_test_service_test.go was not generated")
 	}
 
 	// Read and verify main_test.go contains expected content
@@ -136,7 +136,7 @@ func TestGenerateE2ETest(t *testing.T) {
 	}
 
 	// Verify it contains client variable
-	if !contains(mainTestStr, "var e2_etest_serviceClient") {
+	if !contains(mainTestStr, "var e2e_test_serviceClient") {
 		t.Error("main_test.go does not contain client variable")
 	}
 
