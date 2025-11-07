@@ -25,6 +25,7 @@ type AbstractProtobufServiceSpec interface {
 	GetMessages() map[string]*protoMessage
 	GetHandlers() map[string]any
 	NewStateMachineInstance() (goat.AbstractStateMachine, error)
+	GetServiceName() string
 }
 
 type ProtobufServiceSpec[T goat.AbstractStateMachine] struct {
@@ -52,6 +53,10 @@ func (ps *ProtobufServiceSpec[T]) GetHandlers() map[string]any {
 
 func (ps *ProtobufServiceSpec[T]) NewStateMachineInstance() (goat.AbstractStateMachine, error) {
 	return ps.StateMachineSpec.NewInstance()
+}
+
+func (ps *ProtobufServiceSpec[T]) GetServiceName() string {
+	return getServiceTypeName(ps.StateMachineSpec)
 }
 
 func (ps *ProtobufServiceSpec[T]) addRPCMethod(metadata rpcMethod) {

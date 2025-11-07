@@ -19,6 +19,9 @@ type GoTestGenerator struct {
 
 	// ServicePackage is the import path for the generated protobuf package
 	ServicePackage string
+
+	// ClientVarName is the name of the global client variable (e.g., "user_serviceClient")
+	ClientVarName string
 }
 
 // NewGoTestGenerator creates a new Go test code generator.
@@ -28,18 +31,10 @@ func NewGoTestGenerator(packageName string) *GoTestGenerator {
 	}
 }
 
-// GenerateMultiple generates Go test code from multiple E2E test cases.
+// GenerateServiceTests generates Go test code for a single service.
 // Test cases with the same MethodName are grouped into a single table-driven test.
-//
-// Example:
-//
-//	generator := protobuf.NewGoTestGenerator("main")
-//	code, err := generator.GenerateMultiple(testCases)
-//	if err != nil {
-//	    log.Fatal(err)
-//	}
-//	os.WriteFile("user_service_test.go", []byte(code), 0644)
-func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, error) {
+// This function generates only the test functions, not main_test.go.
+func (g *GoTestGenerator) GenerateServiceTests(testCases []E2ETestCase) (string, error) {
 	if len(testCases) == 0 {
 		return "", fmt.Errorf("no test cases provided")
 	}
@@ -49,36 +44,21 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 	// Generate package and imports
 	buf.WriteString(fmt.Sprintf("package %s\n\n", g.PackageName))
 	buf.WriteString("import (\n")
-
-	// Add required imports for gRPC testing
-	if g.ServicePackage != "" {
-		buf.WriteString("\t\"context\"\n")
-		buf.WriteString("\t\"log\"\n")
-		buf.WriteString("\t\"net\"\n")
-		buf.WriteString("\t\"os\"\n")
-	}
-	buf.WriteString("\t\"reflect\"\n")
+	buf.WriteString("\t\"context\"\n")
 	buf.WriteString("\t\"testing\"\n")
 
 	if g.ServicePackage != "" {
 		buf.WriteString("\n")
-		buf.WriteString("\t\"google.golang.org/grpc\"\n")
-		buf.WriteString(fmt.Sprintf("\tpb \"%s\"\n", g.ServicePackage))
+		pbAlias := "pb" + strings.ReplaceAll(strings.ReplaceAll(g.ServiceName, "Service", ""), "_", "")
+		pbAlias = strings.ToLower(pbAlias[:1]) + pbAlias[1:]
+		if pbAlias == "pb" {
+			pbAlias = "pb" + strings.ToLower(g.ServiceName[:1])
+		}
+		// Use simplified alias based on service name
+		buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", toSnakeCaseSimple(g.ServiceName), g.ServicePackage))
 	}
 
 	buf.WriteString(")\n\n")
-
-	// Generate global client variable
-	if g.ServicePackage != "" && g.ServiceName != "" {
-		buf.WriteString(fmt.Sprintf("var client pb.%sClient\n\n", g.ServiceName))
-	}
-
-	// Generate TestMain if service is configured
-	if g.ServicePackage != "" && g.ServiceName != "" {
-		testMain := g.generateTestMain()
-		buf.WriteString(testMain)
-		buf.WriteString("\n\n")
-	}
 
 	// Group test cases by method name
 	grouped := g.groupByMethod(testCases)
@@ -101,9 +81,6 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 		buf.WriteString("\n\n")
 	}
 
-	// Generate helper function for output comparison
-	buf.WriteString(g.generateCompareHelper())
-
 	// Format the generated code
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
@@ -112,6 +89,11 @@ func (g *GoTestGenerator) GenerateMultiple(testCases []E2ETestCase) (string, err
 	}
 
 	return string(formatted), nil
+}
+
+// toSnakeCaseSimple is a simple version for package alias generation.
+func toSnakeCaseSimple(s string) string {
+	return strings.ToLower(strings.ReplaceAll(s, "Service", ""))
 }
 
 // groupByMethod groups test cases by their method name.
@@ -136,6 +118,8 @@ func (g *GoTestGenerator) generateTableTest(methodName string, testCases []E2ETe
 	// Check if client is configured
 	useClient := g.ServicePackage != "" && g.ServiceName != ""
 
+	pbAlias := "pb" + toSnakeCaseSimple(g.ServiceName)
+
 	var tmpl string
 	if useClient {
 		tmpl = `// Test{{.MethodName}} tests the {{.MethodName}} RPC call.
@@ -143,8 +127,8 @@ func (g *GoTestGenerator) generateTableTest(methodName string, testCases []E2ETe
 func Test{{.MethodName}}(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    *pb.{{.InputType}}
-		expected *pb.{{.OutputType}}
+		input    *{{.PbAlias}}.{{.InputType}}
+		expected *{{.PbAlias}}.{{.OutputType}}
 	}{
 {{range .Cases}}		{
 			name: "{{.Name}}",
@@ -156,7 +140,7 @@ func Test{{.MethodName}}(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			actual, err := client.{{.MethodName}}(ctx, tt.input)
+			actual, err := {{.ClientVar}}.{{.MethodName}}(ctx, tt.input)
 			if err != nil {
 				t.Fatalf("RPC call failed: %v", err)
 			}
@@ -229,11 +213,15 @@ func Test{{.MethodName}}(t *testing.T) {
 		InputType  string
 		OutputType string
 		Cases      []caseData
+		ClientVar  string
+		PbAlias    string
 	}{
 		MethodName: methodName,
 		InputType:  inputType,
 		OutputType: outputType,
 		Cases:      cases,
+		ClientVar:  g.ClientVarName,
+		PbAlias:    pbAlias,
 	}
 
 	t := template.Must(template.New("tabletest").Parse(tmpl))
@@ -247,10 +235,11 @@ func Test{{.MethodName}}(t *testing.T) {
 
 // formatStructLiteral formats a map as a Go struct literal.
 func (g *GoTestGenerator) formatStructLiteral(typeName string, data map[string]any) string {
-	// Add pb. prefix if using protobuf package
+	// Add pb prefix if using protobuf package
 	prefix := ""
 	if g.ServicePackage != "" {
-		prefix = "pb."
+		pbAlias := "pb" + toSnakeCaseSimple(g.ServiceName)
+		prefix = pbAlias + "."
 	}
 
 	if len(data) == 0 {
@@ -299,67 +288,4 @@ func (g *GoTestGenerator) formatValue(value any) string {
 	default:
 		return fmt.Sprintf("%#v", v)
 	}
-}
-
-// generateCompareHelper generates a helper function for comparing outputs.
-func (g *GoTestGenerator) generateCompareHelper() string {
-	return `// compareE2EOutput compares two values for equality in E2E tests.
-// This is a helper function automatically generated for E2E testing.
-func compareE2EOutput(expected, actual interface{}) bool {
-	return reflect.DeepEqual(expected, actual)
-}
-`
-}
-
-// generateTestMain generates the TestMain function for gRPC server setup.
-func (g *GoTestGenerator) generateTestMain() string {
-	tmpl := `// TestMain sets up the gRPC server and client for testing.
-func TestMain(m *testing.M) {
-	// Start gRPC server
-	lis, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-
-	grpcServer := grpc.NewServer()
-	// TODO: Register your service implementation here
-	// pb.Register{{.ServiceName}}Server(grpcServer, &yourServiceImplementation{})
-
-	go func() {
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Failed to serve: %v", err)
-		}
-	}()
-
-	// Create client
-	conn, err := grpc.Dial(lis.Addr().String(), grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("Failed to dial: %v", err)
-	}
-	client = pb.New{{.ServiceName}}Client(conn)
-
-	// Run tests
-	code := m.Run()
-
-	// Cleanup
-	conn.Close()
-	grpcServer.Stop()
-
-	os.Exit(code)
-}
-`
-
-	data := struct {
-		ServiceName string
-	}{
-		ServiceName: g.ServiceName,
-	}
-
-	t := template.Must(template.New("testmain").Parse(tmpl))
-	var buf bytes.Buffer
-	if err := t.Execute(&buf, data); err != nil {
-		return ""
-	}
-
-	return buf.String()
 }
