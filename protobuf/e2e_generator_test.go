@@ -2,12 +2,15 @@ package protobuf
 
 import (
 	"context"
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/goatx/goat"
 )
+
+var update = flag.Bool("update", false, "update golden files")
 
 // Test fixtures for E2E generation
 type E2ETestService struct {
@@ -38,139 +41,226 @@ type E2EGetUserResponse struct {
 	Found    bool
 }
 
-func TestGenerateE2ETest(t *testing.T) {
-	// Setup spec
-	spec := NewProtobufServiceSpec(&E2ETestService{})
-	idleState := &TestIdleState{}
-	spec.DefineStates(idleState).SetInitialState(idleState)
+func TestGenerateE2ETest_Golden(t *testing.T) {
+	tests := []struct {
+		name           string
+		setupSpec      func() *ProtobufServiceSpec[*E2ETestService]
+		services       []ServiceTestCase
+		goldenMainTest string
+		goldenService  string
+	}{
+		{
+			name: "single_method_single_input",
+			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
+				spec := NewProtobufServiceSpec(&E2ETestService{})
+				idleState := &TestIdleState{}
+				spec.DefineStates(idleState).SetInitialState(idleState)
 
-	OnProtobufMessage(spec, idleState, "CreateUser",
-		&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
-		func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
-			return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
-				UserID:  "user_" + req.Username,
-				Success: true,
-			})
-		})
+				OnProtobufMessage(spec, idleState, "CreateUser",
+					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
+						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+							UserID:  "user_123",
+							Success: true,
+						})
+					})
 
-	OnProtobufMessage(spec, idleState, "GetUser",
-		&E2EGetUserRequest{}, &E2EGetUserResponse{},
-		func(ctx context.Context, req *E2EGetUserRequest, svc *E2ETestService) ProtobufResponse[*E2EGetUserResponse] {
-			return ProtobufSendTo(ctx, svc, &E2EGetUserResponse{
-				Username: "testuser",
-				Email:    "test@example.com",
-				Found:    true,
-			})
-		})
-
-	// Generate E2E tests
-	tmpDir := t.TempDir()
-
-	err := GenerateE2ETest(E2ETestOptions{
-		OutputDir:   tmpDir,
-		PackageName: "testpkg",
-		Services: []ServiceTestCase{
-			{
-				Spec:           spec,
-				ServicePackage: "github.com/example/proto/user",
-				Methods: []MethodTestCase{
-					{
-						MethodName: "CreateUser",
-						Inputs: []AbstractProtobufMessage{
-							&E2ECreateUserRequest{
-								Username: "alice",
-								Email:    "alice@example.com",
-							},
-							&E2ECreateUserRequest{
-								Username: "bob",
-								Email:    "bob@example.com",
-							},
-						},
-					},
-					{
-						MethodName: "GetUser",
-						Inputs: []AbstractProtobufMessage{
-							&E2EGetUserRequest{UserID: "user_123"},
-						},
-					},
-				},
+				return spec
 			},
+			goldenMainTest: "single_method_single_input_main_test.golden",
+			goldenService:  "single_method_single_input_service_test.golden",
 		},
-	})
-	if err != nil {
-		t.Fatalf("GenerateE2ETest() error = %v", err)
+		{
+			name: "single_method_multiple_inputs",
+			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
+				spec := NewProtobufServiceSpec(&E2ETestService{})
+				idleState := &TestIdleState{}
+				spec.DefineStates(idleState).SetInitialState(idleState)
+
+				OnProtobufMessage(spec, idleState, "CreateUser",
+					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
+						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+							UserID:  "user_" + req.Username,
+							Success: true,
+						})
+					})
+
+				return spec
+			},
+			goldenMainTest: "single_method_multiple_inputs_main_test.golden",
+			goldenService:  "single_method_multiple_inputs_service_test.golden",
+		},
+		{
+			name: "multiple_methods",
+			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
+				spec := NewProtobufServiceSpec(&E2ETestService{})
+				idleState := &TestIdleState{}
+				spec.DefineStates(idleState).SetInitialState(idleState)
+
+				OnProtobufMessage(spec, idleState, "CreateUser",
+					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
+						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+							UserID:  "user_" + req.Username,
+							Success: true,
+						})
+					})
+
+				OnProtobufMessage(spec, idleState, "GetUser",
+					&E2EGetUserRequest{}, &E2EGetUserResponse{},
+					func(ctx context.Context, req *E2EGetUserRequest, svc *E2ETestService) ProtobufResponse[*E2EGetUserResponse] {
+						return ProtobufSendTo(ctx, svc, &E2EGetUserResponse{
+							Username: "testuser",
+							Email:    "test@example.com",
+							Found:    true,
+						})
+					})
+
+				return spec
+			},
+			goldenMainTest: "multiple_methods_main_test.golden",
+			goldenService:  "multiple_methods_service_test.golden",
+		},
 	}
 
-	// List generated files for debugging
-	files, _ := os.ReadDir(tmpDir)
-	t.Logf("Generated files:")
-	for _, f := range files {
-		t.Logf("  - %s", f.Name())
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup spec
+			spec := tt.setupSpec()
 
-	// Verify generated files exist
-	mainTestPath := filepath.Join(tmpDir, "main_test.go")
-	if _, err := os.Stat(mainTestPath); os.IsNotExist(err) {
-		t.Errorf("main_test.go was not generated")
-	}
+			// Build services configuration
+			var services []ServiceTestCase
+			if tt.name == "single_method_single_input" {
+				services = []ServiceTestCase{
+					{
+						Spec:           spec,
+						ServicePackage: "github.com/example/proto/user",
+						Methods: []MethodTestCase{
+							{
+								MethodName: "CreateUser",
+								Inputs: []AbstractProtobufMessage{
+									&E2ECreateUserRequest{
+										Username: "alice",
+										Email:    "alice@example.com",
+									},
+								},
+							},
+						},
+					},
+				}
+			} else if tt.name == "single_method_multiple_inputs" {
+				services = []ServiceTestCase{
+					{
+						Spec:           spec,
+						ServicePackage: "github.com/example/proto/user",
+						Methods: []MethodTestCase{
+							{
+								MethodName: "CreateUser",
+								Inputs: []AbstractProtobufMessage{
+									&E2ECreateUserRequest{
+										Username: "alice",
+										Email:    "alice@example.com",
+									},
+									&E2ECreateUserRequest{
+										Username: "bob",
+										Email:    "bob@example.com",
+									},
+								},
+							},
+						},
+					},
+				}
+			} else if tt.name == "multiple_methods" {
+				services = []ServiceTestCase{
+					{
+						Spec:           spec,
+						ServicePackage: "github.com/example/proto/user",
+						Methods: []MethodTestCase{
+							{
+								MethodName: "CreateUser",
+								Inputs: []AbstractProtobufMessage{
+									&E2ECreateUserRequest{
+										Username: "alice",
+										Email:    "alice@example.com",
+									},
+								},
+							},
+							{
+								MethodName: "GetUser",
+								Inputs: []AbstractProtobufMessage{
+									&E2EGetUserRequest{UserID: "user_123"},
+								},
+							},
+						},
+					},
+				}
+			}
 
-	serviceTestPath := filepath.Join(tmpDir, "e2e_test_service_test.go")
-	if _, err := os.Stat(serviceTestPath); os.IsNotExist(err) {
-		t.Errorf("e2e_test_service_test.go was not generated")
-	}
+			// Generate E2E tests
+			tmpDir := t.TempDir()
 
-	// Read and verify main_test.go contains expected content
-	mainTestContent, err := os.ReadFile(mainTestPath)
-	if err != nil {
-		t.Fatalf("Failed to read main_test.go: %v", err)
-	}
+			err := GenerateE2ETest(E2ETestOptions{
+				OutputDir:   tmpDir,
+				PackageName: "testpkg",
+				Services:    services,
+			})
+			if err != nil {
+				t.Fatalf("GenerateE2ETest() error = %v", err)
+			}
 
-	mainTestStr := string(mainTestContent)
-	if mainTestStr == "" {
-		t.Error("main_test.go is empty")
-	}
+			// Read generated main_test.go
+			mainTestPath := filepath.Join(tmpDir, "main_test.go")
+			mainTestContent, err := os.ReadFile(mainTestPath)
+			if err != nil {
+				t.Fatalf("Failed to read main_test.go: %v", err)
+			}
 
-	// Verify it contains TestMain function
-	if !contains(mainTestStr, "func TestMain(m *testing.M)") {
-		t.Error("main_test.go does not contain TestMain function")
-	}
+			// Read generated service test file
+			serviceTestPath := filepath.Join(tmpDir, "e2e_test_service_test.go")
+			serviceTestContent, err := os.ReadFile(serviceTestPath)
+			if err != nil {
+				t.Fatalf("Failed to read service test file: %v", err)
+			}
 
-	// Verify it contains client variable
-	if !contains(mainTestStr, "var e2e_test_serviceClient") {
-		t.Error("main_test.go does not contain client variable")
-	}
+			// Compare with golden files
+			goldenMainPath := filepath.Join("testdata", tt.goldenMainTest)
+			goldenServicePath := filepath.Join("testdata", tt.goldenService)
 
-	// Read and verify service test file
-	serviceTestContent, err := os.ReadFile(serviceTestPath)
-	if err != nil {
-		t.Fatalf("Failed to read service test file: %v", err)
-	}
+			if *update {
+				// Update golden files
+				if err := os.MkdirAll("testdata", 0755); err != nil {
+					t.Fatalf("Failed to create testdata directory: %v", err)
+				}
+				if err := os.WriteFile(goldenMainPath, mainTestContent, 0644); err != nil {
+					t.Fatalf("Failed to update golden main_test file: %v", err)
+				}
+				if err := os.WriteFile(goldenServicePath, serviceTestContent, 0644); err != nil {
+					t.Fatalf("Failed to update golden service test file: %v", err)
+				}
+				t.Logf("Updated golden files for %s", tt.name)
+				return
+			}
 
-	serviceTestStr := string(serviceTestContent)
-	if serviceTestStr == "" {
-		t.Error("service test file is empty")
-	}
+			// Read and compare main_test.go
+			goldenMain, err := os.ReadFile(goldenMainPath)
+			if err != nil {
+				t.Fatalf("Failed to read golden main_test file: %v (run with -update to create)", err)
+			}
 
-	// Verify it contains test functions
-	if !contains(serviceTestStr, "func TestCreateUser(t *testing.T)") {
-		t.Error("service test file does not contain TestCreateUser")
-	}
+			if string(mainTestContent) != string(goldenMain) {
+				t.Errorf("main_test.go does not match golden file.\nRun 'go test -update' to update golden files.")
+			}
 
-	if !contains(serviceTestStr, "func TestGetUser(t *testing.T)") {
-		t.Error("service test file does not contain TestGetUser")
-	}
-}
+			// Read and compare service test file
+			goldenService, err := os.ReadFile(goldenServicePath)
+			if err != nil {
+				t.Fatalf("Failed to read golden service test file: %v (run with -update to create)", err)
+			}
 
-func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && s != substr && len(s) >= len(substr) &&
-		(s == substr || (len(s) > len(substr) && findSubstring(s, substr)))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
+			if string(serviceTestContent) != string(goldenService) {
+				t.Errorf("service test file does not match golden file.\nRun 'go test -update' to update golden files.")
+			}
+		})
 	}
-	return false
 }
