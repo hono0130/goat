@@ -43,11 +43,10 @@ type E2EGetUserResponse struct {
 
 func TestGenerateE2ETest_Golden(t *testing.T) {
 	tests := []struct {
-		name           string
-		setupSpec      func() *ProtobufServiceSpec[*E2ETestService]
-		services       []ServiceTestCase
-		goldenMainTest string
-		goldenService  string
+		name      string
+		setupSpec func() *ProtobufServiceSpec[*E2ETestService]
+		services  []ServiceTestCase
+		goldenDir string
 	}{
 		{
 			name: "single_method_single_input",
@@ -67,8 +66,7 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 
 				return spec
 			},
-			goldenMainTest: "single_method_single_input_main_test.golden",
-			goldenService:  "single_method_single_input_service_test.golden",
+			goldenDir: "single_method_single_input",
 		},
 		{
 			name: "single_method_multiple_inputs",
@@ -88,8 +86,7 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 
 				return spec
 			},
-			goldenMainTest: "single_method_multiple_inputs_main_test.golden",
-			goldenService:  "single_method_multiple_inputs_service_test.golden",
+			goldenDir: "single_method_multiple_inputs",
 		},
 		{
 			name: "multiple_methods",
@@ -119,8 +116,7 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 
 				return spec
 			},
-			goldenMainTest: "multiple_methods_main_test.golden",
-			goldenService:  "multiple_methods_service_test.golden",
+			goldenDir: "multiple_methods",
 		},
 	}
 
@@ -224,13 +220,14 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 			}
 
 			// Compare with golden files
-			goldenMainPath := filepath.Join("testdata", tt.goldenMainTest)
-			goldenServicePath := filepath.Join("testdata", tt.goldenService)
+			goldenDir := filepath.Join("testdata", tt.goldenDir)
+			goldenMainPath := filepath.Join(goldenDir, "main_test.golden")
+			goldenServicePath := filepath.Join(goldenDir, "service_test.golden")
 
 			if *update {
 				// Update golden files
-				if err := os.MkdirAll("testdata", 0755); err != nil {
-					t.Fatalf("Failed to create testdata directory: %v", err)
+				if err := os.MkdirAll(goldenDir, 0755); err != nil {
+					t.Fatalf("Failed to create golden directory: %v", err)
 				}
 				if err := os.WriteFile(goldenMainPath, mainTestContent, 0644); err != nil {
 					t.Fatalf("Failed to update golden main_test file: %v", err)
