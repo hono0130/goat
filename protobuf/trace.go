@@ -7,23 +7,8 @@ import (
 	"github.com/goatx/goat"
 )
 
-// E2ETestCase represents a single e2e test case.
-type E2ETestCase struct {
-	// MethodName is the RPC method being tested
-	MethodName string
-
-	// InputType is the Go type name of the input message
-	InputType string
-
-	// Input is the serialized input message data
-	Input map[string]any
-
-	// OutputType is the Go type name of the output message
-	OutputType string
-
-	// Output is the serialized output message data
-	Output map[string]any
-}
+// This file contains utility functions for serializing protobuf messages
+// and working with Go reflection on state machines.
 
 // serializeMessage converts a protobuf message to a map for code generation.
 func serializeMessage(msg AbstractProtobufMessage) (map[string]any, error) {

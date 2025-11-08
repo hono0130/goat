@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	pbe2etest "github.com/example/proto/user"
+	pbe2e_test_service "github.com/example/proto/user"
 )
 
 // TestCreateUser tests the CreateUser RPC call.
@@ -12,27 +12,27 @@ import (
 func TestCreateUser(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    *pbe2etest.E2ECreateUserRequest
-		expected *pbe2etest.E2ECreateUserResponse
+		input    *pbe2e_test_service.E2ECreateUserRequest
+		expected *pbe2e_test_service.E2ECreateUserResponse
 	}{
 		{
 			name: "case_0",
-			input: &pbe2etest.E2ECreateUserRequest{
+			input: &pbe2e_test_service.E2ECreateUserRequest{
 				Email:    "alice@example.com",
 				Username: "alice",
 			},
-			expected: &pbe2etest.E2ECreateUserResponse{
+			expected: &pbe2e_test_service.E2ECreateUserResponse{
 				Success: true,
 				UserID:  "user_alice",
 			},
 		},
 		{
 			name: "case_1",
-			input: &pbe2etest.E2ECreateUserRequest{
+			input: &pbe2e_test_service.E2ECreateUserRequest{
 				Email:    "bob@example.com",
 				Username: "bob",
 			},
-			expected: &pbe2etest.E2ECreateUserResponse{
+			expected: &pbe2e_test_service.E2ECreateUserResponse{
 				Success: true,
 				UserID:  "user_bob",
 			},
@@ -44,7 +44,7 @@ func TestCreateUser(t *testing.T) {
 			ctx := context.Background()
 			actual, err := e2e_test_serviceClient.CreateUser(ctx, tt.input)
 			if err != nil {
-				t.Fatalf("RPC call failed: %v", err)
+				t.Fatalf("RPC call failed: %%v", err)
 			}
 
 			// Verify the output matches expected
