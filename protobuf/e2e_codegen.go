@@ -110,7 +110,7 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 	// Helper function
 	buf.WriteString("// compareE2EOutput compares two values for equality in E2E tests.\n")
 	buf.WriteString("// This is a helper function automatically generated for E2E testing.\n")
-	buf.WriteString("func compareE2EOutput(expected, actual interface{}) bool {\n")
+	buf.WriteString("func compareE2EOutput(expected, actual any) bool {\n")
 	buf.WriteString("\treturn reflect.DeepEqual(expected, actual)\n")
 	buf.WriteString("}\n")
 
@@ -213,6 +213,7 @@ func (g *codeGenerator) generateMethodTest(svc serviceTestSuite, method methodTe
 }
 
 // formatStructLiteral formats a map as a Go struct literal.
+// The 'any' parameter is necessary because field values can be of various types.
 func formatStructLiteral(pkgAlias, typeName string, data map[string]any) string {
 	if len(data) == 0 {
 		return fmt.Sprintf("&%s.%s{}", pkgAlias, typeName)
@@ -234,6 +235,8 @@ func formatStructLiteral(pkgAlias, typeName string, data map[string]any) string 
 }
 
 // formatValue formats a value as a Go literal.
+// The 'any' type is required here because protobuf field values can be of various types
+// (string, bool, int64, []string, etc.) determined at runtime.
 func formatValue(value any) string {
 	if value == nil {
 		return "nil"
@@ -248,7 +251,7 @@ func formatValue(value any) string {
 		return fmt.Sprintf("%v", v)
 	case bool:
 		return fmt.Sprintf("%v", v)
-	case []interface{}:
+	case []any:
 		if len(v) == 0 {
 			return "nil"
 		}

@@ -8,6 +8,8 @@ import (
 // and working with Go reflection on state machines.
 
 // serializeMessage converts a protobuf message to a map for code generation.
+// Returns map[string]any where 'any' is necessary because protobuf field values
+// can be of various types (string, bool, int64, []any, etc.) determined by reflection.
 func serializeMessage(msg AbstractProtobufMessage) (map[string]any, error) {
 	data := make(map[string]any)
 

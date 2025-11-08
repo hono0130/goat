@@ -26,7 +26,7 @@ type methodTestSuite struct {
 type testCase struct {
 	name       string         // e.g., "case_0"
 	inputType  string         // e.g., "CreateUserRequest"
-	input      map[string]any // serialized input data
+	input      map[string]any // serialized input data (any is necessary: field values can be string, bool, int64, []any, etc.)
 	outputType string         // e.g., "CreateUserResponse"
-	output     map[string]any // serialized output data
+	output     map[string]any // serialized output data (any is necessary: field values can be string, bool, int64, []any, etc.)
 }

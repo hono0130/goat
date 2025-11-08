@@ -50,6 +50,6 @@ func TestMain(m *testing.M) {
 
 // compareE2EOutput compares two values for equality in E2E tests.
 // This is a helper function automatically generated for E2E testing.
-func compareE2EOutput(expected, actual interface{}) bool {
+func compareE2EOutput(expected, actual any) bool {
 	return reflect.DeepEqual(expected, actual)
 }
