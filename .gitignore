@@ -1,5 +1,4 @@
 .DS_Store
 
-# Generated files
-protobuf/example/proto/
+# Generated test files (but keep proto/ as example)
 protobuf/example/testdata/
