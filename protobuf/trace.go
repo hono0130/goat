@@ -1,10 +1,7 @@
 package protobuf
 
 import (
-	"fmt"
 	"reflect"
-
-	"github.com/goatx/goat"
 )
 
 // This file contains utility functions for serializing protobuf messages
@@ -64,12 +61,4 @@ func isProtobufMessageType(t reflect.Type) bool {
 	// Check if the type is a struct and has the name "ProtobufMessage"
 	// from the protobuf package
 	return t.Kind() == reflect.Struct && t.Name() == "ProtobufMessage"
-}
-
-// getStateMachineID returns a unique identifier for a state machine.
-func getStateMachineID(sm goat.AbstractStateMachine) string {
-	if sm == nil {
-		return "nil"
-	}
-	return fmt.Sprintf("%s@%p", getTypeName(sm), sm)
 }
