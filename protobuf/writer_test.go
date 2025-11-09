@@ -162,7 +162,7 @@ message User {
 	}
 }
 
-func Test_toSnakeCase(t *testing.T) {
+func TestFileWriter_toSnakeCase(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
@@ -202,7 +202,8 @@ func Test_toSnakeCase(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := toSnakeCase(tt.input)
+			w := &fileWriter{}
+			got := w.toSnakeCase(tt.input)
 
 			if got != tt.want {
 				t.Errorf("toSnakeCase(%q) = %q, want %q", tt.input, got, tt.want)
