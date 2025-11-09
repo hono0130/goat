@@ -56,7 +56,6 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 				spec.DefineStates(idleState).SetInitialState(idleState)
 
 				OnProtobufMessage(spec, idleState, "CreateUser",
-					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
 					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
 						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
 							UserID:  "user_123",
@@ -76,7 +75,6 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 				spec.DefineStates(idleState).SetInitialState(idleState)
 
 				OnProtobufMessage(spec, idleState, "CreateUser",
-					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
 					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
 						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
 							UserID:  "user_" + req.Username,
@@ -96,7 +94,6 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 				spec.DefineStates(idleState).SetInitialState(idleState)
 
 				OnProtobufMessage(spec, idleState, "CreateUser",
-					&E2ECreateUserRequest{}, &E2ECreateUserResponse{},
 					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
 						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
 							UserID:  "user_" + req.Username,
@@ -105,7 +102,6 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 					})
 
 				OnProtobufMessage(spec, idleState, "GetUser",
-					&E2EGetUserRequest{}, &E2EGetUserResponse{},
 					func(ctx context.Context, req *E2EGetUserRequest, svc *E2ETestService) ProtobufResponse[*E2EGetUserResponse] {
 						return ProtobufSendTo(ctx, svc, &E2EGetUserResponse{
 							Username: "testuser",
