@@ -85,8 +85,7 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 	spec.addSchema(responseSchema)
 
 	wrappedHandler := func(ctx context.Context, event I, sm T) {
-		response := handler(ctx, event, sm)
-		_ = response
+		_ = handler(ctx, event, sm)
 	}
 
 	goat.OnEvent(spec.StateMachineSpec, state, wrappedHandler)
@@ -222,11 +221,6 @@ func GenerateOpenAPI(opts *GenerateOptions, specs ...AbstractOpenAPIServiceSpec)
 
 	generator := newOpenAPIGenerator(*opts)
 	return generator.generateFromSpecs(specs...)
-}
-
-func getServiceTypeName[T goat.AbstractStateMachine](_ *goat.StateMachineSpec[T]) string {
-	var zero T
-	return getTypeName(zero)
 }
 
 func getEventTypeName[E AbstractOpenAPISchema](event E) string {

@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/goatx/goat"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -76,29 +75,6 @@ func TestOnOpenAPIRequest(t *testing.T) {
 
 			if len(spec.GetEndpoints()) == 0 {
 				t.Error("Endpoints should be registered after OnOpenAPIRequest call")
-			}
-		})
-	}
-}
-
-func TestGetServiceTypeName(t *testing.T) {
-	tests := []struct {
-		name string
-		spec *goat.StateMachineSpec[*TestService1]
-		want string
-	}{
-		{
-			name: "returns correct type name",
-			spec: goat.NewStateMachineSpec(&TestService1{}),
-			want: "TestService1",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getServiceTypeName(tt.spec)
-			if got != tt.want {
-				t.Errorf("getServiceTypeName() = %v, want %v", got, tt.want)
 			}
 		})
 	}
