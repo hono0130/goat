@@ -117,13 +117,13 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 	}
 
 	// Generate service test files
-	for _, svc := range suite.services {
+	for _, svc := range suite.Services {
 		serviceCode, err := gen.generateServiceTest(svc)
 		if err != nil {
-			return fmt.Errorf("failed to generate test for %s: %w", svc.serviceName, err)
+			return fmt.Errorf("failed to generate test for %s: %w", svc.ServiceName, err)
 		}
 
-		filename := toSnakeCase(svc.serviceName) + "_test.go"
+		filename := toSnakeCase(svc.ServiceName) + "_test.go"
 		outputPath := filepath.Join(opts.OutputDir, filename)
 		if err := os.WriteFile(outputPath, []byte(serviceCode), 0644); err != nil {
 			return fmt.Errorf("failed to write %s: %w", filename, err)
