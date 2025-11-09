@@ -12,6 +12,10 @@ type ProtobufResponse[O AbstractProtobufMessage] struct {
 	event O
 }
 
+func (r ProtobufResponse[O]) GetEvent() O {
+	return r.event
+}
+
 func ProtobufSendTo[O AbstractProtobufMessage](ctx context.Context, target goat.AbstractStateMachine, event O) ProtobufResponse[O] {
 	goat.SendTo(ctx, target, event)
 	return ProtobufResponse[O]{event: event}
@@ -22,6 +26,7 @@ func NewProtobufServiceSpec[T goat.AbstractStateMachine](prototype T) *ProtobufS
 		StateMachineSpec: goat.NewStateMachineSpec(prototype),
 		rpcMethods:       []rpcMethod{},
 		messages:         make(map[string]*protoMessage),
+		handlers:         make(map[string]any),
 	}
 }
 
@@ -51,6 +56,9 @@ func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O
 	outputMsg := analyzeMessage(outputEvent)
 	spec.addMessage(inputMsg)
 	spec.addMessage(outputMsg)
+
+	// Store handler for later execution during test generation
+	spec.handlers[methodName] = handler
 
 	wrappedHandler := func(ctx context.Context, event I, sm T) {
 		response := handler(ctx, event, sm)
@@ -198,6 +206,8 @@ func getEventTypeName[E AbstractProtobufMessage](event E) string {
 	return getTypeName(event)
 }
 
+// getTypeName extracts the type name from any value using reflection.
+// 'any' is necessary to accept values of any type for reflection.
 func getTypeName(v any) string {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
