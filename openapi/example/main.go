@@ -13,26 +13,26 @@ type UserService struct {
 }
 
 type CreateUserRequest struct {
-	openapi.OpenAPIEndpoint[*UserService, *UserService]
+	openapi.OpenAPISchema[*UserService, *UserService]
 	Username string
 	Email    string
 	Tags     []string
 }
 
 type CreateUserResponse struct {
-	openapi.OpenAPIEndpoint[*UserService, *UserService]
+	openapi.OpenAPISchema[*UserService, *UserService]
 	UserID    string
 	Success   bool
 	ErrorCode int64
 }
 
 type GetUserRequest struct {
-	openapi.OpenAPIEndpoint[*UserService, *UserService]
+	openapi.OpenAPISchema[*UserService, *UserService]
 	UserID string
 }
 
 type GetUserResponse struct {
-	openapi.OpenAPIEndpoint[*UserService, *UserService]
+	openapi.OpenAPISchema[*UserService, *UserService]
 	Username string
 	Email    string
 	Found    bool
@@ -57,8 +57,8 @@ func createUserServiceModel() *openapi.OpenAPIServiceSpec[*UserService] {
 
 	spec.DefineStates(idleState, processingState).SetInitialState(idleState)
 
-	// Register API endpoints using OnOpenAPIEndpoint
-	openapi.OnOpenAPIEndpoint[*UserService, *CreateUserRequest, *CreateUserResponse](spec, idleState, "POST", "/users", "createUser",
+	// Register API endpoints using OnOpenAPIRequest
+	openapi.OnOpenAPIRequest[*UserService, *CreateUserRequest, *CreateUserResponse](spec, idleState, "POST", "/users", "createUser",
 		func(ctx context.Context, event *CreateUserRequest, service *UserService) openapi.OpenAPIResponse[*CreateUserResponse] {
 			response := &CreateUserResponse{
 				UserID:    "user_123",
@@ -68,7 +68,7 @@ func createUserServiceModel() *openapi.OpenAPIServiceSpec[*UserService] {
 			return openapi.OpenAPISendTo(ctx, service, response)
 		})
 
-	openapi.OnOpenAPIEndpoint[*UserService, *GetUserRequest, *GetUserResponse](spec, idleState, "GET", "/users/{userId}", "getUser",
+	openapi.OnOpenAPIRequest[*UserService, *GetUserRequest, *GetUserResponse](spec, idleState, "GET", "/users/{userId}", "getUser",
 		func(ctx context.Context, event *GetUserRequest, service *UserService) openapi.OpenAPIResponse[*GetUserResponse] {
 			response := &GetUserResponse{
 				Username: "testuser",

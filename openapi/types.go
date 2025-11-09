@@ -4,18 +4,18 @@ import (
 	"github.com/goatx/goat"
 )
 
-type AbstractOpenAPIEndpoint interface {
-	isOpenAPIEndpoint() bool
+type AbstractOpenAPISchema interface {
+	isOpenAPISchema() bool
 	goat.AbstractEvent
 }
 
-type OpenAPIEndpoint[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
+type OpenAPISchema[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
 	goat.Event[Sender, Recipient]
-	// this is needed to make OpenAPIEndpoint copyable
+	// this is needed to make OpenAPISchema copyable
 	_ rune
 }
 
-func (*OpenAPIEndpoint[Sender, Recipient]) isOpenAPIEndpoint() bool {
+func (*OpenAPISchema[Sender, Recipient]) isOpenAPISchema() bool {
 	return true
 }
 

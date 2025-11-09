@@ -8,11 +8,11 @@ import (
 	"github.com/goatx/goat"
 )
 
-type OpenAPIResponse[O AbstractOpenAPIEndpoint] struct {
+type OpenAPIResponse[O AbstractOpenAPISchema] struct {
 	event O
 }
 
-func OpenAPISendTo[O AbstractOpenAPIEndpoint](ctx context.Context, target goat.AbstractStateMachine, event O) OpenAPIResponse[O] {
+func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O) OpenAPIResponse[O] {
 	goat.SendTo(ctx, target, event)
 	return OpenAPIResponse[O]{event: event}
 }
@@ -25,7 +25,7 @@ func NewOpenAPIServiceSpec[T goat.AbstractStateMachine](prototype T) *OpenAPISer
 	}
 }
 
-func OnOpenAPIEndpoint[T goat.AbstractStateMachine, I AbstractOpenAPIEndpoint, O AbstractOpenAPIEndpoint](
+func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O AbstractOpenAPISchema](
 	spec *OpenAPIServiceSpec[T],
 	state goat.AbstractState,
 	method string,
@@ -33,8 +33,8 @@ func OnOpenAPIEndpoint[T goat.AbstractStateMachine, I AbstractOpenAPIEndpoint, O
 	operationID string,
 	handler func(context.Context, I, T) OpenAPIResponse[O],
 ) {
-	requestEvent := newOpenAPIEndpointPrototype[I]()
-	responseEvent := newOpenAPIEndpointPrototype[O]()
+	requestEvent := newOpenAPISchemaPrototype[I]()
+	responseEvent := newOpenAPISchemaPrototype[O]()
 
 	requestTypeName := getEventTypeName(requestEvent)
 	responseTypeName := getEventTypeName(responseEvent)
@@ -62,7 +62,7 @@ func OnOpenAPIEndpoint[T goat.AbstractStateMachine, I AbstractOpenAPIEndpoint, O
 	goat.OnEvent(spec.StateMachineSpec, state, wrappedHandler)
 }
 
-func newOpenAPIEndpointPrototype[T AbstractOpenAPIEndpoint]() T {
+func newOpenAPISchemaPrototype[T AbstractOpenAPISchema]() T {
 	var zero T
 	msgType := reflect.TypeOf(zero)
 	if msgType == nil {
@@ -70,19 +70,19 @@ func newOpenAPIEndpointPrototype[T AbstractOpenAPIEndpoint]() T {
 	}
 
 	if msgType.Kind() == reflect.Interface {
-		panic(fmt.Sprintf("cannot use interface type %s as openapi endpoint type parameter; use a concrete endpoint type instead", msgType))
+		panic(fmt.Sprintf("cannot use interface type %s as openapi schema type parameter; use a concrete schema type instead", msgType))
 	}
 
 	if msgType.Kind() == reflect.Pointer {
 		elem := msgType.Elem()
 		if elem.Kind() == reflect.Interface {
-			panic(fmt.Sprintf("cannot use interface type %s as openapi endpoint type parameter; use a concrete endpoint type instead", elem))
+			panic(fmt.Sprintf("cannot use interface type %s as openapi schema type parameter; use a concrete schema type instead", elem))
 		}
 
 		prototype := reflect.New(elem).Interface()
 		msg, ok := prototype.(T)
 		if !ok {
-			panic(fmt.Sprintf("type %s does not implement AbstractOpenAPIEndpoint", msgType))
+			panic(fmt.Sprintf("type %s does not implement AbstractOpenAPISchema", msgType))
 		}
 		return msg
 	}
@@ -90,12 +90,12 @@ func newOpenAPIEndpointPrototype[T AbstractOpenAPIEndpoint]() T {
 	value := reflect.New(msgType).Elem().Interface()
 	msg, ok := value.(T)
 	if !ok {
-		panic(fmt.Sprintf("type %s does not implement AbstractOpenAPIEndpoint", msgType))
+		panic(fmt.Sprintf("type %s does not implement AbstractOpenAPISchema", msgType))
 	}
 	return msg
 }
 
-func analyzeSchema[S AbstractOpenAPIEndpoint](instance S) *schemaDefinition {
+func analyzeSchema[S AbstractOpenAPISchema](instance S) *schemaDefinition {
 	schemaType := reflect.TypeOf(instance)
 	if schemaType.Kind() == reflect.Ptr {
 		schemaType = schemaType.Elem()
@@ -109,7 +109,7 @@ func analyzeSchema[S AbstractOpenAPIEndpoint](instance S) *schemaDefinition {
 		if !field.IsExported() {
 			continue
 		}
-		if field.Type == reflect.TypeOf(OpenAPIEndpoint[goat.AbstractStateMachine, goat.AbstractStateMachine]{}) {
+		if field.Type == reflect.TypeOf(OpenAPISchema[goat.AbstractStateMachine, goat.AbstractStateMachine]{}) {
 			continue
 		}
 		if isGoatEventType(field.Type) {
@@ -199,7 +199,7 @@ func getServiceTypeName[T goat.AbstractStateMachine](_ *goat.StateMachineSpec[T]
 	return getTypeName(zero)
 }
 
-func getEventTypeName[E AbstractOpenAPIEndpoint](event E) string {
+func getEventTypeName[E AbstractOpenAPISchema](event E) string {
 	return getTypeName(event)
 }
 

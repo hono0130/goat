@@ -21,12 +21,12 @@ func TestGenerateOpenAPI_GoldenFile(t *testing.T) {
 				state := &TestIdleState{}
 				spec.DefineStates(state).SetInitialState(state)
 
-				OnOpenAPIEndpoint[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/items", "createItem",
+				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/items", "createItem",
 					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 						return OpenAPISendTo(ctx, sm, &TestResponse1{})
 					})
 
-				OnOpenAPIEndpoint[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/items/{id}", "getItem",
+				OnOpenAPIRequest[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/items/{id}", "getItem",
 					func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponse[*TestResponse2] {
 						return OpenAPISendTo(ctx, sm, &TestResponse2{})
 					})
@@ -118,7 +118,7 @@ components:
 				state := &TestIdleState{}
 				spec.DefineStates(state).SetInitialState(state)
 
-				OnOpenAPIEndpoint[*TestService1, *TestRequest1, *TestResponse1](spec, state, "GET", "/health", "healthCheck",
+				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "GET", "/health", "healthCheck",
 					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 						return OpenAPISendTo(ctx, sm, &TestResponse1{})
 					})
@@ -204,7 +204,7 @@ func TestGenerateOpenAPI_MultipleServices(t *testing.T) {
 	state1 := &TestIdleState{}
 	spec1.DefineStates(state1).SetInitialState(state1)
 
-	OnOpenAPIEndpoint[*TestService1, *TestRequest1, *TestResponse1](spec1, state1, "POST", "/service1/action", "service1Action",
+	OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec1, state1, "POST", "/service1/action", "service1Action",
 		func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 			return OpenAPISendTo(ctx, sm, &TestResponse1{})
 		})
@@ -213,7 +213,7 @@ func TestGenerateOpenAPI_MultipleServices(t *testing.T) {
 	state2 := &TestIdleState{}
 	spec2.DefineStates(state2).SetInitialState(state2)
 
-	OnOpenAPIEndpoint[*TestService2, *TestRequest2, *TestResponse2](spec2, state2, "GET", "/service2/query", "service2Query",
+	OnOpenAPIRequest[*TestService2, *TestRequest2, *TestResponse2](spec2, state2, "GET", "/service2/query", "service2Query",
 		func(ctx context.Context, event *TestRequest2, sm *TestService2) OpenAPIResponse[*TestResponse2] {
 			return OpenAPISendTo(ctx, sm, &TestResponse2{})
 		})

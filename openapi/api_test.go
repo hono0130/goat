@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestOnOpenAPIEndpoint(t *testing.T) {
+func TestOnOpenAPIRequest(t *testing.T) {
 	tests := []struct {
 		name             string
 		method           string
@@ -53,7 +53,7 @@ func TestOnOpenAPIEndpoint(t *testing.T) {
 
 			initialEndpointCount := len(spec.GetEndpoints())
 
-			OnOpenAPIEndpoint[*TestService1, *TestRequest1, *TestResponse1](spec, state, tt.method, tt.path, tt.operationID,
+			OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, tt.method, tt.path, tt.operationID,
 				func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 					return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
 				})
@@ -68,11 +68,11 @@ func TestOnOpenAPIEndpoint(t *testing.T) {
 			}
 
 			if spec.StateMachineSpec == nil {
-				t.Fatal("StateMachineSpec should not be nil after OnOpenAPIEndpoint call")
+				t.Fatal("StateMachineSpec should not be nil after OnOpenAPIRequest call")
 			}
 
 			if len(spec.GetEndpoints()) == 0 {
-				t.Error("Endpoints should be registered after OnOpenAPIEndpoint call")
+				t.Error("Endpoints should be registered after OnOpenAPIRequest call")
 			}
 		})
 	}
@@ -104,7 +104,7 @@ func TestGetServiceTypeName(t *testing.T) {
 func TestGetEventTypeName(t *testing.T) {
 	tests := []struct {
 		name  string
-		event AbstractOpenAPIEndpoint
+		event AbstractOpenAPISchema
 		want  string
 	}{
 		{
@@ -165,7 +165,7 @@ func TestGetTypeName(t *testing.T) {
 func TestAnalyzeSchema(t *testing.T) {
 	tests := []struct {
 		name     string
-		instance AbstractOpenAPIEndpoint
+		instance AbstractOpenAPISchema
 		want     *schemaDefinition
 	}{
 		{
