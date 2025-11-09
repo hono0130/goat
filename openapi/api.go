@@ -8,9 +8,13 @@ import (
 	"github.com/goatx/goat"
 )
 
-func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O) O {
+type OpenAPIResponse[O AbstractOpenAPISchema] struct {
+	event O
+}
+
+func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O) OpenAPIResponse[O] {
 	goat.SendTo(ctx, target, event)
-	return event
+	return OpenAPIResponse[O]{event: event}
 }
 
 // RequestOption is a functional option for configuring OnOpenAPIRequest
@@ -48,7 +52,7 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 	state goat.AbstractState,
 	method string,
 	path string,
-	handler func(context.Context, I, T) O,
+	handler func(context.Context, I, T) OpenAPIResponse[O],
 	opts ...RequestOption,
 ) {
 	// Apply default configuration

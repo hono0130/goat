@@ -31,7 +31,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
 					OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/test",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) *TestResponse1 {
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 							return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
 						},
 						WithOperationID("testEndpoint"))
@@ -78,12 +78,12 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
 					OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/endpoint1",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) *TestResponse1 {
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 							return OpenAPISendTo(ctx, sm, &TestResponse1{})
 						},
 						WithOperationID("endpoint1"))
 					OnOpenAPIRequest[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/endpoint2",
-						func(ctx context.Context, event *TestRequest2, sm *TestService1) *TestResponse2 {
+						func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponse[*TestResponse2] {
 							return OpenAPISendTo(ctx, sm, &TestResponse2{})
 						},
 						WithOperationID("endpoint2"))
@@ -94,7 +94,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
 					OnOpenAPIRequest[*TestService2, *TestRequest3, *TestResponse3](spec, state, "PUT", "/endpoint3",
-						func(ctx context.Context, event *TestRequest3, sm *TestService2) *TestResponse3 {
+						func(ctx context.Context, event *TestRequest3, sm *TestService2) OpenAPIResponse[*TestResponse3] {
 							return OpenAPISendTo(ctx, sm, &TestResponse3{})
 						},
 						WithOperationID("endpoint3"))

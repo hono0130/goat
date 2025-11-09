@@ -59,7 +59,7 @@ func createUserServiceModel() *openapi.OpenAPIServiceSpec[*UserService] {
 
 	// Register API endpoints using OnOpenAPIRequest
 	openapi.OnOpenAPIRequest[*UserService, *CreateUserRequest, *CreateUserResponse](spec, idleState, "POST", "/users",
-		func(ctx context.Context, event *CreateUserRequest, service *UserService) *CreateUserResponse {
+		func(ctx context.Context, event *CreateUserRequest, service *UserService) openapi.OpenAPIResponse[*CreateUserResponse] {
 			response := &CreateUserResponse{
 				UserID:    "user_123",
 				Success:   true,
@@ -71,7 +71,7 @@ func createUserServiceModel() *openapi.OpenAPIServiceSpec[*UserService] {
 		openapi.WithStatusCode(openapi.StatusCreated))
 
 	openapi.OnOpenAPIRequest[*UserService, *GetUserRequest, *GetUserResponse](spec, idleState, "GET", "/users/{userId}",
-		func(ctx context.Context, event *GetUserRequest, service *UserService) *GetUserResponse {
+		func(ctx context.Context, event *GetUserRequest, service *UserService) openapi.OpenAPIResponse[*GetUserResponse] {
 			response := &GetUserResponse{
 				Username: "testuser",
 				Email:    "test@example.com",

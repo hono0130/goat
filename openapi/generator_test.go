@@ -22,13 +22,13 @@ func TestGenerateOpenAPI_GoldenFile(t *testing.T) {
 				spec.DefineStates(state).SetInitialState(state)
 
 				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/items",
-					func(ctx context.Context, event *TestRequest1, sm *TestService1) *TestResponse1 {
+					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 						return OpenAPISendTo(ctx, sm, &TestResponse1{})
 					},
 					WithOperationID("createItem"))
 
 				OnOpenAPIRequest[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/items/{id}",
-					func(ctx context.Context, event *TestRequest2, sm *TestService1) *TestResponse2 {
+					func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponse[*TestResponse2] {
 						return OpenAPISendTo(ctx, sm, &TestResponse2{})
 					},
 					WithOperationID("getItem"))
@@ -121,7 +121,7 @@ components:
 				spec.DefineStates(state).SetInitialState(state)
 
 				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "GET", "/health",
-					func(ctx context.Context, event *TestRequest1, sm *TestService1) *TestResponse1 {
+					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 						return OpenAPISendTo(ctx, sm, &TestResponse1{})
 					},
 					WithOperationID("healthCheck"))
@@ -208,7 +208,7 @@ func TestGenerateOpenAPI_MultipleServices(t *testing.T) {
 	spec1.DefineStates(state1).SetInitialState(state1)
 
 	OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec1, state1, "POST", "/service1/action",
-		func(ctx context.Context, event *TestRequest1, sm *TestService1) *TestResponse1 {
+		func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 			return OpenAPISendTo(ctx, sm, &TestResponse1{})
 		},
 		WithOperationID("service1Action"))
@@ -218,7 +218,7 @@ func TestGenerateOpenAPI_MultipleServices(t *testing.T) {
 	spec2.DefineStates(state2).SetInitialState(state2)
 
 	OnOpenAPIRequest[*TestService2, *TestRequest2, *TestResponse2](spec2, state2, "GET", "/service2/query",
-		func(ctx context.Context, event *TestRequest2, sm *TestService2) *TestResponse2 {
+		func(ctx context.Context, event *TestRequest2, sm *TestService2) OpenAPIResponse[*TestResponse2] {
 			return OpenAPISendTo(ctx, sm, &TestResponse2{})
 		},
 		WithOperationID("service2Query"))
