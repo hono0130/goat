@@ -3,6 +3,7 @@ package protobuf
 import (
 	"fmt"
 	"go/format"
+	"reflect"
 	"sort"
 	"strings"
 )
@@ -114,7 +115,12 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 	buf.WriteString("\treturn reflect.DeepEqual(expected, actual)\n")
 	buf.WriteString("}\n")
 
-	return buf.String(), nil
+	formatted, err := format.Source([]byte(buf.String()))
+	if err != nil {
+		return buf.String(), fmt.Errorf("failed to format generated main test: %w", err)
+	}
+
+	return string(formatted), nil
 }
 
 // generateServiceTest generates a <service>_test.go file for a single service.
@@ -219,19 +225,20 @@ func formatStructLiteral(pkgAlias, typeName string, data map[string]any) string 
 		return fmt.Sprintf("&%s.%s{}", pkgAlias, typeName)
 	}
 
-	// Sort keys for stable output
 	keys := make([]string, 0, len(data))
 	for k := range data {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	var fields []string
+	var buf strings.Builder
+	fmt.Fprintf(&buf, "&%s.%s{\n", pkgAlias, typeName)
 	for _, k := range keys {
-		fields = append(fields, fmt.Sprintf("\t\t\t\t%s: %s", k, formatValue(data[k])))
+		fmt.Fprintf(&buf, "\t\t\t\t%s: %s,\n", k, formatValue(data[k]))
 	}
+	buf.WriteString("\t\t\t}")
 
-	return fmt.Sprintf("&%s.%s{\n%s,\n\t\t\t}", pkgAlias, typeName, strings.Join(fields, ",\n"))
+	return buf.String()
 }
 
 // formatValue formats a value as a Go literal.
@@ -242,25 +249,26 @@ func formatValue(value any) string {
 		return "nil"
 	}
 
+	val := reflect.ValueOf(value)
+	switch val.Kind() {
+	case reflect.Ptr, reflect.Slice, reflect.Map:
+		if val.IsNil() {
+			return "nil"
+		}
+	}
+
 	switch v := value.(type) {
 	case string:
 		return fmt.Sprintf("%q", v)
-	case int, int32, int64, uint, uint32, uint64:
-		return fmt.Sprintf("%v", v)
+	case bool:
+		return fmt.Sprintf("%t", v)
+	case int, int8, int16, int32, int64:
+		return fmt.Sprintf("%d", v)
+	case uint, uint8, uint16, uint32, uint64, uintptr:
+		return fmt.Sprintf("%d", v)
 	case float32, float64:
 		return fmt.Sprintf("%v", v)
-	case bool:
-		return fmt.Sprintf("%v", v)
-	case []any:
-		if len(v) == 0 {
-			return "nil"
-		}
-		var items []string
-		for _, item := range v {
-			items = append(items, formatValue(item))
-		}
-		return fmt.Sprintf("[]string{%s}", strings.Join(items, ", "))
 	default:
-		return fmt.Sprintf("%#v", v)
+		return fmt.Sprintf("%#v", value)
 	}
 }
