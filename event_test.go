@@ -293,3 +293,25 @@ func TestGetEventDetails(t *testing.T) {
 		})
 	}
 }
+
+func TestNewEventPrototype(t *testing.T) {
+	t.Run("creates non-nil prototype for pointer events", func(t *testing.T) {
+		prototype := newEventPrototype[*testEvent]()
+		if prototype == nil {
+			t.Fatal("expected prototype to be non-nil")
+		}
+		if !sameEvent(prototype, &testEvent{}) {
+			t.Errorf("expected prototype to be testEvent, got %T", prototype)
+		}
+	})
+
+	t.Run("supports generic pointer events", func(t *testing.T) {
+		prototype := newEventPrototype[*genericTestEvent[int]]()
+		if prototype == nil {
+			t.Fatal("expected prototype to be non-nil")
+		}
+		if !sameEvent(prototype, &genericTestEvent[int]{}) {
+			t.Errorf("expected prototype to be genericTestEvent[int], got %T", prototype)
+		}
+	})
+}

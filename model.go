@@ -9,13 +9,15 @@ import (
 )
 
 type model struct {
-	worlds     worlds
-	initial    world
-	accessible map[worldID][]worldID
-	conds      map[ConditionName]Condition
-	invariants []ConditionName
-	ltlRules   []ltlRule
-	labels     map[worldID]map[ConditionName]bool
+	worlds                worlds
+	initial               world
+	accessible            map[worldID][]worldID
+	conds                 map[ConditionName]Condition
+	invariants            []ConditionName
+	hasInvariantViolation bool
+	ltlRules              []ltlRule
+	hasLTLViolation       bool
+	labels                map[worldID]map[ConditionName]bool
 }
 
 type worldID uint64
@@ -31,9 +33,9 @@ func (ws worlds) insert(w world) {
 }
 
 type world struct {
-	id                 worldID
-	env                environment
-	invariantViolation bool
+	id               worldID
+	env              environment
+	failedInvariants []ConditionName
 }
 
 func newWorld(env environment) world {
@@ -210,8 +212,9 @@ func (m *model) Solve() error {
 		current := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		if !m.evaluateInvariants(current) {
-			current.invariantViolation = true
+		if failed := m.evaluateInvariants(current); len(failed) > 0 {
+			m.hasInvariantViolation = true
+			current.failedInvariants = append(current.failedInvariants, failed...)
 			m.worlds[current.id] = current
 		}
 
@@ -234,13 +237,14 @@ func (m *model) Solve() error {
 	return nil
 }
 
-func (m *model) evaluateInvariants(w world) bool {
+func (m *model) evaluateInvariants(w world) []ConditionName {
+	failed := make([]ConditionName, 0)
 	for _, name := range m.invariants {
 		if !m.labels[w.id][name] {
-			return false
+			failed = append(failed, name)
 		}
 	}
-	return true
+	return failed
 }
 
 type options struct {

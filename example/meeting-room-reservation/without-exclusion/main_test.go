@@ -31,10 +31,6 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 
 	expectedSummary := map[string]any{
 		"total_worlds": float64(12152),
-		"invariant_violations": map[string]any{
-			"found": true,
-			"count": float64(2592),
-		},
 	}
 
 	ignoreOpts := cmpopts.IgnoreMapEntries(func(k string, _ any) bool {

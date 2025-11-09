@@ -2,6 +2,7 @@ package protobuf
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/goatx/goat"
@@ -28,10 +29,11 @@ func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O
 	spec *ProtobufServiceSpec[T],
 	state goat.AbstractState,
 	methodName string,
-	inputEvent I,
-	outputEvent O,
 	handler func(context.Context, I, T) ProtobufResponse[O],
 ) {
+	inputEvent := newProtobufMessagePrototype[I]()
+	outputEvent := newProtobufMessagePrototype[O]()
+
 	serviceTypeName := getServiceTypeName(spec.StateMachineSpec)
 	inputTypeName := getEventTypeName(inputEvent)
 	outputTypeName := getEventTypeName(outputEvent)
@@ -55,7 +57,40 @@ func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O
 		_ = response
 	}
 
-	goat.OnEvent(spec.StateMachineSpec, state, inputEvent, wrappedHandler)
+	goat.OnEvent(spec.StateMachineSpec, state, wrappedHandler)
+}
+
+func newProtobufMessagePrototype[T AbstractProtobufMessage]() T {
+	var zero T
+	msgType := reflect.TypeOf(zero)
+	if msgType == nil {
+		msgType = reflect.TypeFor[T]()
+	}
+
+	if msgType.Kind() == reflect.Interface {
+		panic(fmt.Sprintf("cannot use interface type %s as protobuf message type parameter; use a concrete message type instead", msgType))
+	}
+
+	if msgType.Kind() == reflect.Pointer {
+		elem := msgType.Elem()
+		if elem.Kind() == reflect.Interface {
+			panic(fmt.Sprintf("cannot use interface type %s as protobuf message type parameter; use a concrete message type instead", elem))
+		}
+
+		prototype := reflect.New(elem).Interface()
+		msg, ok := prototype.(T)
+		if !ok {
+			panic(fmt.Sprintf("type %s does not implement AbstractProtobufMessage", msgType))
+		}
+		return msg
+	}
+
+	value := reflect.New(msgType).Elem().Interface()
+	msg, ok := value.(T)
+	if !ok {
+		panic(fmt.Sprintf("type %s does not implement AbstractProtobufMessage", msgType))
+	}
+	return msg
 }
 
 func analyzeMessage[M AbstractProtobufMessage](instance M) *protoMessage {

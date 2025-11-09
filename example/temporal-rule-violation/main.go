@@ -47,7 +47,7 @@ func createTemporalRuleViolationModel() []goat.Option {
 	shipperSpec := goat.NewStateMachineSpec(&FailingShipper{})
 	idle := &shipperState{}
 	shipperSpec.DefineStates(idle).SetInitialState(idle)
-	goat.OnEvent(shipperSpec, idle, &eShipRequest{}, func(ctx context.Context, _ *eShipRequest, _ *FailingShipper) {
+	goat.OnEvent(shipperSpec, idle, func(ctx context.Context, _ *eShipRequest, _ *FailingShipper) {
 		// Intentionally left blank: the failing shipper never sends the response.
 	})
 
@@ -65,7 +65,7 @@ func createTemporalRuleViolationModel() []goat.Option {
 	goat.OnEntry(orderSpec, paid, func(ctx context.Context, o *Order) {
 		goat.SendTo(ctx, o.Shipper, &eShipRequest{})
 	})
-	goat.OnEvent(orderSpec, paid, &eShipResponse{}, func(ctx context.Context, _ *eShipResponse, o *Order) {
+	goat.OnEvent(orderSpec, paid, func(ctx context.Context, _ *eShipResponse, o *Order) {
 		goat.Goto(ctx, shipped)
 	})
 

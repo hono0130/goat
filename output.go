@@ -3,18 +3,13 @@ package goat
 import (
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strings"
 )
 
 type modelSummary struct {
-	TotalWorlds int `json:"total_worlds"`
-
-	InvariantViolations struct {
-		Found bool `json:"found"`
-		Count int  `json:"count"`
-	} `json:"invariant_violations"`
-
+	TotalWorlds     int   `json:"total_worlds"`
 	ExecutionTimeMs int64 `json:"execution_time_ms"`
 }
 
@@ -42,7 +37,7 @@ func (m *model) writeDot(w io.Writer) {
 			sb.WriteString(fmt.Sprintf("%d", id))
 			sb.WriteString(" [ penwidth=5 ];\n")
 		}
-		if wld.invariantViolation {
+		if len(wld.failedInvariants) > 0 {
 			sb.WriteString("  ")
 			sb.WriteString(fmt.Sprintf("%d", id))
 			sb.WriteString(" [ color=red, penwidth=3 ];\n")
@@ -74,30 +69,29 @@ func (m *model) writeDot(w io.Writer) {
 	_, _ = io.WriteString(w, sb.String())
 }
 
-func (m *model) writeInvariantViolations(w io.Writer, invariantDescription string) {
+func (m *model) writeInvariantViolations(w io.Writer) {
 	var sb strings.Builder
-	paths := m.findPathsToViolations()
-
-	if len(paths) == 0 {
-		sb.WriteString("No invariant violations found.\n")
-		_, _ = io.WriteString(w, sb.String())
-		return
-	}
-
-	for i, path := range paths {
+	violations := m.collectInvariantViolations()
+	for i, violation := range violations {
 		if i > 0 {
 			sb.WriteString("\n")
 		}
 
-		sb.WriteString("InvariantError:  ")
-		sb.WriteString(invariantDescription)
-		sb.WriteString("   ✘\n")
+		name := violation.condition.String()
+		if name == "" {
+			sb.WriteString("Condition failed.\n")
+		} else {
+			sb.WriteString("Condition failed. Not Always ")
+			sb.WriteString(name)
+			sb.WriteString(".\n")
+		}
+
 		sb.WriteString("Path (length = ")
-		sb.WriteString(fmt.Sprintf("%d", len(path)))
+		sb.WriteString(fmt.Sprintf("%d", len(violation.path)))
 		sb.WriteString("):\n")
 
-		m.writeWorldSequence(&sb, path, func(idx int, w world) string {
-			if idx == len(path)-1 && w.invariantViolation {
+		m.writeWorldSequence(&sb, violation.path, func(idx int, w world) string {
+			if idx == len(violation.path)-1 {
 				return "<-- violation here"
 			}
 			return ""
@@ -126,9 +120,14 @@ func (m *model) writeTemporalViolations(w io.Writer, results []temporalRuleResul
 		}
 		block++
 
-		sb.WriteString("TemporalRuleViolation:  ")
-		sb.WriteString(res.Rule)
-		sb.WriteString("   ✘\n")
+		rule := strings.TrimSpace(res.Rule)
+		if rule == "" {
+			sb.WriteString("Condition failed.\n")
+		} else {
+			sb.WriteString("Condition failed. Not ")
+			sb.WriteString(rule)
+			sb.WriteString(".\n")
+		}
 
 		prefixLen := len(lasso.Prefix)
 		loopLen := len(lasso.Loop)
@@ -202,14 +201,36 @@ func (m *model) writeWorldSequence(sb *strings.Builder, worldIDs []worldID, anno
 	}
 }
 
-func (m *model) findPathsToViolations() [][]worldID {
-	var paths [][]worldID
+type invariantViolationWitness struct {
+	path      []worldID
+	condition ConditionName
+}
+
+func (m *model) collectInvariantViolations() []invariantViolationWitness {
+	var violations []invariantViolationWitness
+
+	targets := make(map[string]struct{})
+	for _, world := range m.worlds {
+		for _, name := range world.failedInvariants {
+			targets[name.String()] = struct{}{}
+		}
+	}
+
+	totalTargets := len(targets)
+	if totalTargets == 0 {
+		return nil
+	}
 
 	visited := make(map[worldID]bool)
+	seen := make(map[string]bool)
 
 	queue := [][]worldID{{m.initial.id}}
 
 	for len(queue) > 0 {
+		if len(seen) == totalTargets {
+			break
+		}
+
 		path := queue[0]
 		queue = queue[1:]
 
@@ -220,9 +241,21 @@ func (m *model) findPathsToViolations() [][]worldID {
 		}
 		visited[currentID] = true
 
-		if m.worlds[currentID].invariantViolation {
-			paths = append(paths, path)
-			continue
+		world := m.worlds[currentID]
+
+		if len(world.failedInvariants) > 0 {
+			for _, name := range world.failedInvariants {
+				if seen[name.String()] {
+					continue
+				}
+				seen[name.String()] = true
+
+				copyPath := slices.Clone(path)
+				violations = append(violations, invariantViolationWitness{
+					path:      copyPath,
+					condition: name,
+				})
+			}
 		}
 
 		for _, nextID := range m.accessible[currentID] {
@@ -235,7 +268,7 @@ func (m *model) findPathsToViolations() [][]worldID {
 		}
 	}
 
-	return paths
+	return violations
 }
 
 func (w world) label() string {
@@ -386,7 +419,7 @@ func (*model) worldToJSON(w world) worldJSON {
 	})
 
 	return worldJSON{
-		InvariantViolation: w.invariantViolation,
+		InvariantViolation: len(w.failedInvariants) > 0,
 		StateMachines:      stateMachines,
 		QueuedEvents:       queuedEvents,
 	}
@@ -397,16 +430,5 @@ func (m *model) summarize(executionTimeMs int64) *modelSummary {
 		TotalWorlds:     len(m.worlds),
 		ExecutionTimeMs: executionTimeMs,
 	}
-
-	violationCount := 0
-	for _, world := range m.worlds {
-		if world.invariantViolation {
-			violationCount++
-		}
-	}
-
-	summary.InvariantViolations.Found = violationCount > 0
-	summary.InvariantViolations.Count = violationCount
-
 	return summary
 }

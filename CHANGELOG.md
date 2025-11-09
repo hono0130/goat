@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.0](https://github.com/goatx/goat/releases/tag/v0.4.0) - 2025-11-07
+
+### Changed
+- Improved model check output for better readability
+- **Breaking:** Removed event instance parameters from OnEvent APIs
+
 ## [0.3.0](https://github.com/goatx/goat/releases/tag/v0.3.0) - 2025-10-30
 
 ### Added
