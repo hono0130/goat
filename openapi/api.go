@@ -8,13 +8,21 @@ import (
 	"github.com/goatx/goat"
 )
 
-type OpenAPIResponse[O AbstractOpenAPISchema] struct {
+// OpenAPIResponse is a sealed interface that can only be created via OpenAPISendTo.
+// This ensures handlers must call OpenAPISendTo to send events.
+type OpenAPIResponse[O AbstractOpenAPISchema] interface {
+	isOpenAPIResponse()
+}
+
+type openAPIResponseImpl[O AbstractOpenAPISchema] struct {
 	event O
 }
 
+func (openAPIResponseImpl[O]) isOpenAPIResponse() {}
+
 func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O) OpenAPIResponse[O] {
 	goat.SendTo(ctx, target, event)
-	return OpenAPIResponse[O]{event: event}
+	return openAPIResponseImpl[O]{event: event}
 }
 
 // RequestOption is a functional option for configuring OnOpenAPIRequest
