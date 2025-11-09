@@ -74,11 +74,12 @@ func createTemporalRuleModel() []goat.Option {
 	if err != nil {
 		log.Fatal(err)
 	}
-	order, err := orderSpec.NewInstance()
+	order, err := orderSpec.NewInstance(func(order *Order) {
+		order.Shipper = shipper
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	order.Shipper = shipper
 
 	inPaid := goat.NewCondition("inPaid", order, func(o *Order) bool {
 		return o.State.(*State).StateType == StatePaid

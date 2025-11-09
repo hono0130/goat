@@ -236,41 +236,46 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 
 	// === Create Instances ===
 	// Create database instance
-	db, err := dbSpec.NewInstance()
+	db, err := dbSpec.NewInstance(func(db *DBStateMachine) {
+		db.Reservations = make([]Reservation, 0)
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	db.Reservations = make([]Reservation, 0)
 
 	// Create server instances
-	server1, err := serverSpec.NewInstance()
+	server1, err := serverSpec.NewInstance(func(server *ServerStateMachine) {
+		server.DB = db
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	server1.DB = db
 
-	server2, err := serverSpec.NewInstance()
+	server2, err := serverSpec.NewInstance(func(server *ServerStateMachine) {
+		server.DB = db
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	server2.DB = db
 
 	// Create client instances
-	client1, err := clientSpec.NewInstance()
+	client1, err := clientSpec.NewInstance(func(client *ClientStateMachine) {
+		client.ClientID = 0
+		client.TargetRoom = 101
+		client.Server = server1
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	client1.ClientID = 0
-	client1.TargetRoom = 101
-	client1.Server = server1
 
-	client2, err := clientSpec.NewInstance()
+	client2, err := clientSpec.NewInstance(func(client *ClientStateMachine) {
+		client.ClientID = 1
+		client.TargetRoom = 101
+		client.Server = server2
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	client2.ClientID = 1
-	client2.TargetRoom = 101
-	client2.Server = server2
 
 	cond := goat.NewCondition("no-double-book", db, func(db *DBStateMachine) bool {
 		roomClients := make(map[int]map[int]bool)
