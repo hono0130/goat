@@ -33,7 +33,7 @@ func (f conditionFunc) Evaluate(w world) bool { return f.fn(w) }
 //   - name: The name of this condition
 //   - b: The boolean value that this condition will always return
 //
-// Returns a Condition that can be used with Test() or WithInvariants().
+// Returns a Condition that can be used with Test() (for example via WithRules(Always(...))).
 //
 // Example:
 //
@@ -52,7 +52,7 @@ func BoolCondition(name string, b bool) Condition {
 //   - sm: The state machine instance to create a condition for
 //   - check: A predicate function that returns true if the condition holds
 //
-// Returns a Condition that can be used with Test() or WithInvariants().
+// Returns a Condition that can be used with Test() (for example via WithRules(Always(...))).
 //
 // Example:
 //
@@ -132,7 +132,7 @@ func GetMachine[T AbstractStateMachine](m Machines, sm T) (T, bool) {
 //   - checkFunc: Predicate that inspects one or more state machines
 //   - sms: State machines referenced by the condition
 //
-// Returns a Condition that can be used with Test() or WithInvariants().
+// Returns a Condition that can be used with Test() (for example via WithRules(Always(...))).
 //
 // Example:
 //
@@ -171,7 +171,7 @@ func NewMultiCondition(name string, checkFunc func(Machines) bool, sms ...Abstra
 //   - sm1, sm2: The state machines to reference
 //   - check: A predicate function that returns true if the condition holds
 //
-// Returns a Condition that can be used with Test() or WithInvariants().
+// Returns a Condition that can be used with Test() (for example via WithRules(Always(...))).
 //
 // Example:
 //
@@ -199,7 +199,7 @@ func NewCondition2[T1, T2 AbstractStateMachine](name string, sm1 T1, sm2 T2, che
 //   - sm1, sm2, sm3: The state machines to reference
 //   - check: A predicate function that returns true if the condition holds
 //
-// Returns a Condition that can be used with Test() or WithInvariants().
+// Returns a Condition that can be used with Test() (for example via WithRules(Always(...))).
 //
 // Example:
 //

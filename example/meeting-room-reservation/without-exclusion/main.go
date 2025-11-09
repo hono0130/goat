@@ -292,8 +292,7 @@ func createMeetingRoomWithoutExclusionModel() []goat.Option {
 
 	opts := []goat.Option{
 		goat.WithStateMachines(server1, server2, db, client1, client2),
-		goat.WithConditions(cond),
-		goat.WithInvariants(cond),
+		goat.WithRules(goat.Always(cond)),
 	}
 
 	return opts
