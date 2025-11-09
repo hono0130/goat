@@ -56,8 +56,8 @@ func TestOnOpenAPIRequest(t *testing.T) {
 			initialEndpointCount := len(spec.GetEndpoints())
 
 			OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, tt.method, tt.path,
-				func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponseWrapper[*TestResponse1] {
-					return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"}, StatusOK)
+				func(ctx context.Context, event *TestRequest1, sm *TestService1) *TestResponse1 {
+					return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
 				},
 				WithOperationID(tt.operationID))
 
