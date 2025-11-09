@@ -44,7 +44,8 @@ testStateMachine << entryEvent;" ];
 				inv := BoolCondition("inv", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				_ = m.Solve()
 				return m
@@ -137,7 +138,8 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				_ = m.Solve()
 				return m
@@ -151,7 +153,8 @@ func TestModel_writeInvariantViolations(t *testing.T) {
 				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				_ = m.Solve()
 				return m
@@ -186,7 +189,8 @@ func TestModel_writeTemporalViolations(t *testing.T) {
 	cFalse := BoolCondition("c", false)
 	m, err := newModel(
 		WithStateMachines(sm),
-		WithRules(EventuallyAlways(cFalse)),
+		WithConditions(cFalse),
+		WithTemporalRules(EventuallyAlways(cFalse)),
 	)
 	if err != nil {
 		t.Fatalf("newModel error: %v", err)
@@ -289,7 +293,8 @@ func TestModel_collectInvariantViolations(t *testing.T) {
 				inv := BoolCondition("pass", true)
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				if err != nil {
 					panic(err)
@@ -306,7 +311,8 @@ func TestModel_collectInvariantViolations(t *testing.T) {
 				inv := BoolCondition("fail", false)
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				if err != nil {
 					panic(err)
@@ -354,7 +360,8 @@ func TestModel_collectInvariantViolations(t *testing.T) {
 
 				m, err := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				if err != nil {
 					panic(err)
@@ -624,7 +631,8 @@ func TestModel_summarize(t *testing.T) {
 				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				_ = m.Solve()
 				return m
@@ -642,7 +650,8 @@ func TestModel_summarize(t *testing.T) {
 				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				_ = m.Solve()
 				return m

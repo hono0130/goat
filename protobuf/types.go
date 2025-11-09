@@ -23,12 +23,20 @@ type AbstractProtobufServiceSpec interface {
 	isProtobufServiceSpec() bool
 	GetRPCMethods() []rpcMethod
 	GetMessages() map[string]*protoMessage
+	// GetHandlers returns a map of method names to handler functions.
+	// 'any' is necessary because each handler has a different signature based on request/response types.
+	GetHandlers() map[string]any
+	NewStateMachineInstance() (goat.AbstractStateMachine, error)
+	GetServiceName() string
 }
 
 type ProtobufServiceSpec[T goat.AbstractStateMachine] struct {
 	*goat.StateMachineSpec[T]
 	rpcMethods []rpcMethod
 	messages   map[string]*protoMessage
+	// handlers stores handler functions for each RPC method.
+	// 'any' is necessary because each handler has a different signature.
+	handlers map[string]any // methodName -> handler function
 }
 
 func (*ProtobufServiceSpec[T]) isProtobufServiceSpec() bool {
@@ -41,6 +49,18 @@ func (ps *ProtobufServiceSpec[T]) GetRPCMethods() []rpcMethod {
 
 func (ps *ProtobufServiceSpec[T]) GetMessages() map[string]*protoMessage {
 	return ps.messages
+}
+
+func (ps *ProtobufServiceSpec[T]) GetHandlers() map[string]any {
+	return ps.handlers
+}
+
+func (ps *ProtobufServiceSpec[T]) NewStateMachineInstance() (goat.AbstractStateMachine, error) {
+	return ps.StateMachineSpec.NewInstance()
+}
+
+func (ps *ProtobufServiceSpec[T]) GetServiceName() string {
+	return getServiceTypeName(ps.StateMachineSpec)
 }
 
 func (ps *ProtobufServiceSpec[T]) addRPCMethod(metadata rpcMethod) {

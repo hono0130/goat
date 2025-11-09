@@ -8,7 +8,8 @@ func TestEventuallyAlways(t *testing.T) {
 		cTrue := BoolCondition("c", true)
 		m, err := newModel(
 			WithStateMachines(sm),
-			WithRules(EventuallyAlways(cTrue)),
+			WithConditions(cTrue),
+			WithTemporalRules(EventuallyAlways(cTrue)),
 		)
 		if err != nil {
 			t.Fatalf("newModel error: %v", err)
@@ -25,7 +26,8 @@ func TestEventuallyAlways(t *testing.T) {
 		cFalse := BoolCondition("cF", false)
 		m, err := newModel(
 			WithStateMachines(sm),
-			WithRules(EventuallyAlways(cFalse)),
+			WithConditions(cFalse),
+			WithTemporalRules(EventuallyAlways(cFalse)),
 		)
 		if err != nil {
 			t.Fatalf("newModel error: %v", err)
@@ -47,7 +49,8 @@ func TestAlwaysEventually(t *testing.T) {
 		cTrue := BoolCondition("c", true)
 		m, err := newModel(
 			WithStateMachines(sm),
-			WithRules(AlwaysEventually(cTrue)),
+			WithConditions(cTrue),
+			WithTemporalRules(AlwaysEventually(cTrue)),
 		)
 		if err != nil {
 			t.Fatalf("newModel error: %v", err)
@@ -64,7 +67,8 @@ func TestAlwaysEventually(t *testing.T) {
 		cFalse := BoolCondition("cF", false)
 		m, err := newModel(
 			WithStateMachines(sm),
-			WithRules(AlwaysEventually(cFalse)),
+			WithConditions(cFalse),
+			WithTemporalRules(AlwaysEventually(cFalse)),
 		)
 		if err != nil {
 			t.Fatalf("newModel error: %v", err)
@@ -87,7 +91,8 @@ func TestWheneverPEventuallyQ(t *testing.T) {
 		qTrue := BoolCondition("q", true)
 		m, err := newModel(
 			WithStateMachines(sm),
-			WithRules(WheneverPEventuallyQ(pTrue, qTrue)),
+			WithConditions(pTrue, qTrue),
+			WithTemporalRules(WheneverPEventuallyQ(pTrue, qTrue)),
 		)
 		if err != nil {
 			t.Fatalf("newModel error: %v", err)
@@ -105,7 +110,8 @@ func TestWheneverPEventuallyQ(t *testing.T) {
 		qFalse := BoolCondition("q", false)
 		m, err := newModel(
 			WithStateMachines(sm),
-			WithRules(WheneverPEventuallyQ(pTrue, qFalse)),
+			WithConditions(pTrue, qFalse),
+			WithTemporalRules(WheneverPEventuallyQ(pTrue, qFalse)),
 		)
 		if err != nil {
 			t.Fatalf("newModel error: %v", err)
