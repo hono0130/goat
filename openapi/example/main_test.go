@@ -21,7 +21,7 @@ func TestUserServiceOpenAPIGeneration(t *testing.T) {
 		Filename:    "user_service.yaml",
 	}
 
-	err := openapi.GenerateOpenAPI(opts, spec)
+	err := openapi.GenerateOpenAPI(&opts, spec)
 	if err != nil {
 		t.Fatalf("GenerateOpenAPI() error = %v", err)
 	}

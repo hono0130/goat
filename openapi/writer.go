@@ -73,7 +73,7 @@ func (w *specWriter) generateFileContent(definitions *openAPIDefinitions) string
 	return builder.String()
 }
 
-func (w *specWriter) writePath(builder *strings.Builder, path *pathDefinition) {
+func (*specWriter) writePath(builder *strings.Builder, path *pathDefinition) {
 	builder.WriteString("  ")
 	builder.WriteString(path.Path)
 	builder.WriteString(":\n")
@@ -167,7 +167,7 @@ func (w *specWriter) writeSchema(builder *strings.Builder, schema *schemaDefinit
 }
 
 func (*specWriter) toCamelCase(name string) string {
-	if len(name) == 0 {
+	if name == "" {
 		return name
 	}
 

@@ -6,6 +6,7 @@ type openAPIGenerator struct {
 	opts     GenerateOptions
 }
 
+//nolint:gocritic // opts is passed by value for consistency with protobuf package
 func newOpenAPIGenerator(opts GenerateOptions) *openAPIGenerator {
 	return &openAPIGenerator{
 		analyzer: newSchemaAnalyzer(),

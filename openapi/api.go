@@ -2,6 +2,7 @@ package openapi
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/goatx/goat"
@@ -30,10 +31,11 @@ func OnOpenAPIEndpoint[T goat.AbstractStateMachine, I AbstractOpenAPIEndpoint, O
 	method string,
 	path string,
 	operationID string,
-	requestEvent I,
-	responseEvent O,
 	handler func(context.Context, I, T) OpenAPIResponse[O],
 ) {
+	requestEvent := newOpenAPIEndpointPrototype[I]()
+	responseEvent := newOpenAPIEndpointPrototype[O]()
+
 	requestTypeName := getEventTypeName(requestEvent)
 	responseTypeName := getEventTypeName(responseEvent)
 
@@ -57,7 +59,40 @@ func OnOpenAPIEndpoint[T goat.AbstractStateMachine, I AbstractOpenAPIEndpoint, O
 		_ = response
 	}
 
-	goat.OnEvent(spec.StateMachineSpec, state, requestEvent, wrappedHandler)
+	goat.OnEvent(spec.StateMachineSpec, state, wrappedHandler)
+}
+
+func newOpenAPIEndpointPrototype[T AbstractOpenAPIEndpoint]() T {
+	var zero T
+	msgType := reflect.TypeOf(zero)
+	if msgType == nil {
+		msgType = reflect.TypeFor[T]()
+	}
+
+	if msgType.Kind() == reflect.Interface {
+		panic(fmt.Sprintf("cannot use interface type %s as openapi endpoint type parameter; use a concrete endpoint type instead", msgType))
+	}
+
+	if msgType.Kind() == reflect.Pointer {
+		elem := msgType.Elem()
+		if elem.Kind() == reflect.Interface {
+			panic(fmt.Sprintf("cannot use interface type %s as openapi endpoint type parameter; use a concrete endpoint type instead", elem))
+		}
+
+		prototype := reflect.New(elem).Interface()
+		msg, ok := prototype.(T)
+		if !ok {
+			panic(fmt.Sprintf("type %s does not implement AbstractOpenAPIEndpoint", msgType))
+		}
+		return msg
+	}
+
+	value := reflect.New(msgType).Elem().Interface()
+	msg, ok := value.(T)
+	if !ok {
+		panic(fmt.Sprintf("type %s does not implement AbstractOpenAPIEndpoint", msgType))
+	}
+	return msg
 }
 
 func analyzeSchema[S AbstractOpenAPIEndpoint](instance S) *schemaDefinition {
@@ -112,7 +147,7 @@ func isGoatEventType(t reflect.Type) bool {
 	return t.Kind() == reflect.Struct && t.Name() == "Event" && t.PkgPath() == "github.com/goatx/goat"
 }
 
-func mapGoFieldToOpenAPI(goType reflect.Type) (string, string, bool) {
+func mapGoFieldToOpenAPI(goType reflect.Type) (typeName, format string, isArray bool) {
 	if goType.Kind() == reflect.Slice {
 		elemType, format, _ := mapGoFieldToOpenAPI(goType.Elem())
 		return elemType, format, true
@@ -144,7 +179,7 @@ type GenerateOptions struct {
 	Filename    string
 }
 
-func GenerateOpenAPI(opts GenerateOptions, specs ...AbstractOpenAPIServiceSpec) error {
+func GenerateOpenAPI(opts *GenerateOptions, specs ...AbstractOpenAPIServiceSpec) error {
 	if opts.OutputDir == "" {
 		opts.OutputDir = "./openapi"
 	}
@@ -155,7 +190,7 @@ func GenerateOpenAPI(opts GenerateOptions, specs ...AbstractOpenAPIServiceSpec) 
 		opts.Version = "1.0.0"
 	}
 
-	generator := newOpenAPIGenerator(opts)
+	generator := newOpenAPIGenerator(*opts)
 	return generator.generateFromSpecs(specs...)
 }
 

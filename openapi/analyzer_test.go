@@ -30,8 +30,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					spec := NewOpenAPIServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIEndpoint(spec, state, "POST", "/test", "testEndpoint",
-						&TestRequest1{}, &TestResponse1{},
+					OnOpenAPIEndpoint[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/test", "testEndpoint",
 						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 							return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
 						})
@@ -76,13 +75,11 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					spec := NewOpenAPIServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIEndpoint(spec, state, "POST", "/endpoint1", "endpoint1",
-						&TestRequest1{}, &TestResponse1{},
+					OnOpenAPIEndpoint[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/endpoint1", "endpoint1",
 						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 							return OpenAPISendTo(ctx, sm, &TestResponse1{})
 						})
-					OnOpenAPIEndpoint(spec, state, "GET", "/endpoint2", "endpoint2",
-						&TestRequest2{}, &TestResponse2{},
+					OnOpenAPIEndpoint[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/endpoint2", "endpoint2",
 						func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponse[*TestResponse2] {
 							return OpenAPISendTo(ctx, sm, &TestResponse2{})
 						})
@@ -92,8 +89,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					spec := NewOpenAPIServiceSpec(&TestService2{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIEndpoint(spec, state, "PUT", "/endpoint3", "endpoint3",
-						&TestRequest3{}, &TestResponse3{},
+					OnOpenAPIEndpoint[*TestService2, *TestRequest3, *TestResponse3](spec, state, "PUT", "/endpoint3", "endpoint3",
 						func(ctx context.Context, event *TestRequest3, sm *TestService2) OpenAPIResponse[*TestResponse3] {
 							return OpenAPISendTo(ctx, sm, &TestResponse3{})
 						})

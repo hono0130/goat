@@ -58,8 +58,7 @@ func createUserServiceModel() *openapi.OpenAPIServiceSpec[*UserService] {
 	spec.DefineStates(idleState, processingState).SetInitialState(idleState)
 
 	// Register API endpoints using OnOpenAPIEndpoint
-	openapi.OnOpenAPIEndpoint(spec, idleState, "POST", "/users", "createUser",
-		&CreateUserRequest{}, &CreateUserResponse{},
+	openapi.OnOpenAPIEndpoint[*UserService, *CreateUserRequest, *CreateUserResponse](spec, idleState, "POST", "/users", "createUser",
 		func(ctx context.Context, event *CreateUserRequest, service *UserService) openapi.OpenAPIResponse[*CreateUserResponse] {
 			response := &CreateUserResponse{
 				UserID:    "user_123",
@@ -69,8 +68,7 @@ func createUserServiceModel() *openapi.OpenAPIServiceSpec[*UserService] {
 			return openapi.OpenAPISendTo(ctx, service, response)
 		})
 
-	openapi.OnOpenAPIEndpoint(spec, idleState, "GET", "/users/{userId}", "getUser",
-		&GetUserRequest{}, &GetUserResponse{},
+	openapi.OnOpenAPIEndpoint[*UserService, *GetUserRequest, *GetUserResponse](spec, idleState, "GET", "/users/{userId}", "getUser",
 		func(ctx context.Context, event *GetUserRequest, service *UserService) openapi.OpenAPIResponse[*GetUserResponse] {
 			response := &GetUserResponse{
 				Username: "testuser",
@@ -94,7 +92,7 @@ func main() {
 		Filename:    "user_service.yaml",
 	}
 
-	err := openapi.GenerateOpenAPI(opts, spec)
+	err := openapi.GenerateOpenAPI(&opts, spec)
 	if err != nil {
 		log.Fatalf("GenerateOpenAPI() error = %v", err)
 	}

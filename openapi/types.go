@@ -43,6 +43,7 @@ func (os *OpenAPIServiceSpec[T]) GetSchemas() map[string]*schemaDefinition {
 	return os.schemas
 }
 
+//nolint:gocritic // metadata is passed by value for consistency with protobuf package
 func (os *OpenAPIServiceSpec[T]) addEndpoint(metadata endpointMetadata) {
 	os.endpoints = append(os.endpoints, metadata)
 }

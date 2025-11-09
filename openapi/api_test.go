@@ -53,8 +53,7 @@ func TestOnOpenAPIEndpoint(t *testing.T) {
 
 			initialEndpointCount := len(spec.GetEndpoints())
 
-			OnOpenAPIEndpoint(spec, state, tt.method, tt.path, tt.operationID,
-				&TestRequest1{}, &TestResponse1{},
+			OnOpenAPIEndpoint[*TestService1, *TestRequest1, *TestResponse1](spec, state, tt.method, tt.path, tt.operationID,
 				func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
 					return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
 				})
@@ -203,11 +202,11 @@ func TestAnalyzeSchema(t *testing.T) {
 
 func TestMapGoFieldToOpenAPI(t *testing.T) {
 	tests := []struct {
-		name           string
-		goType         reflect.Type
-		wantType       string
-		wantFormat     string
-		wantIsArray    bool
+		name        string
+		goType      reflect.Type
+		wantType    string
+		wantFormat  string
+		wantIsArray bool
 	}{
 		{
 			name:        "maps string to string",
