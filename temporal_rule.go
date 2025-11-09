@@ -2,13 +2,20 @@ package goat
 
 import "fmt"
 
+// TemporalRule represents a temporal property specified
+type TemporalRule interface {
+	name() string
+	isTemporalRule() bool
+}
+
 type ltlRule struct {
 	n string
 	b *ba
 }
 
-func (r ltlRule) name() string { return r.n }
-func (r ltlRule) ba() *ba      { return r.b }
+func (r ltlRule) name() string       { return r.n }
+func (ltlRule) isTemporalRule() bool { return true }
+func (r ltlRule) ba() *ba            { return r.b }
 
 type temporalEvidence interface {
 	temporalEvidence()
@@ -20,23 +27,49 @@ type temporalRuleResult struct {
 	Evidence  temporalEvidence `json:"evidence,omitempty"`
 }
 
+// WithTemporalRules registers temporal rules for model checking.
+//
+// Parameters:
+//   - rs: The temporal rules to enforce during verification
+//
+// Returns an Option that can be passed to Test or Debug.
+//
+// Example:
+//
+//	err := goat.Test(
+//	    goat.WithStateMachines(sm),
+//	    goat.WithTemporalRules(goat.EventuallyAlways(cond)),
+//	)
+func WithTemporalRules(rs ...TemporalRule) Option {
+	return optionFunc(func(o *options) {
+		for _, r := range rs {
+			ltlRule, ok := r.(ltlRule)
+			if !ok {
+				panic(fmt.Sprintf("temporal rule %T must be constructed using helper functions like WheneverPEventuallyQ or EventuallyAlways", r))
+			}
+			o.ltlRules = append(o.ltlRules, ltlRule)
+		}
+	})
+}
+
 // WheneverPEventuallyQ returns a rule enforcing that whenever p holds, q eventually holds.
 //
 // Parameters:
 //   - p: Condition that triggers the obligation
 //   - q: Condition that must eventually become true
 //
-// Returns a Rule that can be registered with WithRules.
+// Returns a TemporalRule that can be registered with WithTemporalRules.
 //
 // Example:
 //
 //	err := goat.Test(
 //		goat.WithStateMachines(primary, replica),
-//		goat.WithRules(
+//		goat.WithConditions(write, replicated),
+//		goat.WithTemporalRules(
 //			goat.WheneverPEventuallyQ(write, replicated),
 //		),
 //	)
-func WheneverPEventuallyQ(p, q Condition) Rule {
+func WheneverPEventuallyQ(p, q Condition) TemporalRule {
 	name := fmt.Sprintf("whenever %s eventually %s", p.Name(), q.Name())
 	b := &ba{
 		initial:   0,
@@ -55,12 +88,7 @@ func WheneverPEventuallyQ(p, q Condition) Rule {
 			},
 		},
 	}
-
-	return ruleFunc(func(o *options) {
-		registerCondition(o, p)
-		registerCondition(o, q)
-		registerTemporalRule(o, ltlRule{n: name, b: b})
-	})
+	return ltlRule{n: name, b: b}
 }
 
 // EventuallyAlways returns a rule enforcing that c eventually holds forever.
@@ -68,17 +96,18 @@ func WheneverPEventuallyQ(p, q Condition) Rule {
 // Parameters:
 //   - c: Condition that must eventually remain true
 //
-// Returns a Rule that can be registered with WithRules.
+// Returns a TemporalRule that can be registered with WithTemporalRules.
 //
 // Example:
 //
 //	err := goat.Test(
-//		goat.WithStateMachines(nodes...),
-//		goat.WithRules(
+//	    goat.WithStateMachines(nodes...),
+//	    goat.WithConditions(stable),
+//	    goat.WithTemporalRules(
 //			goat.EventuallyAlways(stable),
 //		),
 //	)
-func EventuallyAlways(c Condition) Rule {
+func EventuallyAlways(c Condition) TemporalRule {
 	name := fmt.Sprintf("eventually always %s", c.Name())
 	b := &ba{
 		initial:   0,
@@ -94,11 +123,7 @@ func EventuallyAlways(c Condition) Rule {
 			},
 		},
 	}
-
-	return ruleFunc(func(o *options) {
-		registerCondition(o, c)
-		registerTemporalRule(o, ltlRule{n: name, b: b})
-	})
+	return ltlRule{n: name, b: b}
 }
 
 // AlwaysEventually returns a rule enforcing that c holds infinitely often.
@@ -106,17 +131,18 @@ func EventuallyAlways(c Condition) Rule {
 // Parameters:
 //   - c: Condition that must recur indefinitely
 //
-// Returns a Rule that can be registered with WithRules.
+// Returns a TemporalRule that can be registered with WithTemporalRules.
 //
 // Example:
 //
 //	err := goat.Test(
-//		goat.WithStateMachines(node),
-//		goat.WithRules(
+//	    goat.WithStateMachines(node),
+//	    goat.WithConditions(heartbeat),
+//	    goat.WithTemporalRules(
 //			goat.AlwaysEventually(heartbeat),
 //		),
 //	)
-func AlwaysEventually(c Condition) Rule {
+func AlwaysEventually(c Condition) TemporalRule {
 	name := fmt.Sprintf("always eventually %s", c.Name())
 	b := &ba{
 		initial:   0,
@@ -135,9 +161,5 @@ func AlwaysEventually(c Condition) Rule {
 			},
 		},
 	}
-
-	return ruleFunc(func(o *options) {
-		registerCondition(o, c)
-		registerTemporalRule(o, ltlRule{n: name, b: b})
-	})
+	return ltlRule{n: name, b: b}
 }

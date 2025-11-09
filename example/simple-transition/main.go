@@ -64,7 +64,8 @@ func createSimpleTransitionModel() []goat.Option {
 
 	opts := []goat.Option{
 		goat.WithStateMachines(sm),
-		goat.WithRules(goat.Always(cond)),
+		goat.WithConditions(cond),
+		goat.WithInvariants(cond),
 	}
 
 	return opts

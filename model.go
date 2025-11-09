@@ -259,13 +259,14 @@ type options struct {
 // state machines, conditions, invariants, and other testing parameters.
 //
 // Use the provided helper functions like WithStateMachines(),
-// WithRules() to create options.
+// WithConditions(), and WithInvariants() to create options.
 //
 // Example:
 //
 //	goat.Test(
 //	    goat.WithStateMachines(sm1, sm2),
-//	    goat.WithRules(goat.Always(cond1)),
+//	    goat.WithConditions(cond1),
+//	    goat.WithInvariants(cond1),
 //	)
 type Option interface {
 	apply(*options)

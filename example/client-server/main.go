@@ -168,7 +168,8 @@ func createClientServerModel() []goat.Option {
 
 	opts := []goat.Option{
 		goat.WithStateMachines(server, client),
-		goat.WithRules(goat.Always(cond)),
+		goat.WithConditions(cond),
+		goat.WithInvariants(cond),
 	}
 
 	return opts

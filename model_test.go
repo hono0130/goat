@@ -68,7 +68,8 @@ func TestModel_Solve(t *testing.T) {
 				inv := BoolCondition("inv", false) // Always false condition
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				return m
 			},
@@ -178,7 +179,8 @@ func TestModel_evaluateInvariants(t *testing.T) {
 				inv := BoolCondition("pass", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				w := initialWorld(sm)
 				return m, w
@@ -192,7 +194,8 @@ func TestModel_evaluateInvariants(t *testing.T) {
 				inv := BoolCondition("fail", false)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv)),
+					WithConditions(inv),
+					WithInvariants(inv),
 				)
 				w := initialWorld(sm)
 				return m, w
@@ -208,7 +211,8 @@ func TestModel_evaluateInvariants(t *testing.T) {
 				inv3 := BoolCondition("i3", true)
 				m, _ := newModel(
 					WithStateMachines(sm),
-					WithRules(Always(inv1), Always(inv2), Always(inv3)),
+					WithConditions(inv1, inv2, inv3),
+					WithInvariants(inv1, inv2, inv3),
 				)
 				w := initialWorld(sm)
 				return m, w

@@ -91,7 +91,8 @@ func createTemporalRuleViolationModel() []goat.Option {
 
 	opts := []goat.Option{
 		goat.WithStateMachines(shipper, order),
-		goat.WithRules(rule),
+		goat.WithConditions(inPaid, inShipped),
+		goat.WithTemporalRules(rule),
 	}
 
 	return opts
