@@ -6,20 +6,22 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/goatx/goat/internal/e2egen"
 )
 
 // codeGenerator generates Go test code from the intermediate representation.
 // This is protocol-agnostic in terms of data structure, but generates
 // protobuf/gRPC-specific Go code.
 type codeGenerator struct {
-	suite testSuite
+	suite e2egen.TestSuite
 }
 
 // generateMainTest generates the main_test.go file with TestMain and global client variables.
 func (g *codeGenerator) generateMainTest() (string, error) {
 	var buf strings.Builder
 
-	buf.WriteString(fmt.Sprintf("package %s\n\n", g.suite.packageName))
+	buf.WriteString(fmt.Sprintf("package %s\n\n", g.suite.PackageName))
 
 	// Imports
 	buf.WriteString("import (\n")
@@ -34,19 +36,19 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 
 	// Add imports for each service package
 	packagesSeen := make(map[string]bool)
-	for _, svc := range g.suite.services {
-		if svc.servicePackage != "" && !packagesSeen[svc.servicePackage] {
-			buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", toSnakeCase(svc.serviceName), svc.servicePackage))
-			packagesSeen[svc.servicePackage] = true
+	for _, svc := range g.suite.Services {
+		if svc.ServicePackage != "" && !packagesSeen[svc.ServicePackage] {
+			buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", toSnakeCase(svc.ServiceName), svc.ServicePackage))
+			packagesSeen[svc.ServicePackage] = true
 		}
 	}
 
 	buf.WriteString(")\n\n")
 
 	// Global client variables
-	for _, svc := range g.suite.services {
-		if svc.servicePackage != "" {
-			buf.WriteString(fmt.Sprintf("var %s pb%s.%sClient\n", svc.clientVarName, toSnakeCase(svc.serviceName), svc.serviceName))
+	for _, svc := range g.suite.Services {
+		if svc.ServicePackage != "" {
+			buf.WriteString(fmt.Sprintf("var %s pb%s.%sClient\n", svc.ClientVarName, toSnakeCase(svc.ServiceName), svc.ServiceName))
 		}
 	}
 	buf.WriteString("\n")
@@ -55,8 +57,8 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 	buf.WriteString("func TestMain(m *testing.M) {\n")
 
 	// Start servers and initialize clients for each service
-	for i, svc := range g.suite.services {
-		if svc.servicePackage == "" {
+	for i, svc := range g.suite.Services {
+		if svc.ServicePackage == "" {
 			continue
 		}
 
@@ -64,7 +66,7 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 		listenerVar := fmt.Sprintf("lis%d", i)
 		connVar := fmt.Sprintf("conn%d", i)
 
-		buf.WriteString(fmt.Sprintf("\t// Start %s server\n", svc.serviceName))
+		buf.WriteString(fmt.Sprintf("\t// Start %s server\n", svc.ServiceName))
 		buf.WriteString(fmt.Sprintf("\t%s, err := net.Listen(\"tcp\", \"localhost:0\")\n", listenerVar))
 		buf.WriteString("\tif err != nil {\n")
 		buf.WriteString("\t\tlog.Fatalf(\"Failed to listen: %%v\", err)\n")
@@ -73,7 +75,7 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 		buf.WriteString(fmt.Sprintf("\t%s := grpc.NewServer()\n", serverVar))
 		buf.WriteString("\t// TODO: Register your service implementation here\n")
 		buf.WriteString(fmt.Sprintf("\t// pb%s.Register%sServer(%s, &yourServiceImplementation{})\n\n",
-			toSnakeCase(svc.serviceName), svc.serviceName, serverVar))
+			toSnakeCase(svc.ServiceName), svc.ServiceName, serverVar))
 
 		buf.WriteString("\tgo func() {\n")
 		buf.WriteString(fmt.Sprintf("\t\tif err := %s.Serve(%s); err != nil {\n", serverVar, listenerVar))
@@ -82,12 +84,12 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 		buf.WriteString("\t}()\n\n")
 
 		// Create client
-		buf.WriteString(fmt.Sprintf("\t// Create %s client\n", svc.serviceName))
+		buf.WriteString(fmt.Sprintf("\t// Create %s client\n", svc.ServiceName))
 		buf.WriteString(fmt.Sprintf("\t%s, err := grpc.Dial(%s.Addr().String(), grpc.WithInsecure())\n", connVar, listenerVar))
 		buf.WriteString("\tif err != nil {\n")
 		buf.WriteString("\t\tlog.Fatalf(\"Failed to dial: %%v\", err)\n")
 		buf.WriteString("\t}\n")
-		buf.WriteString(fmt.Sprintf("\t%s = pb%s.New%sClient(%s)\n\n", svc.clientVarName, toSnakeCase(svc.serviceName), svc.serviceName, connVar))
+		buf.WriteString(fmt.Sprintf("\t%s = pb%s.New%sClient(%s)\n\n", svc.ClientVarName, toSnakeCase(svc.ServiceName), svc.ServiceName, connVar))
 	}
 
 	// Run tests
@@ -96,8 +98,8 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 
 	// Cleanup
 	buf.WriteString("\t// Cleanup\n")
-	for i, svc := range g.suite.services {
-		if svc.servicePackage == "" {
+	for i, svc := range g.suite.Services {
+		if svc.ServicePackage == "" {
 			continue
 		}
 		buf.WriteString(fmt.Sprintf("\tconn%d.Close()\n", i))
@@ -124,28 +126,28 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 }
 
 // generateServiceTest generates a <service>_test.go file for a single service.
-func (g *codeGenerator) generateServiceTest(svc serviceTestSuite) (string, error) {
+func (g *codeGenerator) generateServiceTest(svc e2egen.ServiceTestSuite) (string, error) {
 	var buf strings.Builder
 
-	buf.WriteString(fmt.Sprintf("package %s\n\n", g.suite.packageName))
+	buf.WriteString(fmt.Sprintf("package %s\n\n", g.suite.PackageName))
 
 	// Imports
 	buf.WriteString("import (\n")
 	buf.WriteString("\t\"context\"\n")
 	buf.WriteString("\t\"testing\"\n")
 
-	if svc.servicePackage != "" {
+	if svc.ServicePackage != "" {
 		buf.WriteString("\n")
-		buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", toSnakeCase(svc.serviceName), svc.servicePackage))
+		buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", toSnakeCase(svc.ServiceName), svc.ServicePackage))
 	}
 
 	buf.WriteString(")\n\n")
 
 	// Generate test function for each method
-	for _, method := range svc.methods {
+	for _, method := range svc.Methods {
 		testFunc, err := g.generateMethodTest(svc, method)
 		if err != nil {
-			return "", fmt.Errorf("failed to generate test for %s: %w", method.methodName, err)
+			return "", fmt.Errorf("failed to generate test for %s: %w", method.MethodName, err)
 		}
 		buf.WriteString(testFunc)
 		buf.WriteString("\n\n")
@@ -162,36 +164,36 @@ func (g *codeGenerator) generateServiceTest(svc serviceTestSuite) (string, error
 }
 
 // generateMethodTest generates a table-driven test function for a single RPC method.
-func (g *codeGenerator) generateMethodTest(svc serviceTestSuite, method methodTestSuite) (string, error) {
-	if len(method.testCases) == 0 {
-		return "", fmt.Errorf("no test cases for method %s", method.methodName)
+func (g *codeGenerator) generateMethodTest(svc e2egen.ServiceTestSuite, method e2egen.MethodTestSuite) (string, error) {
+	if len(method.TestCases) == 0 {
+		return "", fmt.Errorf("no test cases for method %s", method.MethodName)
 	}
 
-	firstCase := method.testCases[0]
-	pbAlias := "pb" + toSnakeCase(svc.serviceName)
+	firstCase := method.TestCases[0]
+	pbAlias := "pb" + toSnakeCase(svc.ServiceName)
 
 	var buf strings.Builder
 
 	// Comment
-	buf.WriteString(fmt.Sprintf("// Test%s tests the %s RPC call.\n", method.methodName, method.methodName))
+	buf.WriteString(fmt.Sprintf("// Test%s tests the %s RPC call.\n", method.MethodName, method.MethodName))
 	buf.WriteString("// This test was automatically generated from model checking execution.\n")
 
 	// Function definition
-	buf.WriteString(fmt.Sprintf("func Test%s(t *testing.T) {\n", method.methodName))
+	buf.WriteString(fmt.Sprintf("func Test%s(t *testing.T) {\n", method.MethodName))
 
 	// Table definition
 	buf.WriteString("\ttests := []struct {\n")
 	buf.WriteString("\t\tname     string\n")
-	buf.WriteString(fmt.Sprintf("\t\tinput    *%s.%s\n", pbAlias, firstCase.inputType))
-	buf.WriteString(fmt.Sprintf("\t\texpected *%s.%s\n", pbAlias, firstCase.outputType))
+	buf.WriteString(fmt.Sprintf("\t\tinput    *%s.%s\n", pbAlias, firstCase.InputType))
+	buf.WriteString(fmt.Sprintf("\t\texpected *%s.%s\n", pbAlias, firstCase.OutputType))
 	buf.WriteString("\t}{\n")
 
 	// Each test case
-	for _, tc := range method.testCases {
+	for _, tc := range method.TestCases {
 		buf.WriteString("\t\t{\n")
-		buf.WriteString(fmt.Sprintf("\t\t\tname: %q,\n", tc.name))
-		buf.WriteString(fmt.Sprintf("\t\t\tinput: %s,\n", formatStructLiteral(pbAlias, tc.inputType, tc.input)))
-		buf.WriteString(fmt.Sprintf("\t\t\texpected: %s,\n", formatStructLiteral(pbAlias, tc.outputType, tc.output)))
+		buf.WriteString(fmt.Sprintf("\t\t\tname: %q,\n", tc.Name))
+		buf.WriteString(fmt.Sprintf("\t\t\tinput: %s,\n", formatStructLiteral(pbAlias, tc.InputType, tc.Input)))
+		buf.WriteString(fmt.Sprintf("\t\t\texpected: %s,\n", formatStructLiteral(pbAlias, tc.OutputType, tc.Output)))
 		buf.WriteString("\t\t},\n")
 	}
 
@@ -202,14 +204,14 @@ func (g *codeGenerator) generateMethodTest(svc serviceTestSuite, method methodTe
 	buf.WriteString("\t\tt.Run(tt.name, func(t *testing.T) {\n")
 	buf.WriteString("\t\t\tctx := context.Background()\n")
 	buf.WriteString(fmt.Sprintf("\t\t\tactual, err := %s.%s(ctx, tt.input)\n",
-		svc.clientVarName, method.methodName))
+		svc.ClientVarName, method.MethodName))
 	buf.WriteString("\t\t\tif err != nil {\n")
 	buf.WriteString("\t\t\t\tt.Fatalf(\"RPC call failed: %%v\", err)\n")
 	buf.WriteString("\t\t\t}\n\n")
 	buf.WriteString("\t\t\t// Verify the output matches expected\n")
 	buf.WriteString("\t\t\tif !compareE2EOutput(tt.expected, actual) {\n")
 	buf.WriteString(fmt.Sprintf("\t\t\t\tt.Errorf(\"%s output mismatch:\\nexpected: %%+v\\ngot:      %%+v\", tt.expected, actual)\n",
-		method.methodName))
+		method.MethodName))
 	buf.WriteString("\t\t\t}\n")
 	buf.WriteString("\t\t})\n")
 	buf.WriteString("\t}\n")

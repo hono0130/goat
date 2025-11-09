@@ -6,68 +6,69 @@ import (
 	"strings"
 
 	"github.com/goatx/goat"
+	"github.com/goatx/goat/internal/e2egen"
 )
 
-// buildTestSuite builds an intermediate representation (testSuite) from protobuf E2ETestOptions.
+// buildTestSuite builds an intermediate representation (e2egen.TestSuite) from protobuf E2ETestOptions.
 // This function is responsible for:
 // 1. Executing handlers to calculate expected outputs
 // 2. Serializing input/output messages
 // 3. Constructing the protocol-agnostic intermediate representation
-func buildTestSuite(opts E2ETestOptions) (testSuite, error) {
-	suite := testSuite{
-		packageName: opts.PackageName,
+func buildTestSuite(opts E2ETestOptions) (e2egen.TestSuite, error) {
+	suite := e2egen.TestSuite{
+		PackageName: opts.PackageName,
 	}
 
 	for si, svc := range opts.Services {
 		serviceName := svc.Spec.GetServiceName()
 		clientVarName := toSnakeCase(serviceName) + "Client"
 
-		var methods []methodTestSuite
+		var methods []e2egen.MethodTestSuite
 
 		for mi, method := range svc.Methods {
-			var cases []testCase
+			var cases []e2egen.TestCase
 
 			for ii, input := range method.Inputs {
 				// Execute handler to get expected output
 				output, err := executeHandler(svc.Spec, method.MethodName, input)
 				if err != nil {
-					return testSuite{}, fmt.Errorf("service %d (%s) method %d (%s) input %d: failed to execute handler: %w",
+					return e2egen.TestSuite{}, fmt.Errorf("service %d (%s) method %d (%s) input %d: failed to execute handler: %w",
 						si, serviceName, mi, method.MethodName, ii, err)
 				}
 
 				// Serialize input and output
 				inputData, err := serializeMessage(input)
 				if err != nil {
-					return testSuite{}, fmt.Errorf("service %d (%s) method %d (%s) input %d: failed to serialize input: %w",
+					return e2egen.TestSuite{}, fmt.Errorf("service %d (%s) method %d (%s) input %d: failed to serialize input: %w",
 						si, serviceName, mi, method.MethodName, ii, err)
 				}
 
 				outputData, err := serializeMessage(output)
 				if err != nil {
-					return testSuite{}, fmt.Errorf("service %d (%s) method %d (%s) input %d: failed to serialize output: %w",
+					return e2egen.TestSuite{}, fmt.Errorf("service %d (%s) method %d (%s) input %d: failed to serialize output: %w",
 						si, serviceName, mi, method.MethodName, ii, err)
 				}
 
-				cases = append(cases, testCase{
-					name:       fmt.Sprintf("case_%d", ii),
-					inputType:  getTypeName(input),
-					input:      inputData,
-					outputType: getTypeName(output),
-					output:     outputData,
+				cases = append(cases, e2egen.TestCase{
+					Name:       fmt.Sprintf("case_%d", ii),
+					InputType:  getTypeName(input),
+					Input:      inputData,
+					OutputType: getTypeName(output),
+					Output:     outputData,
 				})
 			}
 
-			methods = append(methods, methodTestSuite{
-				methodName: method.MethodName,
-				testCases:  cases,
+			methods = append(methods, e2egen.MethodTestSuite{
+				MethodName: method.MethodName,
+				TestCases:  cases,
 			})
 		}
 
-		suite.services = append(suite.services, serviceTestSuite{
-			serviceName:    serviceName,
-			servicePackage: svc.ServicePackage,
-			clientVarName:  clientVarName,
-			methods:        methods,
+		suite.Services = append(suite.Services, e2egen.ServiceTestSuite{
+			ServiceName:    serviceName,
+			ServicePackage: svc.ServicePackage,
+			ClientVarName:  clientVarName,
+			Methods:        methods,
 		})
 	}
 
