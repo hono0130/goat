@@ -8,13 +8,14 @@ import (
 	"github.com/goatx/goat"
 )
 
-type OpenAPIResponse[O AbstractOpenAPISchema] struct {
-	event O
+type OpenAPIResponseWrapper[O AbstractOpenAPISchema] struct {
+	event      O
+	statusCode int
 }
 
-func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O) OpenAPIResponse[O] {
+func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O, statusCode int) OpenAPIResponseWrapper[O] {
 	goat.SendTo(ctx, target, event)
-	return OpenAPIResponse[O]{event: event}
+	return OpenAPIResponseWrapper[O]{event: event, statusCode: statusCode}
 }
 
 func NewOpenAPIServiceSpec[T goat.AbstractStateMachine](prototype T) *OpenAPIServiceSpec[T] {
@@ -31,7 +32,8 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 	method string,
 	path string,
 	operationID string,
-	handler func(context.Context, I, T) OpenAPIResponse[O],
+	statusCode int,
+	handler func(context.Context, I, T) OpenAPIResponseWrapper[O],
 ) {
 	requestEvent := newOpenAPISchemaPrototype[I]()
 	responseEvent := newOpenAPISchemaPrototype[O]()
@@ -45,6 +47,7 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 		OperationID:  operationID,
 		RequestType:  requestTypeName,
 		ResponseType: responseTypeName,
+		StatusCode:   statusCode,
 	}
 
 	spec.addEndpoint(metadata)
