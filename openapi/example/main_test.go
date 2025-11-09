@@ -53,7 +53,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateUserRequest'
       responses:
-        '200':
+        '201':
           description: Successful response
           content:
             application/json:

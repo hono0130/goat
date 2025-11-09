@@ -58,25 +58,28 @@ func createUserServiceModel() *openapi.OpenAPIServiceSpec[*UserService] {
 	spec.DefineStates(idleState, processingState).SetInitialState(idleState)
 
 	// Register API endpoints using OnOpenAPIRequest
-	openapi.OnOpenAPIRequest[*UserService, *CreateUserRequest, *CreateUserResponse](spec, idleState, "POST", "/users", "createUser",
-		func(ctx context.Context, event *CreateUserRequest, service *UserService) openapi.OpenAPIResponse[*CreateUserResponse] {
+	openapi.OnOpenAPIRequest[*UserService, *CreateUserRequest, *CreateUserResponse](spec, idleState, "POST", "/users",
+		func(ctx context.Context, event *CreateUserRequest, service *UserService) openapi.OpenAPIResponseWrapper[*CreateUserResponse] {
 			response := &CreateUserResponse{
 				UserID:    "user_123",
 				Success:   true,
 				ErrorCode: 0,
 			}
-			return openapi.OpenAPISendTo(ctx, service, response)
-		})
+			return openapi.OpenAPISendTo(ctx, service, response, openapi.StatusCreated)
+		},
+		openapi.WithOperationID("createUser"),
+		openapi.WithStatusCode(openapi.StatusCreated))
 
-	openapi.OnOpenAPIRequest[*UserService, *GetUserRequest, *GetUserResponse](spec, idleState, "GET", "/users/{userId}", "getUser",
-		func(ctx context.Context, event *GetUserRequest, service *UserService) openapi.OpenAPIResponse[*GetUserResponse] {
+	openapi.OnOpenAPIRequest[*UserService, *GetUserRequest, *GetUserResponse](spec, idleState, "GET", "/users/{userId}",
+		func(ctx context.Context, event *GetUserRequest, service *UserService) openapi.OpenAPIResponseWrapper[*GetUserResponse] {
 			response := &GetUserResponse{
 				Username: "testuser",
 				Email:    "test@example.com",
 				Found:    true,
 			}
-			return openapi.OpenAPISendTo(ctx, service, response)
-		})
+			return openapi.OpenAPISendTo(ctx, service, response, openapi.StatusOK)
+		},
+		openapi.WithOperationID("getUser"))
 
 	return spec
 }

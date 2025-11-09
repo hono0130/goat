@@ -10,12 +10,34 @@ import (
 
 type OpenAPIResponseWrapper[O AbstractOpenAPISchema] struct {
 	event      O
-	statusCode int
+	statusCode StatusCode
 }
 
-func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O, statusCode int) OpenAPIResponseWrapper[O] {
+func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O, statusCode StatusCode) OpenAPIResponseWrapper[O] {
 	goat.SendTo(ctx, target, event)
 	return OpenAPIResponseWrapper[O]{event: event, statusCode: statusCode}
+}
+
+// RequestOption is a functional option for configuring OnOpenAPIRequest
+type RequestOption func(*requestConfig)
+
+type requestConfig struct {
+	operationID string
+	statusCode  StatusCode
+}
+
+// WithOperationID sets a custom operation ID for the endpoint
+func WithOperationID(id string) RequestOption {
+	return func(c *requestConfig) {
+		c.operationID = id
+	}
+}
+
+// WithStatusCode sets a custom status code for the endpoint
+func WithStatusCode(code StatusCode) RequestOption {
+	return func(c *requestConfig) {
+		c.statusCode = code
+	}
 }
 
 func NewOpenAPIServiceSpec[T goat.AbstractStateMachine](prototype T) *OpenAPIServiceSpec[T] {
@@ -31,10 +53,20 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 	state goat.AbstractState,
 	method string,
 	path string,
-	operationID string,
-	statusCode int,
 	handler func(context.Context, I, T) OpenAPIResponseWrapper[O],
+	opts ...RequestOption,
 ) {
+	// Apply default configuration
+	config := &requestConfig{
+		operationID: "", // Empty means don't generate operationID field
+		statusCode:  StatusOK,
+	}
+
+	// Apply functional options
+	for _, opt := range opts {
+		opt(config)
+	}
+
 	requestEvent := newOpenAPISchemaPrototype[I]()
 	responseEvent := newOpenAPISchemaPrototype[O]()
 
@@ -44,10 +76,10 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 	metadata := endpointMetadata{
 		Path:         path,
 		Method:       method,
-		OperationID:  operationID,
+		OperationID:  config.operationID,
 		RequestType:  requestTypeName,
 		ResponseType: responseTypeName,
-		StatusCode:   statusCode,
+		StatusCode:   config.statusCode,
 	}
 
 	spec.addEndpoint(metadata)

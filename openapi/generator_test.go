@@ -21,15 +21,17 @@ func TestGenerateOpenAPI_GoldenFile(t *testing.T) {
 				state := &TestIdleState{}
 				spec.DefineStates(state).SetInitialState(state)
 
-				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/items", "createItem",
-					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-						return OpenAPISendTo(ctx, sm, &TestResponse1{})
-					})
+				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/items",
+					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponseWrapper[*TestResponse1] {
+						return OpenAPISendTo(ctx, sm, &TestResponse1{}, StatusOK)
+					},
+					WithOperationID("createItem"))
 
-				OnOpenAPIRequest[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/items/{id}", "getItem",
-					func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponse[*TestResponse2] {
-						return OpenAPISendTo(ctx, sm, &TestResponse2{})
-					})
+				OnOpenAPIRequest[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/items/{id}",
+					func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponseWrapper[*TestResponse2] {
+						return OpenAPISendTo(ctx, sm, &TestResponse2{}, StatusOK)
+					},
+					WithOperationID("getItem"))
 
 				return spec
 			},
@@ -118,10 +120,11 @@ components:
 				state := &TestIdleState{}
 				spec.DefineStates(state).SetInitialState(state)
 
-				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "GET", "/health", "healthCheck",
-					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-						return OpenAPISendTo(ctx, sm, &TestResponse1{})
-					})
+				OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "GET", "/health",
+					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponseWrapper[*TestResponse1] {
+						return OpenAPISendTo(ctx, sm, &TestResponse1{}, StatusOK)
+					},
+					WithOperationID("healthCheck"))
 
 				return spec
 			},
@@ -204,19 +207,21 @@ func TestGenerateOpenAPI_MultipleServices(t *testing.T) {
 	state1 := &TestIdleState{}
 	spec1.DefineStates(state1).SetInitialState(state1)
 
-	OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec1, state1, "POST", "/service1/action", "service1Action",
-		func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-			return OpenAPISendTo(ctx, sm, &TestResponse1{})
-		})
+	OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec1, state1, "POST", "/service1/action",
+		func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponseWrapper[*TestResponse1] {
+			return OpenAPISendTo(ctx, sm, &TestResponse1{}, StatusOK)
+		},
+		WithOperationID("service1Action"))
 
 	spec2 := NewOpenAPIServiceSpec(&TestService2{})
 	state2 := &TestIdleState{}
 	spec2.DefineStates(state2).SetInitialState(state2)
 
-	OnOpenAPIRequest[*TestService2, *TestRequest2, *TestResponse2](spec2, state2, "GET", "/service2/query", "service2Query",
-		func(ctx context.Context, event *TestRequest2, sm *TestService2) OpenAPIResponse[*TestResponse2] {
-			return OpenAPISendTo(ctx, sm, &TestResponse2{})
-		})
+	OnOpenAPIRequest[*TestService2, *TestRequest2, *TestResponse2](spec2, state2, "GET", "/service2/query",
+		func(ctx context.Context, event *TestRequest2, sm *TestService2) OpenAPIResponseWrapper[*TestResponse2] {
+			return OpenAPISendTo(ctx, sm, &TestResponse2{}, StatusOK)
+		},
+		WithOperationID("service2Query"))
 
 	tempDir := t.TempDir()
 	opts := GenerateOptions{

@@ -100,7 +100,9 @@ func (*specWriter) writePath(builder *strings.Builder, path *pathDefinition) {
 		builder.WriteString("'\n")
 
 		builder.WriteString("      responses:\n")
-		builder.WriteString("        '200':\n")
+		builder.WriteString("        '")
+		fmt.Fprintf(builder, "%d", operation.StatusCode)
+		builder.WriteString("':\n")
 		builder.WriteString("          description: Successful response\n")
 		builder.WriteString("          content:\n")
 		builder.WriteString("            application/json:\n")

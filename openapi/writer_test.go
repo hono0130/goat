@@ -86,6 +86,7 @@ components:
 								OperationID: "createUser",
 								RequestRef:  "CreateUserRequest",
 								ResponseRef: "CreateUserResponse",
+								StatusCode:  StatusOK,
 							},
 						},
 					},

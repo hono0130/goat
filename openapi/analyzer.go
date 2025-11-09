@@ -20,6 +20,7 @@ type pathOperation struct {
 	OperationID string
 	RequestRef  string
 	ResponseRef string
+	StatusCode  StatusCode
 }
 
 type pathDefinition struct {
@@ -58,6 +59,7 @@ func (a *schemaAnalyzer) analyzeSpecs(specs ...AbstractOpenAPIServiceSpec) *open
 				OperationID: endpoint.OperationID,
 				RequestRef:  endpoint.RequestType,
 				ResponseRef: endpoint.ResponseType,
+				StatusCode:  endpoint.StatusCode,
 			}
 			pathMap[endpoint.Path].Operations = append(pathMap[endpoint.Path].Operations, operation)
 		}

@@ -28,6 +28,7 @@ func TestOnOpenAPIRequest(t *testing.T) {
 				OperationID:  "testEndpoint",
 				RequestType:  "TestRequest1",
 				ResponseType: "TestResponse1",
+				StatusCode:   StatusOK,
 			},
 		},
 		{
@@ -41,6 +42,7 @@ func TestOnOpenAPIRequest(t *testing.T) {
 				OperationID:  "customEndpoint",
 				RequestType:  "TestRequest1",
 				ResponseType: "TestResponse1",
+				StatusCode:   StatusOK,
 			},
 		},
 	}
@@ -53,10 +55,11 @@ func TestOnOpenAPIRequest(t *testing.T) {
 
 			initialEndpointCount := len(spec.GetEndpoints())
 
-			OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, tt.method, tt.path, tt.operationID,
-				func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-					return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
-				})
+			OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, tt.method, tt.path,
+				func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponseWrapper[*TestResponse1] {
+					return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"}, StatusOK)
+				},
+				WithOperationID(tt.operationID))
 
 			endpoints := spec.GetEndpoints()
 			if len(endpoints) != initialEndpointCount+1 {

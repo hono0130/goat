@@ -30,10 +30,11 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					spec := NewOpenAPIServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/test", "testEndpoint",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-							return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
-						})
+					OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/test",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponseWrapper[*TestResponse1] {
+							return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"}, StatusOK)
+						},
+						WithOperationID("testEndpoint"))
 					return spec
 				}(),
 			},
@@ -61,6 +62,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 								OperationID: "testEndpoint",
 								RequestRef:  "TestRequest1",
 								ResponseRef: "TestResponse1",
+								StatusCode:  StatusOK,
 							},
 						},
 					},
@@ -75,24 +77,27 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 					spec := NewOpenAPIServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/endpoint1", "endpoint1",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-							return OpenAPISendTo(ctx, sm, &TestResponse1{})
-						})
-					OnOpenAPIRequest[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/endpoint2", "endpoint2",
-						func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponse[*TestResponse2] {
-							return OpenAPISendTo(ctx, sm, &TestResponse2{})
-						})
+					OnOpenAPIRequest[*TestService1, *TestRequest1, *TestResponse1](spec, state, "POST", "/endpoint1",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponseWrapper[*TestResponse1] {
+							return OpenAPISendTo(ctx, sm, &TestResponse1{}, StatusOK)
+						},
+						WithOperationID("endpoint1"))
+					OnOpenAPIRequest[*TestService1, *TestRequest2, *TestResponse2](spec, state, "GET", "/endpoint2",
+						func(ctx context.Context, event *TestRequest2, sm *TestService1) OpenAPIResponseWrapper[*TestResponse2] {
+							return OpenAPISendTo(ctx, sm, &TestResponse2{}, StatusOK)
+						},
+						WithOperationID("endpoint2"))
 					return spec
 				}(),
 				func() AbstractOpenAPIServiceSpec {
 					spec := NewOpenAPIServiceSpec(&TestService2{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIRequest[*TestService2, *TestRequest3, *TestResponse3](spec, state, "PUT", "/endpoint3", "endpoint3",
-						func(ctx context.Context, event *TestRequest3, sm *TestService2) OpenAPIResponse[*TestResponse3] {
-							return OpenAPISendTo(ctx, sm, &TestResponse3{})
-						})
+					OnOpenAPIRequest[*TestService2, *TestRequest3, *TestResponse3](spec, state, "PUT", "/endpoint3",
+						func(ctx context.Context, event *TestRequest3, sm *TestService2) OpenAPIResponseWrapper[*TestResponse3] {
+							return OpenAPISendTo(ctx, sm, &TestResponse3{}, StatusOK)
+						},
+						WithOperationID("endpoint3"))
 					return spec
 				}(),
 			},
@@ -144,6 +149,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 								OperationID: "endpoint1",
 								RequestRef:  "TestRequest1",
 								ResponseRef: "TestResponse1",
+								StatusCode:  StatusOK,
 							},
 						},
 					},
@@ -155,6 +161,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 								OperationID: "endpoint2",
 								RequestRef:  "TestRequest2",
 								ResponseRef: "TestResponse2",
+								StatusCode:  StatusOK,
 							},
 						},
 					},
@@ -166,6 +173,7 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 								OperationID: "endpoint3",
 								RequestRef:  "TestRequest3",
 								ResponseRef: "TestResponse3",
+								StatusCode:  StatusOK,
 							},
 						},
 					},

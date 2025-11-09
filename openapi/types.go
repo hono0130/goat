@@ -4,6 +4,24 @@ import (
 	"github.com/goatx/goat"
 )
 
+// StatusCode represents an HTTP status code
+type StatusCode int
+
+// HTTP status codes
+const (
+	StatusOK                  StatusCode = 200
+	StatusCreated             StatusCode = 201
+	StatusAccepted            StatusCode = 202
+	StatusNoContent           StatusCode = 204
+	StatusBadRequest          StatusCode = 400
+	StatusUnauthorized        StatusCode = 401
+	StatusForbidden           StatusCode = 403
+	StatusNotFound            StatusCode = 404
+	StatusConflict            StatusCode = 409
+	StatusInternalServerError StatusCode = 500
+	StatusServiceUnavailable  StatusCode = 503
+)
+
 type AbstractOpenAPISchema interface {
 	isOpenAPISchema() bool
 	goat.AbstractEvent
@@ -84,7 +102,7 @@ type endpointMetadata struct {
 	OperationID  string
 	RequestType  string
 	ResponseType string
-	StatusCode   int
+	StatusCode   StatusCode
 }
 
 type schemaDefinition struct {
