@@ -37,29 +37,6 @@ func (*OpenAPISchema[Sender, Recipient]) isOpenAPISchema() bool {
 	return true
 }
 
-// OpenAPIRequest represents a request schema in OpenAPI specification
-type OpenAPIRequest[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
-	goat.Event[Sender, Recipient]
-	// this is needed to make OpenAPIRequest copyable
-	_ rune
-}
-
-func (*OpenAPIRequest[Sender, Recipient]) isOpenAPISchema() bool {
-	return true
-}
-
-// OpenAPIResponse represents a response schema in OpenAPI specification with status code
-type OpenAPIResponse[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
-	goat.Event[Sender, Recipient]
-	StatusCode int
-	// this is needed to make OpenAPIResponse copyable
-	_ rune
-}
-
-func (*OpenAPIResponse[Sender, Recipient]) isOpenAPISchema() bool {
-	return true
-}
-
 type AbstractOpenAPIServiceSpec interface {
 	isOpenAPIServiceSpec() bool
 	GetEndpoints() []endpointMetadata
