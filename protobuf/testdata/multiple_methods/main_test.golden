@@ -8,8 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"google.golang.org/grpc"
 	pbe2e_test_service "github.com/example/proto/user"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var e2e_test_serviceClient pbe2e_test_service.E2ETestServiceClient
@@ -32,7 +33,7 @@ func TestMain(m *testing.M) {
 	}()
 
 	// Create E2ETestService client
-	conn0, err := grpc.Dial(lis0.Addr().String(), grpc.WithInsecure())
+	conn0, err := grpc.Dial(lis0.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to dial: %%v", err)
 	}

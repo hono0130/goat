@@ -8,8 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"google.golang.org/grpc"
 	pbuser_service "github.com/goatx/goat/user/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var user_serviceClient pbuser_service.UserServiceClient
@@ -32,7 +33,7 @@ func TestMain(m *testing.M) {
 	}()
 
 	// Create UserService client
-	conn0, err := grpc.Dial(lis0.Addr().String(), grpc.WithInsecure())
+	conn0, err := grpc.Dial(lis0.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to dial: %%v", err)
 	}
