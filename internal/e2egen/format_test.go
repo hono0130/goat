@@ -1,4 +1,4 @@
-package protobuf
+package e2egen
 
 import (
 	"testing"
@@ -35,10 +35,9 @@ func TestFormatStructLiteral(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if got := formatStructLiteral(tt.pkgAlias, tt.typeName, tt.data); got != tt.want {
-				t.Fatalf("formatStructLiteral() = %q, want %q", got, tt.want)
+			if got := FormatStructLiteral(tt.pkgAlias, tt.typeName, tt.data); got != tt.want {
+				t.Fatalf("FormatStructLiteral() = %q, want %q", got, tt.want)
 			}
 		})
 	}
@@ -66,10 +65,9 @@ func TestFormatValue(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			if got := formatValue(tt.value); got != tt.want {
-				t.Fatalf("formatValue() = %q, want %q", got, tt.want)
+			if got := FormatValue(tt.value); got != tt.want {
+				t.Fatalf("FormatValue() = %q, want %q", got, tt.want)
 			}
 		})
 	}
