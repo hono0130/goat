@@ -7,8 +7,6 @@ import (
 	pbe2e_test_service "github.com/example/proto/user"
 )
 
-// TestCreateUser tests the CreateUser RPC call.
-// This test was automatically generated from model checking execution.
 func TestCreateUser(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -47,7 +45,6 @@ func TestCreateUser(t *testing.T) {
 				t.Fatalf("RPC call failed: %%v", err)
 			}
 
-			// Verify the output matches expected
 			if !compareE2EOutput(tt.expected, actual) {
 				t.Errorf("CreateUser output mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, actual)
 			}
