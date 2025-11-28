@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 func FormatStructLiteral(pkgAlias, typeName string, data map[string]any) string {
@@ -17,14 +18,13 @@ func FormatStructLiteral(pkgAlias, typeName string, data map[string]any) string 
 	}
 	sort.Strings(keys)
 
-	var buf string
-	buf = fmt.Sprintf("&%s.%s{\n", pkgAlias, typeName)
+	var b strings.Builder
+	fmt.Fprintf(&b, "&%s.%s{\n", pkgAlias, typeName)
 	for _, k := range keys {
-		buf += fmt.Sprintf("\t\t\t\t%s: %s,\n", k, FormatValue(data[k]))
+		fmt.Fprintf(&b, "\t\t\t\t%s: %s,\n", k, FormatValue(data[k]))
 	}
-	buf += "\t\t\t}"
-
-	return buf
+	b.WriteString("\t\t\t}")
+	return b.String()
 }
 
 func FormatValue(value any) string {
@@ -32,26 +32,21 @@ func FormatValue(value any) string {
 		return "nil"
 	}
 
-	val := reflect.ValueOf(value)
-	switch val.Kind() {
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
 	case reflect.Ptr, reflect.Slice, reflect.Map:
-		if val.IsNil() {
+		if v.IsNil() {
 			return "nil"
 		}
+	case reflect.String:
+		return fmt.Sprintf("%q", value)
+	case reflect.Bool:
+		return fmt.Sprintf("%t", value)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return fmt.Sprintf("%d", value)
+	case reflect.Float32, reflect.Float64:
+		return fmt.Sprintf("%v", value)
 	}
-
-	switch v := value.(type) {
-	case string:
-		return fmt.Sprintf("%q", v)
-	case bool:
-		return fmt.Sprintf("%t", v)
-	case int, int8, int16, int32, int64:
-		return fmt.Sprintf("%d", v)
-	case uint, uint8, uint16, uint32, uint64, uintptr:
-		return fmt.Sprintf("%d", v)
-	case float32, float64:
-		return fmt.Sprintf("%v", v)
-	default:
-		return fmt.Sprintf("%#v", value)
-	}
+	return fmt.Sprintf("%#v", value)
 }
