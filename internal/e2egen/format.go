@@ -6,8 +6,6 @@ import (
 	"sort"
 )
 
-// FormatStructLiteral formats a map as a Go struct literal.
-// The 'any' parameter is necessary because field values can be of various types.
 func FormatStructLiteral(pkgAlias, typeName string, data map[string]any) string {
 	if len(data) == 0 {
 		return fmt.Sprintf("&%s.%s{}", pkgAlias, typeName)
@@ -29,9 +27,6 @@ func FormatStructLiteral(pkgAlias, typeName string, data map[string]any) string 
 	return buf
 }
 
-// FormatValue formats a value as a Go literal.
-// The 'any' type is required here because protobuf field values can be of various types
-// (string, bool, int64, []string, etc.) determined at runtime.
 func FormatValue(value any) string {
 	if value == nil {
 		return "nil"
