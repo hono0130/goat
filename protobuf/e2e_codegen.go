@@ -3,11 +3,10 @@ package protobuf
 import (
 	"fmt"
 	"go/format"
-	"reflect"
-	"sort"
 	"strings"
 
 	"github.com/goatx/goat/internal/e2egen"
+	"github.com/goatx/goat/internal/strcase"
 )
 
 // codeGenerator generates Go test code from the intermediate representation.
@@ -38,7 +37,7 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 	packagesSeen := make(map[string]bool)
 	for _, svc := range g.suite.Services {
 		if svc.ServicePackage != "" && !packagesSeen[svc.ServicePackage] {
-			buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", toSnakeCase(svc.ServiceName), svc.ServicePackage))
+			buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", strcase.ToSnakeCase(svc.ServiceName), svc.ServicePackage))
 			packagesSeen[svc.ServicePackage] = true
 		}
 	}
@@ -48,7 +47,7 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 	// Global client variables
 	for _, svc := range g.suite.Services {
 		if svc.ServicePackage != "" {
-			buf.WriteString(fmt.Sprintf("var %s pb%s.%sClient\n", svc.ClientVarName, toSnakeCase(svc.ServiceName), svc.ServiceName))
+			buf.WriteString(fmt.Sprintf("var %s pb%s.%sClient\n", svc.ClientVarName, strcase.ToSnakeCase(svc.ServiceName), svc.ServiceName))
 		}
 	}
 	buf.WriteString("\n")
@@ -75,7 +74,7 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 		buf.WriteString(fmt.Sprintf("\t%s := grpc.NewServer()\n", serverVar))
 		buf.WriteString("\t// TODO: Register your service implementation here\n")
 		buf.WriteString(fmt.Sprintf("\t// pb%s.Register%sServer(%s, &yourServiceImplementation{})\n\n",
-			toSnakeCase(svc.ServiceName), svc.ServiceName, serverVar))
+			strcase.ToSnakeCase(svc.ServiceName), svc.ServiceName, serverVar))
 
 		buf.WriteString("\tgo func() {\n")
 		buf.WriteString(fmt.Sprintf("\t\tif err := %s.Serve(%s); err != nil {\n", serverVar, listenerVar))
@@ -89,7 +88,7 @@ func (g *codeGenerator) generateMainTest() (string, error) {
 		buf.WriteString("\tif err != nil {\n")
 		buf.WriteString("\t\tlog.Fatalf(\"Failed to dial: %%v\", err)\n")
 		buf.WriteString("\t}\n")
-		buf.WriteString(fmt.Sprintf("\t%s = pb%s.New%sClient(%s)\n\n", svc.ClientVarName, toSnakeCase(svc.ServiceName), svc.ServiceName, connVar))
+		buf.WriteString(fmt.Sprintf("\t%s = pb%s.New%sClient(%s)\n\n", svc.ClientVarName, strcase.ToSnakeCase(svc.ServiceName), svc.ServiceName, connVar))
 	}
 
 	// Run tests
@@ -138,7 +137,7 @@ func (g *codeGenerator) generateServiceTest(svc e2egen.ServiceTestSuite) (string
 
 	if svc.ServicePackage != "" {
 		buf.WriteString("\n")
-		buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", toSnakeCase(svc.ServiceName), svc.ServicePackage))
+		buf.WriteString(fmt.Sprintf("\tpb%s \"%s\"\n", strcase.ToSnakeCase(svc.ServiceName), svc.ServicePackage))
 	}
 
 	buf.WriteString(")\n\n")
@@ -170,7 +169,7 @@ func (g *codeGenerator) generateMethodTest(svc e2egen.ServiceTestSuite, method e
 	}
 
 	firstCase := method.TestCases[0]
-	pbAlias := "pb" + toSnakeCase(svc.ServiceName)
+	pbAlias := "pb" + strcase.ToSnakeCase(svc.ServiceName)
 
 	var buf strings.Builder
 
@@ -192,8 +191,8 @@ func (g *codeGenerator) generateMethodTest(svc e2egen.ServiceTestSuite, method e
 	for _, tc := range method.TestCases {
 		buf.WriteString("\t\t{\n")
 		buf.WriteString(fmt.Sprintf("\t\t\tname: %q,\n", tc.Name))
-		buf.WriteString(fmt.Sprintf("\t\t\tinput: %s,\n", formatStructLiteral(pbAlias, tc.InputType, tc.Input)))
-		buf.WriteString(fmt.Sprintf("\t\t\texpected: %s,\n", formatStructLiteral(pbAlias, tc.OutputType, tc.Output)))
+		buf.WriteString(fmt.Sprintf("\t\t\tinput: %s,\n", e2egen.FormatStructLiteral(pbAlias, tc.InputType, tc.Input)))
+		buf.WriteString(fmt.Sprintf("\t\t\texpected: %s,\n", e2egen.FormatStructLiteral(pbAlias, tc.OutputType, tc.Output)))
 		buf.WriteString("\t\t},\n")
 	}
 
@@ -220,57 +219,3 @@ func (g *codeGenerator) generateMethodTest(svc e2egen.ServiceTestSuite, method e
 	return buf.String(), nil
 }
 
-// formatStructLiteral formats a map as a Go struct literal.
-// The 'any' parameter is necessary because field values can be of various types.
-func formatStructLiteral(pkgAlias, typeName string, data map[string]any) string {
-	if len(data) == 0 {
-		return fmt.Sprintf("&%s.%s{}", pkgAlias, typeName)
-	}
-
-	keys := make([]string, 0, len(data))
-	for k := range data {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	var buf strings.Builder
-	fmt.Fprintf(&buf, "&%s.%s{\n", pkgAlias, typeName)
-	for _, k := range keys {
-		fmt.Fprintf(&buf, "\t\t\t\t%s: %s,\n", k, formatValue(data[k]))
-	}
-	buf.WriteString("\t\t\t}")
-
-	return buf.String()
-}
-
-// formatValue formats a value as a Go literal.
-// The 'any' type is required here because protobuf field values can be of various types
-// (string, bool, int64, []string, etc.) determined at runtime.
-func formatValue(value any) string {
-	if value == nil {
-		return "nil"
-	}
-
-	val := reflect.ValueOf(value)
-	switch val.Kind() {
-	case reflect.Ptr, reflect.Slice, reflect.Map:
-		if val.IsNil() {
-			return "nil"
-		}
-	}
-
-	switch v := value.(type) {
-	case string:
-		return fmt.Sprintf("%q", v)
-	case bool:
-		return fmt.Sprintf("%t", v)
-	case int, int8, int16, int32, int64:
-		return fmt.Sprintf("%d", v)
-	case uint, uint8, uint16, uint32, uint64, uintptr:
-		return fmt.Sprintf("%d", v)
-	case float32, float64:
-		return fmt.Sprintf("%v", v)
-	default:
-		return fmt.Sprintf("%#v", value)
-	}
-}

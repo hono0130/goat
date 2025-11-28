@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/goatx/goat/internal/strcase"
 )
 
 // MethodTestCase represents test cases for a specific RPC method.
@@ -123,7 +125,7 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 			return fmt.Errorf("failed to generate test for %s: %w", svc.ServiceName, err)
 		}
 
-		filename := toSnakeCase(svc.ServiceName) + "_test.go"
+		filename := strcase.ToSnakeCase(svc.ServiceName) + "_test.go"
 		outputPath := filepath.Join(opts.OutputDir, filename)
 		if err := os.WriteFile(outputPath, []byte(serviceCode), 0644); err != nil {
 			return fmt.Errorf("failed to write %s: %w", filename, err)

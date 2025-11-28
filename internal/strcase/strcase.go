@@ -29,10 +29,10 @@ func ToSnakeCase(s string) string {
 				prev := runes[i-1]
 				nextLower := false
 				if i < len(runes)-1 {
-					nextLower = unicode.IsLower(runes[i+1]) || unicode.IsDigit(runes[i+1])
+					nextLower = unicode.IsLower(runes[i+1])
 				}
 
-				if unicode.IsLower(prev) || unicode.IsDigit(prev) || nextLower {
+				if unicode.IsLower(prev) || nextLower {
 					result = append(result, '_')
 				}
 			}

@@ -3,10 +3,10 @@ package protobuf
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/goatx/goat"
 	"github.com/goatx/goat/internal/e2egen"
+	"github.com/goatx/goat/internal/strcase"
 )
 
 // buildTestSuite builds an intermediate representation (e2egen.TestSuite) from protobuf E2ETestOptions.
@@ -21,7 +21,7 @@ func buildTestSuite(opts E2ETestOptions) (e2egen.TestSuite, error) {
 
 	for si, svc := range opts.Services {
 		serviceName := svc.Spec.GetServiceName()
-		clientVarName := toSnakeCase(serviceName) + "Client"
+		clientVarName := strcase.ToSnakeCase(serviceName) + "Client"
 
 		var methods []e2egen.MethodTestSuite
 
@@ -108,26 +108,3 @@ func executeHandler(spec AbstractProtobufServiceSpec, methodName string, input A
 	return eventResults[0].Interface().(AbstractProtobufMessage), nil
 }
 
-// toSnakeCase converts a PascalCase or camelCase string to snake_case.
-func toSnakeCase(name string) string {
-	var result strings.Builder
-
-	for i, r := range name {
-		if r >= 'A' && r <= 'Z' {
-			if i > 0 {
-				prevChar := rune(name[i-1])
-				if prevChar >= 'a' && prevChar <= 'z' {
-					result.WriteRune('_')
-				} else if i < len(name)-1 {
-					nextChar := rune(name[i+1])
-					if nextChar >= 'a' && nextChar <= 'z' {
-						result.WriteRune('_')
-					}
-				}
-			}
-		}
-		result.WriteRune(r)
-	}
-
-	return strings.ToLower(result.String())
-}
