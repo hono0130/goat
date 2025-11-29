@@ -156,11 +156,13 @@ func createClientServerModel() []goat.Option {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client, err := clientSpec.NewInstance()
+
+	client, err := clientSpec.NewInstance(func(client *Client) {
+		client.Server = server
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
-	client.Server = server
 
 	cond := goat.NewCondition2("client-server", client, server, func(c *Client, s *Server) bool {
 		return c.Server != nil && s != nil
