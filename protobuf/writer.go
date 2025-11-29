@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/goatx/goat/internal/strcase"
 )
 
 type fileWriter struct {
@@ -92,7 +94,7 @@ func (w *fileWriter) writeMessage(builder *strings.Builder, message *protoMessag
 			fieldType = "repeated " + fieldType
 		}
 
-		fieldName := w.toSnakeCase(field.Name)
+		fieldName := strcase.ToSnakeCase(field.Name)
 		builder.WriteString("  ")
 		builder.WriteString(fieldType)
 		builder.WriteString(" ")
@@ -123,25 +125,3 @@ func (*fileWriter) writeService(builder *strings.Builder, service *protoService)
 	builder.WriteString("}")
 }
 
-func (*fileWriter) toSnakeCase(name string) string {
-	var result strings.Builder
-
-	for i, r := range name {
-		if r >= 'A' && r <= 'Z' {
-			if i > 0 {
-				prevChar := rune(name[i-1])
-				if prevChar >= 'a' && prevChar <= 'z' {
-					result.WriteRune('_')
-				} else if i < len(name)-1 {
-					nextChar := rune(name[i+1])
-					if nextChar >= 'a' && nextChar <= 'z' {
-						result.WriteRune('_')
-					}
-				}
-			}
-		}
-		result.WriteRune(r)
-	}
-
-	return strings.ToLower(result.String())
-}

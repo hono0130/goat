@@ -11,7 +11,6 @@ type AbstractProtobufMessage interface {
 
 type ProtobufMessage[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
 	goat.Event[Sender, Recipient]
-	// this is needed to make ProtobufMessage copyable
 	_ rune
 }
 
@@ -23,12 +22,16 @@ type AbstractProtobufServiceSpec interface {
 	isProtobufServiceSpec() bool
 	GetRPCMethods() []rpcMethod
 	GetMessages() map[string]*protoMessage
+	GetHandlers() map[string]any
+	NewStateMachineInstance() (goat.AbstractStateMachine, error)
+	GetServiceName() string
 }
 
 type ProtobufServiceSpec[T goat.AbstractStateMachine] struct {
 	*goat.StateMachineSpec[T]
 	rpcMethods []rpcMethod
 	messages   map[string]*protoMessage
+	handlers   map[string]any
 }
 
 func (*ProtobufServiceSpec[T]) isProtobufServiceSpec() bool {
@@ -41,6 +44,18 @@ func (ps *ProtobufServiceSpec[T]) GetRPCMethods() []rpcMethod {
 
 func (ps *ProtobufServiceSpec[T]) GetMessages() map[string]*protoMessage {
 	return ps.messages
+}
+
+func (ps *ProtobufServiceSpec[T]) GetHandlers() map[string]any {
+	return ps.handlers
+}
+
+func (ps *ProtobufServiceSpec[T]) NewStateMachineInstance() (goat.AbstractStateMachine, error) {
+	return ps.StateMachineSpec.NewInstance()
+}
+
+func (ps *ProtobufServiceSpec[T]) GetServiceName() string {
+	return getServiceTypeName(ps.StateMachineSpec)
 }
 
 func (ps *ProtobufServiceSpec[T]) addRPCMethod(metadata rpcMethod) {
