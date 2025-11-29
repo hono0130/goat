@@ -11,7 +11,6 @@ type AbstractProtobufMessage interface {
 
 type ProtobufMessage[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
 	goat.Event[Sender, Recipient]
-	// this is needed to make ProtobufMessage copyable
 	_ rune
 }
 
@@ -23,8 +22,6 @@ type AbstractProtobufServiceSpec interface {
 	isProtobufServiceSpec() bool
 	GetRPCMethods() []rpcMethod
 	GetMessages() map[string]*protoMessage
-	// GetHandlers returns a map of method names to handler functions.
-	// 'any' is necessary because each handler has a different signature based on request/response types.
 	GetHandlers() map[string]any
 	NewStateMachineInstance() (goat.AbstractStateMachine, error)
 	GetServiceName() string
@@ -34,9 +31,7 @@ type ProtobufServiceSpec[T goat.AbstractStateMachine] struct {
 	*goat.StateMachineSpec[T]
 	rpcMethods []rpcMethod
 	messages   map[string]*protoMessage
-	// handlers stores handler functions for each RPC method.
-	// 'any' is necessary because each handler has a different signature.
-	handlers map[string]any // methodName -> handler function
+	handlers   map[string]any
 }
 
 func (*ProtobufServiceSpec[T]) isProtobufServiceSpec() bool {

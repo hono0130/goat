@@ -57,7 +57,6 @@ func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O
 	spec.addMessage(inputMsg)
 	spec.addMessage(outputMsg)
 
-	// Store handler for later execution during test generation
 	spec.handlers[methodName] = handler
 
 	wrappedHandler := func(ctx context.Context, event I, sm T) {
@@ -206,8 +205,6 @@ func getEventTypeName[E AbstractProtobufMessage](event E) string {
 	return getTypeName(event)
 }
 
-// getTypeName extracts the type name from any value using reflection.
-// 'any' is necessary to accept values of any type for reflection.
 func getTypeName(v any) string {
 	t := reflect.TypeOf(v)
 	if t.Kind() == reflect.Ptr {
