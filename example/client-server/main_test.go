@@ -25,7 +25,7 @@ func TestClientServer(t *testing.T) {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
 
-	expectedWorldsData, err := os.ReadFile("expected_worlds.json")
+	expectedWorldsData, err := os.ReadFile("expected_worlds.json.golden")
 	if err != nil {
 		t.Fatalf("Failed to read expected worlds file: %v", err)
 	}

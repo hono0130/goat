@@ -4,52 +4,52 @@ import (
 	"github.com/goatx/goat"
 )
 
-type AbstractProtobufMessage interface {
-	isProtobufMessage() bool
+type AbstractMessage interface {
+	isMessage() bool
 	goat.AbstractEvent
 }
 
-type ProtobufMessage[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
+type Message[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
 	goat.Event[Sender, Recipient]
-	// this is needed to make ProtobufMessage copyable
+	// this is needed to make Message copyable
 	_ rune
 }
 
-func (*ProtobufMessage[Sender, Recipient]) isProtobufMessage() bool {
+func (*Message[Sender, Recipient]) isMessage() bool {
 	return true
 }
 
-type AbstractProtobufServiceSpec interface {
-	isProtobufServiceSpec() bool
+type AbstractServiceSpec interface {
+	isServiceSpec() bool
 	GetRPCMethods() []rpcMethod
-	GetMessages() map[string]*protoMessage
+	GetMessages() map[string]*message
 }
 
-type ProtobufServiceSpec[T goat.AbstractStateMachine] struct {
+type ServiceSpec[T goat.AbstractStateMachine] struct {
 	*goat.StateMachineSpec[T]
 	rpcMethods []rpcMethod
-	messages   map[string]*protoMessage
+	messages   map[string]*message
 }
 
-func (*ProtobufServiceSpec[T]) isProtobufServiceSpec() bool {
+func (*ServiceSpec[T]) isServiceSpec() bool {
 	return true
 }
 
-func (ps *ProtobufServiceSpec[T]) GetRPCMethods() []rpcMethod {
+func (ps *ServiceSpec[T]) GetRPCMethods() []rpcMethod {
 	return ps.rpcMethods
 }
 
-func (ps *ProtobufServiceSpec[T]) GetMessages() map[string]*protoMessage {
+func (ps *ServiceSpec[T]) GetMessages() map[string]*message {
 	return ps.messages
 }
 
-func (ps *ProtobufServiceSpec[T]) addRPCMethod(metadata rpcMethod) {
+func (ps *ServiceSpec[T]) addRPCMethod(metadata rpcMethod) {
 	ps.rpcMethods = append(ps.rpcMethods, metadata)
 }
 
-func (ps *ProtobufServiceSpec[T]) addMessage(msg *protoMessage) {
+func (ps *ServiceSpec[T]) addMessage(msg *message) {
 	if ps.messages == nil {
-		ps.messages = make(map[string]*protoMessage)
+		ps.messages = make(map[string]*message)
 	}
 	ps.messages[msg.Name] = msg
 }
@@ -61,12 +61,12 @@ type rpcMethod struct {
 	OutputType  string
 }
 
-type protoMessage struct {
+type message struct {
 	Name   string
-	Fields []protoField
+	Fields []field
 }
 
-type protoField struct {
+type field struct {
 	Name       string
 	Type       string
 	Number     int

@@ -6,33 +6,34 @@ import (
 	"reflect"
 
 	"github.com/goatx/goat"
+	"github.com/goatx/goat/internal/typeutil"
 )
 
-type ProtobufResponse[O AbstractProtobufMessage] struct {
+type Response[O AbstractMessage] struct {
 	event O
 }
 
-func ProtobufSendTo[O AbstractProtobufMessage](ctx context.Context, target goat.AbstractStateMachine, event O) ProtobufResponse[O] {
+func SendTo[O AbstractMessage](ctx context.Context, target goat.AbstractStateMachine, event O) Response[O] {
 	goat.SendTo(ctx, target, event)
-	return ProtobufResponse[O]{event: event}
+	return Response[O]{event: event}
 }
 
-func NewProtobufServiceSpec[T goat.AbstractStateMachine](prototype T) *ProtobufServiceSpec[T] {
-	return &ProtobufServiceSpec[T]{
+func NewServiceSpec[T goat.AbstractStateMachine](prototype T) *ServiceSpec[T] {
+	return &ServiceSpec[T]{
 		StateMachineSpec: goat.NewStateMachineSpec(prototype),
 		rpcMethods:       []rpcMethod{},
-		messages:         make(map[string]*protoMessage),
+		messages:         make(map[string]*message),
 	}
 }
 
-func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O AbstractProtobufMessage](
-	spec *ProtobufServiceSpec[T],
+func OnMessage[T goat.AbstractStateMachine, I AbstractMessage, O AbstractMessage](
+	spec *ServiceSpec[T],
 	state goat.AbstractState,
 	methodName string,
-	handler func(context.Context, I, T) ProtobufResponse[O],
+	handler func(context.Context, I, T) Response[O],
 ) {
-	inputEvent := newProtobufMessagePrototype[I]()
-	outputEvent := newProtobufMessagePrototype[O]()
+	inputEvent := newMessagePrototype[I]()
+	outputEvent := newMessagePrototype[O]()
 
 	serviceTypeName := getServiceTypeName(spec.StateMachineSpec)
 	inputTypeName := getEventTypeName(inputEvent)
@@ -60,7 +61,7 @@ func OnProtobufMessage[T goat.AbstractStateMachine, I AbstractProtobufMessage, O
 	goat.OnEvent(spec.StateMachineSpec, state, wrappedHandler)
 }
 
-func newProtobufMessagePrototype[T AbstractProtobufMessage]() T {
+func newMessagePrototype[T AbstractMessage]() T {
 	var zero T
 	msgType := reflect.TypeOf(zero)
 	if msgType == nil {
@@ -80,7 +81,7 @@ func newProtobufMessagePrototype[T AbstractProtobufMessage]() T {
 		prototype := reflect.New(elem).Interface()
 		msg, ok := prototype.(T)
 		if !ok {
-			panic(fmt.Sprintf("type %s does not implement AbstractProtobufMessage", msgType))
+			panic(fmt.Sprintf("type %s does not implement AbstractMessage", msgType))
 		}
 		return msg
 	}
@@ -88,43 +89,40 @@ func newProtobufMessagePrototype[T AbstractProtobufMessage]() T {
 	value := reflect.New(msgType).Elem().Interface()
 	msg, ok := value.(T)
 	if !ok {
-		panic(fmt.Sprintf("type %s does not implement AbstractProtobufMessage", msgType))
+		panic(fmt.Sprintf("type %s does not implement AbstractMessage", msgType))
 	}
 	return msg
 }
 
-func analyzeMessage[M AbstractProtobufMessage](instance M) *protoMessage {
+func analyzeMessage[M AbstractMessage](instance M) *message {
 	msgType := reflect.TypeOf(instance)
 	if msgType.Kind() == reflect.Ptr {
 		msgType = msgType.Elem()
 	}
 
-	var fields []protoField
+	var fields []field
 	fieldNum := 1
 
 	for i := 0; i < msgType.NumField(); i++ {
-		field := msgType.Field(i)
+		f := msgType.Field(i)
 
-		if !field.IsExported() {
+		if !f.IsExported() {
 			continue
 		}
-		if field.Type == reflect.TypeOf(ProtobufMessage[goat.AbstractStateMachine, goat.AbstractStateMachine]{}) {
+		if f.Type == reflect.TypeOf(Message[goat.AbstractStateMachine, goat.AbstractStateMachine]{}) {
 			continue
 		}
-		if isGoatEventType(field.Type) {
-			continue
-		}
-		if field.Name == "_" {
+		if f.Name == "_" {
 			continue
 		}
 
-		protoType, isRepeated := mapGoFieldToProto(field.Type)
+		protoType, isRepeated := mapGoField(f.Type)
 		if protoType == "" {
 			continue
 		}
 
-		fields = append(fields, protoField{
-			Name:       field.Name,
+		fields = append(fields, field{
+			Name:       f.Name,
 			Type:       protoType,
 			Number:     fieldNum,
 			IsRepeated: isRepeated,
@@ -132,23 +130,15 @@ func analyzeMessage[M AbstractProtobufMessage](instance M) *protoMessage {
 		fieldNum++
 	}
 
-	return &protoMessage{
+	return &message{
 		Name:   msgType.Name(),
 		Fields: fields,
 	}
 }
 
-func isGoatEventType(t reflect.Type) bool {
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-
-	return t.Kind() == reflect.Struct && t.Name() == "Event" && t.PkgPath() == "github.com/goatx/goat"
-}
-
-func mapGoFieldToProto(goType reflect.Type) (string, bool) {
+func mapGoField(goType reflect.Type) (string, bool) {
 	if goType.Kind() == reflect.Slice {
-		elemType, _ := mapGoFieldToProto(goType.Elem())
+		elemType, _ := mapGoField(goType.Elem())
 		return elemType, true
 	}
 
@@ -177,7 +167,7 @@ type GenerateOptions struct {
 	Filename    string
 }
 
-func GenerateProtobuf(opts GenerateOptions, specs ...AbstractProtobufServiceSpec) error {
+func Generate(opts GenerateOptions, specs ...AbstractServiceSpec) error {
 	if opts.OutputDir == "" {
 		opts.OutputDir = "./proto"
 	}
@@ -185,23 +175,15 @@ func GenerateProtobuf(opts GenerateOptions, specs ...AbstractProtobufServiceSpec
 		opts.Filename = "generated.proto"
 	}
 
-	generator := newProtobufGenerator(opts)
+	generator := newGenerator(opts)
 	return generator.generateFromSpecs(specs...)
 }
 
 func getServiceTypeName[T goat.AbstractStateMachine](_ *goat.StateMachineSpec[T]) string {
 	var zero T
-	return getTypeName(zero)
+	return typeutil.Name(zero)
 }
 
-func getEventTypeName[E AbstractProtobufMessage](event E) string {
-	return getTypeName(event)
-}
-
-func getTypeName(v any) string {
-	t := reflect.TypeOf(v)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	return t.Name()
+func getEventTypeName[E AbstractMessage](event E) string {
+	return typeutil.Name(event)
 }

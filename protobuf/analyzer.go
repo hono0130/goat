@@ -15,26 +15,26 @@ func newTypeAnalyzer() *typeAnalyzer {
 	}
 }
 
-type protoService struct {
+type service struct {
 	Name    string
-	Methods []protoMethod
+	Methods []method
 }
 
-type protoMethod struct {
+type method struct {
 	Name       string
 	InputType  string
 	OutputType string
 }
 
-type protoDefinitions struct {
-	Messages []*protoMessage
-	Services []*protoService
+type definitions struct {
+	Messages []*message
+	Services []*service
 }
 
-func (a *typeAnalyzer) analyzeSpecs(specs ...AbstractProtobufServiceSpec) *protoDefinitions {
-	definitions := &protoDefinitions{
-		Messages: []*protoMessage{},
-		Services: []*protoService{},
+func (a *typeAnalyzer) analyzeSpecs(specs ...AbstractServiceSpec) *definitions {
+	definitions := &definitions{
+		Messages: []*message{},
+		Services: []*service{},
 	}
 
 	a.processedTypes = make(map[reflect.Type]bool)
@@ -43,7 +43,7 @@ func (a *typeAnalyzer) analyzeSpecs(specs ...AbstractProtobufServiceSpec) *proto
 		service := a.analyzeServiceSpecInterface(spec)
 		definitions.Services = append(definitions.Services, service)
 
-		messages := make([]*protoMessage, 0, len(spec.GetMessages()))
+		messages := make([]*message, 0, len(spec.GetMessages()))
 		for _, message := range spec.GetMessages() {
 			messages = append(messages, message)
 		}
@@ -57,7 +57,7 @@ func (a *typeAnalyzer) analyzeSpecs(specs ...AbstractProtobufServiceSpec) *proto
 	return definitions
 }
 
-func (*typeAnalyzer) analyzeServiceSpecInterface(spec AbstractProtobufServiceSpec) *protoService {
+func (*typeAnalyzer) analyzeServiceSpecInterface(spec AbstractServiceSpec) *service {
 	rpcMethods := spec.GetRPCMethods()
 
 	serviceName := ""
@@ -65,13 +65,13 @@ func (*typeAnalyzer) analyzeServiceSpecInterface(spec AbstractProtobufServiceSpe
 		serviceName = rpcMethods[0].ServiceType
 	}
 
-	service := &protoService{
+	service := &service{
 		Name:    serviceName,
-		Methods: []protoMethod{},
+		Methods: []method{},
 	}
 
 	for _, metadata := range rpcMethods {
-		method := protoMethod{
+		method := method{
 			Name:       metadata.MethodName,
 			InputType:  metadata.InputType,
 			OutputType: metadata.OutputType,

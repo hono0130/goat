@@ -20,8 +20,8 @@ const (
 	StatusServiceUnavailable  StatusCode = 503
 )
 
-type AbstractOpenAPISchema interface {
-	isOpenAPISchema() bool
+type AbstractSchema interface {
+	isSchema() bool
 	goat.AbstractEvent
 }
 
@@ -45,45 +45,45 @@ var (
 	HTTPMethodDelete HTTPMethod = httpMethodValue("DELETE")
 )
 
-type OpenAPISchema[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
+type Schema[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
 	goat.Event[Sender, Recipient]
-	// this is needed to make OpenAPISchema copyable
+	// this is needed to make Schema copyable
 	_ rune
 }
 
-func (*OpenAPISchema[Sender, Recipient]) isOpenAPISchema() bool {
+func (*Schema[Sender, Recipient]) isSchema() bool {
 	return true
 }
 
-type AbstractOpenAPIServiceSpec interface {
-	isOpenAPIServiceSpec() bool
+type AbstractServiceSpec interface {
+	isServiceSpec() bool
 	getEndpoints() []endpointMetadata
 	getSchemas() map[string]*schemaDefinition
 }
 
-type OpenAPIServiceSpec[T goat.AbstractStateMachine] struct {
+type ServiceSpec[T goat.AbstractStateMachine] struct {
 	*goat.StateMachineSpec[T]
 	endpoints []endpointMetadata
 	schemas   map[string]*schemaDefinition
 }
 
-func (*OpenAPIServiceSpec[T]) isOpenAPIServiceSpec() bool {
+func (*ServiceSpec[T]) isServiceSpec() bool {
 	return true
 }
 
-func (os *OpenAPIServiceSpec[T]) getEndpoints() []endpointMetadata {
+func (os *ServiceSpec[T]) getEndpoints() []endpointMetadata {
 	return os.endpoints
 }
 
-func (os *OpenAPIServiceSpec[T]) getSchemas() map[string]*schemaDefinition {
+func (os *ServiceSpec[T]) getSchemas() map[string]*schemaDefinition {
 	return os.schemas
 }
 
-func (os *OpenAPIServiceSpec[T]) addEndpoint(metadata *endpointMetadata) {
+func (os *ServiceSpec[T]) addEndpoint(metadata *endpointMetadata) {
 	os.endpoints = append(os.endpoints, *metadata)
 }
 
-func (os *OpenAPIServiceSpec[T]) addSchema(schema *schemaDefinition) {
+func (os *ServiceSpec[T]) addSchema(schema *schemaDefinition) {
 	if os.schemas == nil {
 		os.schemas = make(map[string]*schemaDefinition)
 	}

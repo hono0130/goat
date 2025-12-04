@@ -20,9 +20,9 @@ func TestUserServiceProtobufGeneration(t *testing.T) {
 		Filename:    "user_service.proto",
 	}
 
-	err := protobuf.GenerateProtobuf(opts, spec)
+	err := protobuf.Generate(opts, spec)
 	if err != nil {
-		t.Fatalf("GenerateProtobuf() error = %v", err)
+		t.Fatalf("Generate() error = %v", err)
 	}
 
 	protoFile := filepath.Join(outputPath, "user_service.proto")
@@ -34,40 +34,13 @@ func TestUserServiceProtobufGeneration(t *testing.T) {
 
 	got := string(content)
 
-	// Golden file test
-	want := `syntax = "proto3";
-
-package user.service;
-
-option go_package = "github.com/goatx/goat/user/proto";
-
-message CreateUserRequest {
-  string username = 1;
-  string email = 2;
-  repeated string tags = 3;
-}
-
-message CreateUserResponse {
-  string user_id = 1;
-  bool success = 2;
-  int64 error_code = 3;
-}
-
-message GetUserRequest {
-  string user_id = 1;
-}
-
-message GetUserResponse {
-  string username = 1;
-  string email = 2;
-  bool found = 3;
-}
-
-service UserService {
-  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
-  rpc GetUser(GetUserRequest) returns (GetUserResponse);
-}
-`
+	goldenPath := filepath.Join("proto", "user_service.proto.golden")
+	// #nosec G304 - fixed golden path within repo
+	wantBytes, err := os.ReadFile(goldenPath)
+	if err != nil {
+		t.Fatalf("ReadFile() golden error = %v", err)
+	}
+	want := string(wantBytes)
 
 	if got != want {
 		t.Errorf("Generated proto content mismatch.\nGot:\n%s\nWant:\n%s", got, want)

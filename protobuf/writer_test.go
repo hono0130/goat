@@ -14,9 +14,9 @@ func TestFileWriter_WriteProtoFile(t *testing.T) {
 	t.Run("writes empty definitions", func(t *testing.T) {
 		w := newFileWriter(tempDir, "test.package", "github.com/test/proto")
 
-		err := w.writeProtoFile(filename, &protoDefinitions{
-			Messages: []*protoMessage{},
-			Services: []*protoService{},
+		err := w.writeProtoFile(filename, &definitions{
+			Messages: []*message{},
+			Services: []*service{},
 		})
 		if err != nil {
 			t.Errorf("WriteProtoFile() error = %v", err)
@@ -43,7 +43,7 @@ func TestFileWriter_generateFileContent(t *testing.T) {
 	tests := []struct {
 		name        string
 		writer      *fileWriter
-		definitions *protoDefinitions
+		definitions *definitions
 		wantContent string
 	}{
 		{
@@ -52,9 +52,9 @@ func TestFileWriter_generateFileContent(t *testing.T) {
 				packageName: "test.package",
 				goPackage:   "github.com/test/proto",
 			},
-			definitions: &protoDefinitions{
-				Messages: []*protoMessage{},
-				Services: []*protoService{},
+			definitions: &definitions{
+				Messages: []*message{},
+				Services: []*service{},
 			},
 			wantContent: `syntax = "proto3";
 
@@ -70,12 +70,12 @@ option go_package = "github.com/test/proto";
 				packageName: "test.package",
 				goPackage:   "github.com/test/proto",
 			},
-			definitions: &protoDefinitions{
-				Messages: []*protoMessage{},
-				Services: []*protoService{
+			definitions: &definitions{
+				Messages: []*message{},
+				Services: []*service{
 					{
 						Name: "UserService",
-						Methods: []protoMethod{
+						Methods: []method{
 							{
 								Name:       "CreateUser",
 								InputType:  "CreateUserRequest",
@@ -108,11 +108,11 @@ service UserService {
 				packageName: "test.package",
 				goPackage:   "github.com/test/proto",
 			},
-			definitions: &protoDefinitions{
-				Messages: []*protoMessage{
+			definitions: &definitions{
+				Messages: []*message{
 					{
 						Name: "User",
-						Fields: []protoField{
+						Fields: []field{
 							{
 								Name:       "UserId",
 								Type:       "string",
@@ -134,7 +134,7 @@ service UserService {
 						},
 					},
 				},
-				Services: []*protoService{},
+				Services: []*service{},
 			},
 			wantContent: `syntax = "proto3";
 
@@ -157,56 +157,6 @@ message User {
 
 			if got != tt.wantContent {
 				t.Errorf("generateFileContent() = %q, want %q", got, tt.wantContent)
-			}
-		})
-	}
-}
-
-func TestFileWriter_toSnakeCase(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		want  string
-	}{
-		{
-			name:  "converts CamelCase to snake_case",
-			input: "CamelCase",
-			want:  "camel_case",
-		},
-		{
-			name:  "converts UserId to user_id",
-			input: "UserId",
-			want:  "user_id",
-		},
-		{
-			name:  "handles single word",
-			input: "Word",
-			want:  "word",
-		},
-		{
-			name:  "handles lowercase",
-			input: "lowercase",
-			want:  "lowercase",
-		},
-		{
-			name:  "converts HTTPRequest",
-			input: "HTTPRequest",
-			want:  "http_request",
-		},
-		{
-			name:  "converts userID",
-			input: "userID",
-			want:  "user_id",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			w := &fileWriter{}
-			got := w.toSnakeCase(tt.input)
-
-			if got != tt.want {
-				t.Errorf("toSnakeCase(%q) = %q, want %q", tt.input, got, tt.want)
 			}
 		})
 	}

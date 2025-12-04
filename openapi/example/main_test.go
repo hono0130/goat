@@ -20,9 +20,9 @@ func TestUserServiceOpenAPIGeneration(t *testing.T) {
 		Filename:  "user_service.yaml",
 	}
 
-	err := openapi.GenerateOpenAPI(&opts, spec)
+	err := openapi.Generate(&opts, spec)
 	if err != nil {
-		t.Fatalf("GenerateOpenAPI() error = %v", err)
+		t.Fatalf("Generate() error = %v", err)
 	}
 
 	yamlFile := filepath.Join(outputPath, "user_service.yaml")
@@ -34,109 +34,13 @@ func TestUserServiceOpenAPIGeneration(t *testing.T) {
 
 	got := string(content)
 
-	want := `openapi: 3.0.0
-info:
-  title: User Service API
-  version: 1.0.0
-
-paths:
-  /users:
-    post:
-      operationId: createUser
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateUserRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateUserResponse'
-  /users/{userId}:
-    get:
-      operationId: getUser
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: includeEmail
-          in: query
-          required: false
-          schema:
-            type: boolean
-        - name: X-Request-ID
-          in: header
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetUserResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetUserNotFoundResponse'
-
-components:
-  schemas:
-    CreateUserRequest:
-      type: object
-      properties:
-        username:
-          type: string
-        email:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
-      required:
-        - username
-        - email
-        - tags
-    CreateUserResponse:
-      type: object
-      properties:
-        userID:
-          type: string
-        success:
-          type: boolean
-      required:
-        - userID
-        - success
-    GetUserNotFoundResponse:
-      type: object
-      properties:
-        message:
-          type: string
-      required:
-        - message
-    GetUserResponse:
-      type: object
-      properties:
-        username:
-          type: string
-        email:
-          type: string
-        found:
-          type: boolean
-      required:
-        - username
-        - email
-        - found
-`
+	goldenPath := filepath.Join("openapi", "user_service.yaml.golden")
+	// #nosec G304 - fixed golden path within repo
+	wantBytes, err := os.ReadFile(goldenPath)
+	if err != nil {
+		t.Fatalf("ReadFile() golden error = %v", err)
+	}
+	want := string(wantBytes)
 
 	if got != want {
 		t.Errorf("Generated OpenAPI content mismatch.\nGot:\n%s\nWant:\n%s", got, want)

@@ -21,7 +21,7 @@ func newSpecWriter(outputDir, title, version string) *specWriter {
 	}
 }
 
-func (w *specWriter) writeOpenAPIFile(filename string, definitions *openAPIDefinitions) error {
+func (w *specWriter) writeOpenAPIFile(filename string, definitions *definitions) error {
 	if err := os.MkdirAll(w.outputDir, 0o750); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
@@ -36,7 +36,7 @@ func (w *specWriter) writeOpenAPIFile(filename string, definitions *openAPIDefin
 	return nil
 }
 
-func (w *specWriter) generateFileContent(definitions *openAPIDefinitions) string {
+func (w *specWriter) generateFileContent(definitions *definitions) string {
 	var builder strings.Builder
 
 	builder.WriteString("openapi: 3.0.0\n")

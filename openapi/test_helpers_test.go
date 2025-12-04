@@ -13,22 +13,22 @@ type TestService2 struct {
 }
 
 type TestRequest1 struct {
-	OpenAPISchema[*TestService1, *TestService1]
+	Schema[*TestService1, *TestService1]
 	Data string `openapi:"required"`
 }
 
 type TestResponse1 struct {
-	OpenAPISchema[*TestService1, *TestService1]
+	Schema[*TestService1, *TestService1]
 	Result string `openapi:"required"`
 }
 
 type TestRequest2 struct {
-	OpenAPISchema[*TestService1, *TestService1]
+	Schema[*TestService1, *TestService1]
 	Info string `openapi:"required"`
 }
 
 type TestResponse2 struct {
-	OpenAPISchema[*TestService1, *TestService1]
+	Schema[*TestService1, *TestService1]
 	Value string `openapi:"required"`
 }
 
