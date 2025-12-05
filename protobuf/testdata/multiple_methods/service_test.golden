@@ -1,0 +1,64 @@
+package testpkg
+
+import (
+	"context"
+	"testing"
+
+	pbe2e_test_service "github.com/example/proto/user"
+)
+
+func TestCreateUser(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    *pbe2e_test_service.E2ECreateUserRequest
+		expected *pbe2e_test_service.E2ECreateUserResponse
+	}{
+		{name: "case_0", input: &pbe2e_test_service.E2ECreateUserRequest{
+			Email:    "alice@example.com",
+			Username: "alice",
+		}, expected: &pbe2e_test_service.E2ECreateUserResponse{
+			Success: true,
+			UserID:  "user_alice",
+		}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := e2e_test_serviceClient.CreateUser(context.Background(), tt.input)
+			if err != nil {
+				t.Fatalf("RPC call failed: %%v", err)
+			}
+			if !compareE2EOutput(tt.expected, actual) {
+				t.Errorf("CreateUser mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, actual)
+			}
+		})
+	}
+}
+
+func TestGetUser(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    *pbe2e_test_service.E2EGetUserRequest
+		expected *pbe2e_test_service.E2EGetUserResponse
+	}{
+		{name: "case_0", input: &pbe2e_test_service.E2EGetUserRequest{
+			UserID: "user_123",
+		}, expected: &pbe2e_test_service.E2EGetUserResponse{
+			Email:    "test@example.com",
+			Found:    true,
+			Username: "testuser",
+		}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := e2e_test_serviceClient.GetUser(context.Background(), tt.input)
+			if err != nil {
+				t.Fatalf("RPC call failed: %%v", err)
+			}
+			if !compareE2EOutput(tt.expected, actual) {
+				t.Errorf("GetUser mismatch:\nexpected: %+v\ngot:      %+v", tt.expected, actual)
+			}
+		})
+	}
+}

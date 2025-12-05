@@ -1,0 +1,49 @@
+package testpkg
+
+import (
+	"context"
+	"log"
+	"net"
+	"os"
+	"reflect"
+	"testing"
+
+	pbe2e_test_service "github.com/example/proto/user"
+	"google.golang.org/grpc"
+)
+
+var e2e_test_serviceClient pbe2e_test_service.E2ETestServiceClient
+
+func TestMain(m *testing.M) {
+	lis0, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		log.Fatalf("Failed to listen: %%v", err)
+	}
+
+	grpcServer0 := grpc.NewServer()
+	// TODO: Register your service implementation here
+	// pbe2e_test_service.RegisterE2ETestServiceServer(grpcServer0, &yourServiceImplementation{})
+
+	go func() {
+		if err := grpcServer0.Serve(lis0); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	}()
+
+	conn0, err := grpc.Dial(lis0.Addr().String(), grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to dial: %%v", err)
+	}
+	e2e_test_serviceClient = pbe2e_test_service.NewE2ETestServiceClient(conn0)
+
+	code := m.Run()
+
+	conn0.Close()
+	grpcServer0.Stop()
+
+	os.Exit(code)
+}
+
+func compareE2EOutput(expected, actual any) bool {
+	return reflect.DeepEqual(expected, actual)
+}

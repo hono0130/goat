@@ -13,6 +13,10 @@ type Response[O AbstractMessage] struct {
 	event O
 }
 
+func (r Response[O]) GetEvent() O {
+	return r.event
+}
+
 func SendTo[O AbstractMessage](ctx context.Context, target goat.AbstractStateMachine, event O) Response[O] {
 	goat.SendTo(ctx, target, event)
 	return Response[O]{event: event}
@@ -23,6 +27,7 @@ func NewServiceSpec[T goat.AbstractStateMachine](prototype T) *ServiceSpec[T] {
 		StateMachineSpec: goat.NewStateMachineSpec(prototype),
 		rpcMethods:       []rpcMethod{},
 		messages:         make(map[string]*message),
+		handlers:         make(map[string]any),
 	}
 }
 
@@ -52,6 +57,8 @@ func OnMessage[T goat.AbstractStateMachine, I AbstractMessage, O AbstractMessage
 	outputMsg := analyzeMessage(outputEvent)
 	spec.addMessage(inputMsg)
 	spec.addMessage(outputMsg)
+
+	spec.handlers[methodName] = handler
 
 	wrappedHandler := func(ctx context.Context, event I, sm T) {
 		response := handler(ctx, event, sm)
@@ -186,4 +193,12 @@ func getServiceTypeName[T goat.AbstractStateMachine](_ *goat.StateMachineSpec[T]
 
 func getEventTypeName[E AbstractMessage](event E) string {
 	return typeutil.Name(event)
+}
+
+func getTypeName(v any) string {
+	t := reflect.TypeOf(v)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Name()
 }

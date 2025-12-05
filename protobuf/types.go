@@ -11,7 +11,6 @@ type AbstractMessage interface {
 
 type Message[Sender goat.AbstractStateMachine, Recipient goat.AbstractStateMachine] struct {
 	goat.Event[Sender, Recipient]
-	// this is needed to make Message copyable
 	_ rune
 }
 
@@ -23,12 +22,16 @@ type AbstractServiceSpec interface {
 	isServiceSpec() bool
 	GetRPCMethods() []rpcMethod
 	GetMessages() map[string]*message
+	GetHandlers() map[string]any
+	NewStateMachineInstance() (goat.AbstractStateMachine, error)
+	GetServiceName() string
 }
 
 type ServiceSpec[T goat.AbstractStateMachine] struct {
 	*goat.StateMachineSpec[T]
 	rpcMethods []rpcMethod
 	messages   map[string]*message
+	handlers   map[string]any
 }
 
 func (*ServiceSpec[T]) isServiceSpec() bool {
@@ -41,6 +44,18 @@ func (ps *ServiceSpec[T]) GetRPCMethods() []rpcMethod {
 
 func (ps *ServiceSpec[T]) GetMessages() map[string]*message {
 	return ps.messages
+}
+
+func (ps *ServiceSpec[T]) GetHandlers() map[string]any {
+	return ps.handlers
+}
+
+func (ps *ServiceSpec[T]) NewStateMachineInstance() (goat.AbstractStateMachine, error) {
+	return ps.StateMachineSpec.NewInstance()
+}
+
+func (ps *ServiceSpec[T]) GetServiceName() string {
+	return getServiceTypeName(ps.StateMachineSpec)
 }
 
 func (ps *ServiceSpec[T]) addRPCMethod(metadata rpcMethod) {
