@@ -12,30 +12,29 @@ import (
 
 var update = flag.Bool("update", false, "update golden files")
 
-// Test fixtures for E2E generation
 type E2ETestService struct {
 	goat.StateMachine
 }
 
 type E2ECreateUserRequest struct {
-	ProtobufMessage[*E2ETestService, *E2ETestService]
+	Message[*E2ETestService, *E2ETestService]
 	Username string
 	Email    string
 }
 
 type E2ECreateUserResponse struct {
-	ProtobufMessage[*E2ETestService, *E2ETestService]
+	Message[*E2ETestService, *E2ETestService]
 	UserID  string
 	Success bool
 }
 
 type E2EGetUserRequest struct {
-	ProtobufMessage[*E2ETestService, *E2ETestService]
+	Message[*E2ETestService, *E2ETestService]
 	UserID string
 }
 
 type E2EGetUserResponse struct {
-	ProtobufMessage[*E2ETestService, *E2ETestService]
+	Message[*E2ETestService, *E2ETestService]
 	Username string
 	Email    string
 	Found    bool
@@ -44,20 +43,20 @@ type E2EGetUserResponse struct {
 func TestGenerateE2ETest_Golden(t *testing.T) {
 	tests := []struct {
 		name      string
-		setupSpec func() *ProtobufServiceSpec[*E2ETestService]
+		setupSpec func() *ServiceSpec[*E2ETestService]
 		services  []ServiceTestCase
 		goldenDir string
 	}{
 		{
 			name: "single_method_single_input",
-			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
-				spec := NewProtobufServiceSpec(&E2ETestService{})
+			setupSpec: func() *ServiceSpec[*E2ETestService] {
+				spec := NewServiceSpec(&E2ETestService{})
 				idleState := &TestIdleState{}
 				spec.DefineStates(idleState).SetInitialState(idleState)
 
-				OnProtobufMessage(spec, idleState, "CreateUser",
-					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
-						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+				OnMessage(spec, idleState, "CreateUser",
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) Response[*E2ECreateUserResponse] {
+						return SendTo(ctx, svc, &E2ECreateUserResponse{
 							UserID:  "user_123",
 							Success: true,
 						})
@@ -69,14 +68,14 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 		},
 		{
 			name: "single_method_multiple_inputs",
-			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
-				spec := NewProtobufServiceSpec(&E2ETestService{})
+			setupSpec: func() *ServiceSpec[*E2ETestService] {
+				spec := NewServiceSpec(&E2ETestService{})
 				idleState := &TestIdleState{}
 				spec.DefineStates(idleState).SetInitialState(idleState)
 
-				OnProtobufMessage(spec, idleState, "CreateUser",
-					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
-						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+				OnMessage(spec, idleState, "CreateUser",
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) Response[*E2ECreateUserResponse] {
+						return SendTo(ctx, svc, &E2ECreateUserResponse{
 							UserID:  "user_" + req.Username,
 							Success: true,
 						})
@@ -88,22 +87,22 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 		},
 		{
 			name: "multiple_methods",
-			setupSpec: func() *ProtobufServiceSpec[*E2ETestService] {
-				spec := NewProtobufServiceSpec(&E2ETestService{})
+			setupSpec: func() *ServiceSpec[*E2ETestService] {
+				spec := NewServiceSpec(&E2ETestService{})
 				idleState := &TestIdleState{}
 				spec.DefineStates(idleState).SetInitialState(idleState)
 
-				OnProtobufMessage(spec, idleState, "CreateUser",
-					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) ProtobufResponse[*E2ECreateUserResponse] {
-						return ProtobufSendTo(ctx, svc, &E2ECreateUserResponse{
+				OnMessage(spec, idleState, "CreateUser",
+					func(ctx context.Context, req *E2ECreateUserRequest, svc *E2ETestService) Response[*E2ECreateUserResponse] {
+						return SendTo(ctx, svc, &E2ECreateUserResponse{
 							UserID:  "user_" + req.Username,
 							Success: true,
 						})
 					})
 
-				OnProtobufMessage(spec, idleState, "GetUser",
-					func(ctx context.Context, req *E2EGetUserRequest, svc *E2ETestService) ProtobufResponse[*E2EGetUserResponse] {
-						return ProtobufSendTo(ctx, svc, &E2EGetUserResponse{
+				OnMessage(spec, idleState, "GetUser",
+					func(ctx context.Context, req *E2EGetUserRequest, svc *E2ETestService) Response[*E2EGetUserResponse] {
+						return SendTo(ctx, svc, &E2EGetUserResponse{
 							Username: "testuser",
 							Email:    "test@example.com",
 							Found:    true,
@@ -118,10 +117,8 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup spec
 			spec := tt.setupSpec()
 
-			// Build services configuration
 			var services []ServiceTestCase
 			if tt.name == "single_method_single_input" {
 				services = []ServiceTestCase{
@@ -131,7 +128,7 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 						Methods: []MethodTestCase{
 							{
 								MethodName: "CreateUser",
-								Inputs: []AbstractProtobufMessage{
+								Inputs: []AbstractMessage{
 									&E2ECreateUserRequest{
 										Username: "alice",
 										Email:    "alice@example.com",
@@ -149,7 +146,7 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 						Methods: []MethodTestCase{
 							{
 								MethodName: "CreateUser",
-								Inputs: []AbstractProtobufMessage{
+								Inputs: []AbstractMessage{
 									&E2ECreateUserRequest{
 										Username: "alice",
 										Email:    "alice@example.com",
@@ -171,7 +168,7 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 						Methods: []MethodTestCase{
 							{
 								MethodName: "CreateUser",
-								Inputs: []AbstractProtobufMessage{
+								Inputs: []AbstractMessage{
 									&E2ECreateUserRequest{
 										Username: "alice",
 										Email:    "alice@example.com",
@@ -180,7 +177,7 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 							},
 							{
 								MethodName: "GetUser",
-								Inputs: []AbstractProtobufMessage{
+								Inputs: []AbstractMessage{
 									&E2EGetUserRequest{UserID: "user_123"},
 								},
 							},
@@ -189,7 +186,6 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 				}
 			}
 
-			// Generate E2E tests
 			tmpDir := t.TempDir()
 
 			err := GenerateE2ETest(E2ETestOptions{
@@ -201,27 +197,23 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 				t.Fatalf("GenerateE2ETest() error = %v", err)
 			}
 
-			// Read generated main_test.go
 			mainTestPath := filepath.Join(tmpDir, "main_test.go")
 			mainTestContent, err := os.ReadFile(mainTestPath)
 			if err != nil {
 				t.Fatalf("Failed to read main_test.go: %v", err)
 			}
 
-			// Read generated service test file
 			serviceTestPath := filepath.Join(tmpDir, "e2e_test_service_test.go")
 			serviceTestContent, err := os.ReadFile(serviceTestPath)
 			if err != nil {
 				t.Fatalf("Failed to read service test file: %v", err)
 			}
 
-			// Compare with golden files
 			goldenDir := filepath.Join("testdata", tt.goldenDir)
 			goldenMainPath := filepath.Join(goldenDir, "main_test.golden")
 			goldenServicePath := filepath.Join(goldenDir, "service_test.golden")
 
 			if *update {
-				// Update golden files
 				if err := os.MkdirAll(goldenDir, 0755); err != nil {
 					t.Fatalf("Failed to create golden directory: %v", err)
 				}
@@ -235,7 +227,6 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 				return
 			}
 
-			// Read and compare main_test.go
 			goldenMain, err := os.ReadFile(goldenMainPath)
 			if err != nil {
 				t.Fatalf("Failed to read golden main_test file: %v (run with -update to create)", err)
@@ -245,7 +236,6 @@ func TestGenerateE2ETest_Golden(t *testing.T) {
 				t.Errorf("main_test.go does not match golden file.\nRun 'go test -update' to update golden files.")
 			}
 
-			// Read and compare service test file
 			goldenService, err := os.ReadFile(goldenServicePath)
 			if err != nil {
 				t.Fatalf("Failed to read golden service test file: %v (run with -update to create)", err)

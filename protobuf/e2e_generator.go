@@ -10,11 +10,11 @@ import (
 
 type MethodTestCase struct {
 	MethodName string
-	Inputs     []AbstractProtobufMessage
+	Inputs     []AbstractMessage
 }
 
 type ServiceTestCase struct {
-	Spec           AbstractProtobufServiceSpec
+	Spec           AbstractServiceSpec
 	ServicePackage string
 	Methods        []MethodTestCase
 }

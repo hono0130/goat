@@ -3,6 +3,7 @@ package protobuf
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/goatx/goat"
 	"github.com/goatx/goat/internal/e2egen"
@@ -68,7 +69,7 @@ func buildTestSuite(opts E2ETestOptions) (e2egen.TestSuite, error) {
 	return suite, nil
 }
 
-func executeHandler(spec AbstractProtobufServiceSpec, methodName string, input AbstractProtobufMessage) (AbstractProtobufMessage, error) {
+func executeHandler(spec AbstractServiceSpec, methodName string, input AbstractMessage) (AbstractMessage, error) {
 	handlers := spec.GetHandlers()
 	handler, ok := handlers[methodName]
 	if !ok {
@@ -92,10 +93,10 @@ func executeHandler(spec AbstractProtobufServiceSpec, methodName string, input A
 	response := results[0]
 	eventResults := response.MethodByName("GetEvent").Call(nil)
 
-	return eventResults[0].Interface().(AbstractProtobufMessage), nil
+	return eventResults[0].Interface().(AbstractMessage), nil
 }
 
-func serializeMessage(msg AbstractProtobufMessage) (map[string]any, error) {
+func serializeMessage(msg AbstractMessage) (map[string]any, error) {
 	data := make(map[string]any)
 
 	val := reflect.ValueOf(msg)
@@ -111,7 +112,7 @@ func serializeMessage(msg AbstractProtobufMessage) (map[string]any, error) {
 		if !field.IsExported() || field.Anonymous || field.Name == "_" {
 			continue
 		}
-		if isGoatEventType(field.Type) || isProtobufMessageType(field.Type) {
+		if isGoatEventType(field.Type) || isMessageType(field.Type) {
 			continue
 		}
 
@@ -121,9 +122,16 @@ func serializeMessage(msg AbstractProtobufMessage) (map[string]any, error) {
 	return data, nil
 }
 
-func isProtobufMessageType(t reflect.Type) bool {
+func isGoatEventType(t reflect.Type) bool {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	return t.Kind() == reflect.Struct && t.Name() == "ProtobufMessage"
+	return t.Kind() == reflect.Struct && strings.HasPrefix(t.Name(), "Event")
+}
+
+func isMessageType(t reflect.Type) bool {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Kind() == reflect.Struct && t.Name() == "Message"
 }

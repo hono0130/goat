@@ -115,14 +115,14 @@ func main() {
 				Methods: []protobuf.MethodTestCase{
 					{
 						MethodName: "CreateUser",
-						Inputs: []protobuf.AbstractProtobufMessage{
+						Inputs: []protobuf.AbstractMessage{
 							&CreateUserRequest{Username: "alice", Email: "alice@example.com"},
 							&CreateUserRequest{Username: "bob", Email: "bob@example.com"},
 						},
 					},
 					{
 						MethodName: "GetUser",
-						Inputs: []protobuf.AbstractProtobufMessage{
+						Inputs: []protobuf.AbstractMessage{
 							&GetUserRequest{UserID: "user_123"},
 						},
 					},
