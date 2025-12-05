@@ -5,11 +5,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/goatx/goat"
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestOnProtobufMessage(t *testing.T) {
+func TestOnMessage(t *testing.T) {
 	tests := []struct {
 		name           string
 		methodName     string
@@ -39,15 +38,15 @@ func TestOnProtobufMessage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			spec := NewProtobufServiceSpec(&TestService1{})
+			spec := NewServiceSpec(&TestService1{})
 			state := &TestIdleState{}
 			spec.DefineStates(state).SetInitialState(state)
 
 			initialMethodCount := len(spec.GetRPCMethods())
 
-			OnProtobufMessage(spec, state, tt.methodName,
-				func(ctx context.Context, event *TestRequest1, sm *TestService1) ProtobufResponse[*TestResponse1] {
-					return ProtobufSendTo(ctx, sm, &TestResponse1{Result: "test"})
+			OnMessage(spec, state, tt.methodName,
+				func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+					return SendTo(ctx, sm, &TestResponse1{Result: "test"})
 				})
 
 			methods := spec.GetRPCMethods()
@@ -60,95 +59,11 @@ func TestOnProtobufMessage(t *testing.T) {
 			}
 
 			if spec.StateMachineSpec == nil {
-				t.Fatal("StateMachineSpec should not be nil after OnProtobufMessage call")
+				t.Fatal("StateMachineSpec should not be nil after OnMessage call")
 			}
 
 			if len(spec.GetRPCMethods()) == 0 {
-				t.Error("RPC methods should be registered after OnProtobufMessage call")
-			}
-		})
-	}
-}
-
-func TestGetServiceTypeName(t *testing.T) {
-	tests := []struct {
-		name string
-		spec *goat.StateMachineSpec[*TestService1]
-		want string
-	}{
-		{
-			name: "returns correct type name",
-			spec: goat.NewStateMachineSpec(&TestService1{}),
-			want: "TestService1",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getServiceTypeName(tt.spec)
-			if got != tt.want {
-				t.Errorf("getServiceTypeName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestGetEventTypeName(t *testing.T) {
-	tests := []struct {
-		name  string
-		event AbstractProtobufMessage
-		want  string
-	}{
-		{
-			name:  "returns request type name",
-			event: &TestRequest1{},
-			want:  "TestRequest1",
-		},
-		{
-			name:  "returns response type name",
-			event: &TestResponse1{},
-			want:  "TestResponse1",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getEventTypeName(tt.event)
-			if got != tt.want {
-				t.Errorf("getEventTypeName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestGetTypeName(t *testing.T) {
-	tests := []struct {
-		name  string
-		value any
-		want  string
-	}{
-		{
-			name:  "handles struct value",
-			value: TestService1{},
-			want:  "TestService1",
-		},
-		{
-			name:  "handles pointer to struct",
-			value: &TestService1{},
-			want:  "TestService1",
-		},
-		{
-			name:  "handles event type",
-			value: &TestRequest1{},
-			want:  "TestRequest1",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getTypeName(tt.value)
-			if got != tt.want {
-				t.Errorf("getTypeName() = %v, want %v", got, tt.want)
+				t.Error("RPC methods should be registered after OnMessage call")
 			}
 		})
 	}
@@ -157,15 +72,15 @@ func TestGetTypeName(t *testing.T) {
 func TestAnalyzeMessage(t *testing.T) {
 	tests := []struct {
 		name     string
-		instance AbstractProtobufMessage
-		want     *protoMessage
+		instance AbstractMessage
+		want     *message
 	}{
 		{
 			name:     "analyzes TestRequest1 correctly",
 			instance: &TestRequest1{},
-			want: &protoMessage{
+			want: &message{
 				Name: "TestRequest1",
-				Fields: []protoField{
+				Fields: []field{
 					{Name: "Data", Type: "string", Number: 1, IsRepeated: false},
 				},
 			},
@@ -173,9 +88,9 @@ func TestAnalyzeMessage(t *testing.T) {
 		{
 			name:     "analyzes TestResponse1 correctly",
 			instance: &TestResponse1{},
-			want: &protoMessage{
+			want: &message{
 				Name: "TestResponse1",
-				Fields: []protoField{
+				Fields: []field{
 					{Name: "Result", Type: "string", Number: 1, IsRepeated: false},
 				},
 			},
@@ -192,7 +107,7 @@ func TestAnalyzeMessage(t *testing.T) {
 	}
 }
 
-func TestMapGoFieldToProto(t *testing.T) {
+func TestMapGoField(t *testing.T) {
 	tests := []struct {
 		name          string
 		goType        reflect.Type
@@ -233,12 +148,12 @@ func TestMapGoFieldToProto(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotType, gotRepeated := mapGoFieldToProto(tt.goType)
+			gotType, gotRepeated := mapGoField(tt.goType)
 			if gotType != tt.wantProtoType {
-				t.Errorf("mapGoFieldToProto() type = %v, want %v", gotType, tt.wantProtoType)
+				t.Errorf("mapGoField() type = %v, want %v", gotType, tt.wantProtoType)
 			}
 			if gotRepeated != tt.wantRepeated {
-				t.Errorf("mapGoFieldToProto() repeated = %v, want %v", gotRepeated, tt.wantRepeated)
+				t.Errorf("mapGoField() repeated = %v, want %v", gotRepeated, tt.wantRepeated)
 			}
 		})
 	}

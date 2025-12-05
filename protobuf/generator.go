@@ -1,20 +1,20 @@
 package protobuf
 
-type protobufGenerator struct {
+type generator struct {
 	analyzer *typeAnalyzer
 	writer   *fileWriter
 	opts     GenerateOptions
 }
 
-func newProtobufGenerator(opts GenerateOptions) *protobufGenerator {
-	return &protobufGenerator{
+func newGenerator(opts GenerateOptions) *generator {
+	return &generator{
 		analyzer: newTypeAnalyzer(),
 		writer:   newFileWriter(opts.OutputDir, opts.PackageName, opts.GoPackage),
 		opts:     opts,
 	}
 }
 
-func (g *protobufGenerator) generateFromSpecs(specs ...AbstractProtobufServiceSpec) error {
+func (g *generator) generateFromSpecs(specs ...AbstractServiceSpec) error {
 	definitions := g.analyzer.analyzeSpecs(specs...)
 	return g.writer.writeProtoFile(g.opts.Filename, definitions)
 }

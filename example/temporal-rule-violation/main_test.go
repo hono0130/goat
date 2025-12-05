@@ -35,7 +35,7 @@ func TestTemporalRuleViolationExample(t *testing.T) {
 		t.Fatalf("Failed to parse JSON: %v", err)
 	}
 
-	expectedWorldsData, err := os.ReadFile("expected_worlds.json")
+	expectedWorldsData, err := os.ReadFile("expected_worlds.json.golden")
 	if err != nil {
 		t.Fatalf("Failed to read expected worlds JSON: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestTemporalRuleViolationExample(t *testing.T) {
 		t.Fatalf("expected temporal rule to be violated")
 	}
 
-	expectedTemporalRulesData, err := os.ReadFile("expected_temporal_rules.json")
+	expectedTemporalRulesData, err := os.ReadFile("expected_temporal_rules.json.golden")
 	if err != nil {
 		t.Fatalf("Failed to read expected temporal rules JSON: %v", err)
 	}

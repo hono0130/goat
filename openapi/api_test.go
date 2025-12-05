@@ -8,14 +8,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestOnOpenAPIRequest(t *testing.T) {
+func TestOnRequest(t *testing.T) {
 	tests := []struct {
 		name             string
 		method           HTTPMethod
 		path             string
 		operationID      string
 		expectedEndpoint endpointMetadata
-		setup            func(spec *OpenAPIServiceSpec[*TestService1], state *TestIdleState)
+		setup            func(spec *ServiceSpec[*TestService1], state *TestIdleState)
 	}{
 		{
 			name:        "registers single endpoint and verifies goat integration",
@@ -50,10 +50,10 @@ func TestOnOpenAPIRequest(t *testing.T) {
 			method:      HTTPMethodDelete,
 			path:        "/test",
 			operationID: "deleteTestEndpoint",
-			setup: func(spec *OpenAPIServiceSpec[*TestService1], state *TestIdleState) {
-				OnOpenAPIRequest(spec, state, HTTPMethodGet, "/test",
-					func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-						return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "existing"})
+			setup: func(spec *ServiceSpec[*TestService1], state *TestIdleState) {
+				OnRequest(spec, state, HTTPMethodGet, "/test",
+					func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+						return SendTo(ctx, sm, &TestResponse1{Result: "existing"})
 					},
 					WithOperationID("existingEndpoint"))
 			},
@@ -70,7 +70,7 @@ func TestOnOpenAPIRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			spec := NewOpenAPIServiceSpec(&TestService1{})
+			spec := NewServiceSpec(&TestService1{})
 			state := &TestIdleState{}
 			spec.DefineStates(state).SetInitialState(state)
 
@@ -78,9 +78,9 @@ func TestOnOpenAPIRequest(t *testing.T) {
 				tt.setup(spec, state)
 			}
 
-			OnOpenAPIRequest(spec, state, tt.method, tt.path,
-				func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-					return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
+			OnRequest(spec, state, tt.method, tt.path,
+				func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+					return SendTo(ctx, sm, &TestResponse1{Result: "test"})
 				},
 				WithOperationID(tt.operationID))
 
@@ -96,7 +96,7 @@ func TestOnOpenAPIRequest(t *testing.T) {
 func TestAnalyzeSchema(t *testing.T) {
 	tests := []struct {
 		name     string
-		instance AbstractOpenAPISchema
+		instance AbstractSchema
 		want     *schemaDefinition
 	}{
 		{
@@ -122,7 +122,7 @@ func TestAnalyzeSchema(t *testing.T) {
 		{
 			name: "applies explicit parameter name when provided",
 			instance: &struct {
-				OpenAPISchema[*TestService1, *TestService1]
+				Schema[*TestService1, *TestService1]
 				UserID string `openapi:"path=user_id"`
 			}{},
 			want: &schemaDefinition{
@@ -135,7 +135,7 @@ func TestAnalyzeSchema(t *testing.T) {
 		{
 			name: "falls back to snake case for unnamed parameters",
 			instance: &struct {
-				OpenAPISchema[*TestService1, *TestService1]
+				Schema[*TestService1, *TestService1]
 				SessionToken string `openapi:"query"`
 			}{},
 			want: &schemaDefinition{
@@ -157,7 +157,7 @@ func TestAnalyzeSchema(t *testing.T) {
 	}
 }
 
-func TestMapGoFieldToOpenAPI(t *testing.T) {
+func TestMapGoField(t *testing.T) {
 	tests := []struct {
 		name        string
 		goType      reflect.Type
@@ -218,15 +218,15 @@ func TestMapGoFieldToOpenAPI(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotType, gotFormat, gotIsArray := mapGoFieldToOpenAPI(tt.goType)
+			gotType, gotFormat, gotIsArray := mapGoField(tt.goType)
 			if gotType != tt.wantType {
-				t.Errorf("mapGoFieldToOpenAPI() type = %v, want %v", gotType, tt.wantType)
+				t.Errorf("mapGoField() type = %v, want %v", gotType, tt.wantType)
 			}
 			if gotFormat != tt.wantFormat {
-				t.Errorf("mapGoFieldToOpenAPI() format = %v, want %v", gotFormat, tt.wantFormat)
+				t.Errorf("mapGoField() format = %v, want %v", gotFormat, tt.wantFormat)
 			}
 			if gotIsArray != tt.wantIsArray {
-				t.Errorf("mapGoFieldToOpenAPI() isArray = %v, want %v", gotIsArray, tt.wantIsArray)
+				t.Errorf("mapGoField() isArray = %v, want %v", gotIsArray, tt.wantIsArray)
 			}
 		})
 	}

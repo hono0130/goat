@@ -32,7 +32,7 @@ func newTestStateMachine(initialState AbstractState, states ...AbstractState) *t
 	spec.SetInitialState(initialState)
 	sm, err := spec.NewInstance()
 	if err != nil {
-		panic(err.Error()) // Test helper can panic for simplicity
+		panic(err.Error())
 	}
 	return sm
 }

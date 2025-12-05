@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/goatx/goat/internal/strcase"
 )
 
 type fileWriter struct {
@@ -22,7 +24,7 @@ func newFileWriter(outputDir, packageName, goPackage string) *fileWriter {
 	}
 }
 
-func (w *fileWriter) writeProtoFile(filename string, definitions *protoDefinitions) error {
+func (w *fileWriter) writeProtoFile(filename string, definitions *definitions) error {
 	if err := os.MkdirAll(w.outputDir, 0o750); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
@@ -37,7 +39,7 @@ func (w *fileWriter) writeProtoFile(filename string, definitions *protoDefinitio
 	return nil
 }
 
-func (w *fileWriter) generateFileContent(definitions *protoDefinitions) string {
+func (w *fileWriter) generateFileContent(definitions *definitions) string {
 	var builder strings.Builder
 
 	builder.WriteString("syntax = \"proto3\";\n\n")
@@ -81,7 +83,7 @@ func (w *fileWriter) generateFileContent(definitions *protoDefinitions) string {
 	return builder.String()
 }
 
-func (w *fileWriter) writeMessage(builder *strings.Builder, message *protoMessage) {
+func (*fileWriter) writeMessage(builder *strings.Builder, message *message) {
 	builder.WriteString("message ")
 	builder.WriteString(message.Name)
 	builder.WriteString(" {\n")
@@ -92,7 +94,7 @@ func (w *fileWriter) writeMessage(builder *strings.Builder, message *protoMessag
 			fieldType = "repeated " + fieldType
 		}
 
-		fieldName := w.toSnakeCase(field.Name)
+		fieldName := strcase.ToSnakeCase(field.Name)
 		builder.WriteString("  ")
 		builder.WriteString(fieldType)
 		builder.WriteString(" ")
@@ -105,7 +107,7 @@ func (w *fileWriter) writeMessage(builder *strings.Builder, message *protoMessag
 	builder.WriteString("}")
 }
 
-func (*fileWriter) writeService(builder *strings.Builder, service *protoService) {
+func (*fileWriter) writeService(builder *strings.Builder, service *service) {
 	builder.WriteString("service ")
 	builder.WriteString(service.Name)
 	builder.WriteString(" {\n")
@@ -121,27 +123,4 @@ func (*fileWriter) writeService(builder *strings.Builder, service *protoService)
 	}
 
 	builder.WriteString("}")
-}
-
-func (*fileWriter) toSnakeCase(name string) string {
-	var result strings.Builder
-
-	for i, r := range name {
-		if r >= 'A' && r <= 'Z' {
-			if i > 0 {
-				prevChar := rune(name[i-1])
-				if prevChar >= 'a' && prevChar <= 'z' {
-					result.WriteRune('_')
-				} else if i < len(name)-1 {
-					nextChar := rune(name[i+1])
-					if nextChar >= 'a' && nextChar <= 'z' {
-						result.WriteRune('_')
-					}
-				}
-			}
-		}
-		result.WriteRune(r)
-	}
-
-	return strings.ToLower(result.String())
 }

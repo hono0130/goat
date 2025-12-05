@@ -13,7 +13,7 @@ func TestSpecWriter_writeOpenAPIFile(t *testing.T) {
 	t.Run("writes empty definitions", func(t *testing.T) {
 		w := newSpecWriter(tempDir, "Test API", "1.0.0")
 
-		err := w.writeOpenAPIFile(filename, &openAPIDefinitions{
+		err := w.writeOpenAPIFile(filename, &definitions{
 			Schemas: []*schemaDefinition{},
 			Paths:   []*pathDefinition{},
 		})
@@ -44,7 +44,7 @@ func TestSpecWriter_generateFileContent(t *testing.T) {
 		version: "1.0.0",
 	}
 
-	got := w.generateFileContent(&openAPIDefinitions{
+	got := w.generateFileContent(&definitions{
 		Schemas: []*schemaDefinition{},
 		Paths:   []*pathDefinition{},
 	})

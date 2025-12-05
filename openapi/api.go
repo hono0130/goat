@@ -12,23 +12,23 @@ import (
 	"github.com/goatx/goat/internal/typeutil"
 )
 
-// OpenAPIResponse represents a response that will be sent back in a OpenAPI RPC handler.
-// You must create this by calling OpenAPISendTo with your response message.
-type OpenAPIResponse[O AbstractOpenAPISchema] interface {
-	isOpenAPIResponse()
+// Response represents a response that will be sent back in an OpenAPI RPC handler.
+// You must create this by calling SendTo with your response message.
+type Response[O AbstractSchema] interface {
+	isResponse()
 }
 
-type openAPIResponseImpl[O AbstractOpenAPISchema] struct {
+type responseImpl[O AbstractSchema] struct {
 	event O
 }
 
-func (openAPIResponseImpl[O]) isOpenAPIResponse() {}
+func (responseImpl[O]) isResponse() {}
 
-// OpenAPISendTo sends an OpenAPI response event to the target state machine and returns an OpenAPIResponse.
-// This is the only way to create an OpenAPIResponse, enforcing that all responses go through the proper event system.
+// SendTo sends an OpenAPI response event to the target state machine and returns a Response.
+// This is the only way to create a Response, enforcing that all responses go through the proper event system.
 //
 // Type parameters:
-//   - O: The response schema type (must implement AbstractOpenAPISchema)
+//   - O: The response schema type (must implement AbstractSchema)
 //
 // Parameters:
 //   - ctx: The context for the event
@@ -36,10 +36,10 @@ func (openAPIResponseImpl[O]) isOpenAPIResponse() {}
 //   - event: The response event to send
 //
 // Returns:
-//   - OpenAPIResponse[O]: A sealed response type that can only be created through this function
-func OpenAPISendTo[O AbstractOpenAPISchema](ctx context.Context, target goat.AbstractStateMachine, event O) OpenAPIResponse[O] {
+//   - Response[O]: A sealed response type that can only be created through this function
+func SendTo[O AbstractSchema](ctx context.Context, target goat.AbstractStateMachine, event O) Response[O] {
 	goat.SendTo(ctx, target, event)
-	return openAPIResponseImpl[O]{event: event}
+	return responseImpl[O]{event: event}
 }
 
 // RequestOption is a functional option for configuring an OpenAPI request handler.
@@ -74,7 +74,7 @@ func WithRequestBodyOptional() RequestOption {
 	}
 }
 
-// NewOpenAPIServiceSpec creates a new OpenAPI service specification for the given
+// NewServiceSpec creates a new OpenAPI service specification for the given
 // state machine prototype. The prototype defines which state machine implementation
 // will receive requests and how its states will be exposed via OpenAPI.
 //
@@ -85,22 +85,22 @@ func WithRequestBodyOptional() RequestOption {
 //
 // Example:
 //
-//	spec := openapi.NewOpenAPIServiceSpec(&UserStateMachine{})
-//	openapi.OnOpenAPIRequest(spec, UserState{}, HTTPMethodPost, "/users", handleCreateUser)
-func NewOpenAPIServiceSpec[T goat.AbstractStateMachine](prototype T) *OpenAPIServiceSpec[T] {
-	return &OpenAPIServiceSpec[T]{
+//	spec := openapi.NewServiceSpec(&UserStateMachine{})
+//	openapi.OnRequest(spec, UserState{}, HTTPMethodPost, "/users", handleCreateUser)
+func NewServiceSpec[T goat.AbstractStateMachine](prototype T) *ServiceSpec[T] {
+	return &ServiceSpec[T]{
 		StateMachineSpec: goat.NewStateMachineSpec(prototype),
 		endpoints:        []endpointMetadata{},
 		schemas:          make(map[string]*schemaDefinition),
 	}
 }
 
-// OnOpenAPIRequest registers an OpenAPI endpoint handler with the given specification.
+// OnRequest registers an OpenAPI endpoint handler with the given specification.
 //
 // Type parameters:
 //   - T: The state machine type
-//   - I: The request schema type (must implement AbstractOpenAPISchema)
-//   - O: The response schema type (must implement AbstractOpenAPISchema)
+//   - I: The request schema type (must implement AbstractSchema)
+//   - O: The response schema type (must implement AbstractSchema)
 //
 // Parameters:
 //   - spec: The OpenAPI service specification to register the endpoint with
@@ -109,12 +109,12 @@ func NewOpenAPIServiceSpec[T goat.AbstractStateMachine](prototype T) *OpenAPISer
 //   - path: The URL path for the endpoint (e.g., "/users/{id}")
 //   - handler: The function that handles requests for this endpoint
 //   - opts: Optional configuration options (WithOperationID, WithStatusCode)
-func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O AbstractOpenAPISchema](
-	spec *OpenAPIServiceSpec[T],
+func OnRequest[T goat.AbstractStateMachine, I AbstractSchema, O AbstractSchema](
+	spec *ServiceSpec[T],
 	state goat.AbstractState,
 	method HTTPMethod,
 	path string,
-	handler func(context.Context, I, T) OpenAPIResponse[O],
+	handler func(context.Context, I, T) Response[O],
 	opts ...RequestOption,
 ) {
 	if method == nil {
@@ -131,8 +131,8 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 		opt(config)
 	}
 
-	requestEvent := newOpenAPISchemaPrototype[I]()
-	responseEvent := newOpenAPISchemaPrototype[O]()
+	requestEvent := newSchemaPrototype[I]()
+	responseEvent := newSchemaPrototype[O]()
 
 	requestTypeName := getEventTypeName(requestEvent)
 	responseTypeName := getEventTypeName(responseEvent)
@@ -161,7 +161,7 @@ func OnOpenAPIRequest[T goat.AbstractStateMachine, I AbstractOpenAPISchema, O Ab
 	goat.OnEvent(spec.StateMachineSpec, state, wrappedHandler)
 }
 
-func newOpenAPISchemaPrototype[T AbstractOpenAPISchema]() T {
+func newSchemaPrototype[T AbstractSchema]() T {
 	var zero T
 	msgType := reflect.TypeOf(zero)
 	if msgType == nil {
@@ -181,7 +181,7 @@ func newOpenAPISchemaPrototype[T AbstractOpenAPISchema]() T {
 		prototype := reflect.New(elem).Interface()
 		msg, ok := prototype.(T)
 		if !ok {
-			panic(fmt.Sprintf("type %s does not implement AbstractOpenAPISchema", msgType))
+			panic(fmt.Sprintf("type %s does not implement AbstractSchema", msgType))
 		}
 		return msg
 	}
@@ -189,12 +189,12 @@ func newOpenAPISchemaPrototype[T AbstractOpenAPISchema]() T {
 	value := reflect.New(msgType).Elem().Interface()
 	msg, ok := value.(T)
 	if !ok {
-		panic(fmt.Sprintf("type %s does not implement AbstractOpenAPISchema", msgType))
+		panic(fmt.Sprintf("type %s does not implement AbstractSchema", msgType))
 	}
 	return msg
 }
 
-func analyzeSchema[S AbstractOpenAPISchema](instance S) *schemaDefinition {
+func analyzeSchema[S AbstractSchema](instance S) *schemaDefinition {
 	schemaType := reflect.TypeOf(instance)
 	if schemaType.Kind() == reflect.Ptr {
 		schemaType = schemaType.Elem()
@@ -208,14 +208,14 @@ func analyzeSchema[S AbstractOpenAPISchema](instance S) *schemaDefinition {
 		if !field.IsExported() {
 			continue
 		}
-		if field.Type == reflect.TypeOf(OpenAPISchema[goat.AbstractStateMachine, goat.AbstractStateMachine]{}) {
+		if field.Type == reflect.TypeOf(Schema[goat.AbstractStateMachine, goat.AbstractStateMachine]{}) {
 			continue
 		}
 		if field.Name == "_" {
 			continue
 		}
 
-		openAPIType, format, isArray := mapGoFieldToOpenAPI(field.Type)
+		openAPIType, format, isArray := mapGoField(field.Type)
 		if openAPIType == "" {
 			continue
 		}
@@ -240,9 +240,9 @@ func analyzeSchema[S AbstractOpenAPISchema](instance S) *schemaDefinition {
 	}
 }
 
-func mapGoFieldToOpenAPI(goType reflect.Type) (typeName, format string, isArray bool) {
+func mapGoField(goType reflect.Type) (typeName, format string, isArray bool) {
 	if goType.Kind() == reflect.Slice {
-		elemType, format, _ := mapGoFieldToOpenAPI(goType.Elem())
+		elemType, format, _ := mapGoField(goType.Elem())
 		return elemType, format, true
 	}
 
@@ -283,7 +283,7 @@ type GenerateOptions struct {
 	Filename string
 }
 
-// GenerateOpenAPI generates an OpenAPI 3.0 specification file from one or more service specifications.
+// Generate generates an OpenAPI 3.0 specification file from one or more service specifications.
 // It analyzes the registered endpoints and schemas, and writes a YAML file to the specified output directory.
 //
 // Parameters:
@@ -292,7 +292,7 @@ type GenerateOptions struct {
 //
 // Returns:
 //   - error: An error if Title is empty, or if file creation/writing fails
-func GenerateOpenAPI(opts *GenerateOptions, specs ...AbstractOpenAPIServiceSpec) error {
+func Generate(opts *GenerateOptions, specs ...AbstractServiceSpec) error {
 	if opts.Title == "" {
 		return fmt.Errorf("title is required in GenerateOptions")
 	}
@@ -306,11 +306,11 @@ func GenerateOpenAPI(opts *GenerateOptions, specs ...AbstractOpenAPIServiceSpec)
 		opts.Version = "1.0.0"
 	}
 
-	generator := newOpenAPIGenerator(*opts)
+	generator := newGenerator(*opts)
 	return generator.generateFromSpecs(specs...)
 }
 
-func getEventTypeName[E AbstractOpenAPISchema](event E) string {
+func getEventTypeName[E AbstractSchema](event E) string {
 	return typeutil.Name(event)
 }
 

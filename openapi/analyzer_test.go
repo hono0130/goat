@@ -11,14 +11,14 @@ import (
 func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 	tests := []struct {
 		name    string
-		specs   []AbstractOpenAPIServiceSpec
-		want    *openAPIDefinitions
+		specs   []AbstractServiceSpec
+		want    *definitions
 		wantErr bool
 	}{
 		{
 			name:  "empty specs returns empty definitions",
-			specs: []AbstractOpenAPIServiceSpec{},
-			want: &openAPIDefinitions{
+			specs: []AbstractServiceSpec{},
+			want: &definitions{
 				Schemas: []*schemaDefinition{},
 				Paths:   []*pathDefinition{},
 			},
@@ -26,20 +26,20 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 		},
 		{
 			name: "single spec with one endpoint",
-			specs: []AbstractOpenAPIServiceSpec{
-				func() AbstractOpenAPIServiceSpec {
-					spec := NewOpenAPIServiceSpec(&TestService1{})
+			specs: []AbstractServiceSpec{
+				func() AbstractServiceSpec {
+					spec := NewServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIRequest(spec, state, HTTPMethodPost, "/test",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-							return OpenAPISendTo(ctx, sm, &TestResponse1{Result: "test"})
+					OnRequest(spec, state, HTTPMethodPost, "/test",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+							return SendTo(ctx, sm, &TestResponse1{Result: "test"})
 						},
 						WithOperationID("testEndpoint"))
 					return spec
 				}(),
 			},
-			want: &openAPIDefinitions{
+			want: &definitions{
 				Schemas: []*schemaDefinition{
 					{
 						Name: "TestRequest1",
@@ -83,31 +83,31 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 		},
 		{
 			name: "multiple specs with one endpoint each",
-			specs: []AbstractOpenAPIServiceSpec{
-				func() AbstractOpenAPIServiceSpec {
-					spec := NewOpenAPIServiceSpec(&TestService1{})
+			specs: []AbstractServiceSpec{
+				func() AbstractServiceSpec {
+					spec := NewServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIRequest(spec, state, HTTPMethodPost, "/endpoint1",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-							return OpenAPISendTo(ctx, sm, &TestResponse1{})
+					OnRequest(spec, state, HTTPMethodPost, "/endpoint1",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+							return SendTo(ctx, sm, &TestResponse1{})
 						},
 						WithOperationID("endpoint1"))
 					return spec
 				}(),
-				func() AbstractOpenAPIServiceSpec {
-					spec := NewOpenAPIServiceSpec(&TestService2{})
+				func() AbstractServiceSpec {
+					spec := NewServiceSpec(&TestService2{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIRequest(spec, state, HTTPMethodGet, "/endpoint2",
-						func(ctx context.Context, event *TestRequest2, sm *TestService2) OpenAPIResponse[*TestResponse2] {
-							return OpenAPISendTo(ctx, sm, &TestResponse2{})
+					OnRequest(spec, state, HTTPMethodGet, "/endpoint2",
+						func(ctx context.Context, event *TestRequest2, sm *TestService2) Response[*TestResponse2] {
+							return SendTo(ctx, sm, &TestResponse2{})
 						},
 						WithOperationID("endpoint2"))
 					return spec
 				}(),
 			},
-			want: &openAPIDefinitions{
+			want: &definitions{
 				Schemas: []*schemaDefinition{
 					{
 						Name: "TestRequest1",
@@ -185,27 +185,27 @@ func TestSchemaAnalyzer_analyzeSpecs(t *testing.T) {
 		},
 		{
 			name: "aggregates multiple responses for same operation",
-			specs: []AbstractOpenAPIServiceSpec{
-				func() AbstractOpenAPIServiceSpec {
-					spec := NewOpenAPIServiceSpec(&TestService1{})
+			specs: []AbstractServiceSpec{
+				func() AbstractServiceSpec {
+					spec := NewServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnOpenAPIRequest(spec, state, HTTPMethodGet, "/multi",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-							return OpenAPISendTo(ctx, sm, &TestResponse1{})
+					OnRequest(spec, state, HTTPMethodGet, "/multi",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+							return SendTo(ctx, sm, &TestResponse1{})
 						},
 						WithOperationID("multiOp"),
 						WithStatusCode(StatusOK))
-					OnOpenAPIRequest(spec, state, HTTPMethodGet, "/multi",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) OpenAPIResponse[*TestResponse1] {
-							return OpenAPISendTo(ctx, sm, &TestResponse1{})
+					OnRequest(spec, state, HTTPMethodGet, "/multi",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+							return SendTo(ctx, sm, &TestResponse1{})
 						},
 						WithOperationID("multiOp"),
 						WithStatusCode(StatusBadRequest))
 					return spec
 				}(),
 			},
-			want: &openAPIDefinitions{
+			want: &definitions{
 				Schemas: []*schemaDefinition{
 					{
 						Name: "TestRequest1",

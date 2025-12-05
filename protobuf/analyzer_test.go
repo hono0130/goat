@@ -10,52 +10,52 @@ import (
 func TestTypeAnalyzer_analyzeSpecs(t *testing.T) {
 	tests := []struct {
 		name    string
-		specs   []AbstractProtobufServiceSpec
-		want    *protoDefinitions
+		specs   []AbstractServiceSpec
+		want    *definitions
 		wantErr bool
 	}{
 		{
 			name:  "empty specs returns empty definitions",
-			specs: []AbstractProtobufServiceSpec{},
-			want: &protoDefinitions{
-				Messages: []*protoMessage{},
-				Services: []*protoService{},
+			specs: []AbstractServiceSpec{},
+			want: &definitions{
+				Messages: []*message{},
+				Services: []*service{},
 			},
 			wantErr: false,
 		},
 		{
 			name: "single spec with one method",
-			specs: []AbstractProtobufServiceSpec{
-				func() AbstractProtobufServiceSpec {
-					spec := NewProtobufServiceSpec(&TestService1{})
+			specs: []AbstractServiceSpec{
+				func() AbstractServiceSpec {
+					spec := NewServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnProtobufMessage(spec, state, "TestMethod",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) ProtobufResponse[*TestResponse1] {
-							return ProtobufSendTo(ctx, sm, &TestResponse1{Result: "test"})
+					OnMessage(spec, state, "TestMethod",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+							return SendTo(ctx, sm, &TestResponse1{Result: "test"})
 						})
 					return spec
 				}(),
 			},
-			want: &protoDefinitions{
-				Messages: []*protoMessage{
+			want: &definitions{
+				Messages: []*message{
 					{
 						Name: "TestRequest1",
-						Fields: []protoField{
+						Fields: []field{
 							{Name: "Data", Type: "string", Number: 1, IsRepeated: false},
 						},
 					},
 					{
 						Name: "TestResponse1",
-						Fields: []protoField{
+						Fields: []field{
 							{Name: "Result", Type: "string", Number: 1, IsRepeated: false},
 						},
 					},
 				},
-				Services: []*protoService{
+				Services: []*service{
 					{
 						Name: "TestService1",
-						Methods: []protoMethod{
+						Methods: []method{
 							{
 								Name:       "TestMethod",
 								InputType:  "TestRequest1",
@@ -68,95 +68,74 @@ func TestTypeAnalyzer_analyzeSpecs(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "multiple specs with multiple methods",
-			specs: []AbstractProtobufServiceSpec{
-				func() AbstractProtobufServiceSpec {
-					spec := NewProtobufServiceSpec(&TestService1{})
+			name: "multiple specs with one method each",
+			specs: []AbstractServiceSpec{
+				func() AbstractServiceSpec {
+					spec := NewServiceSpec(&TestService1{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnProtobufMessage(spec, state, "Method1",
-						func(ctx context.Context, event *TestRequest1, sm *TestService1) ProtobufResponse[*TestResponse1] {
-							return ProtobufSendTo(ctx, sm, &TestResponse1{})
-						})
-					OnProtobufMessage(spec, state, "Method2",
-						func(ctx context.Context, event *TestRequest2, sm *TestService1) ProtobufResponse[*TestResponse2] {
-							return ProtobufSendTo(ctx, sm, &TestResponse2{})
+					OnMessage(spec, state, "Method1",
+						func(ctx context.Context, event *TestRequest1, sm *TestService1) Response[*TestResponse1] {
+							return SendTo(ctx, sm, &TestResponse1{})
 						})
 					return spec
 				}(),
-				func() AbstractProtobufServiceSpec {
-					spec := NewProtobufServiceSpec(&TestService2{})
+				func() AbstractServiceSpec {
+					spec := NewServiceSpec(&TestService2{})
 					state := &TestIdleState{}
 					spec.DefineStates(state).SetInitialState(state)
-					OnProtobufMessage(spec, state, "Method3",
-						func(ctx context.Context, event *TestRequest3, sm *TestService2) ProtobufResponse[*TestResponse3] {
-							return ProtobufSendTo(ctx, sm, &TestResponse3{})
+					OnMessage(spec, state, "Method2",
+						func(ctx context.Context, event *TestRequest2, sm *TestService2) Response[*TestResponse2] {
+							return SendTo(ctx, sm, &TestResponse2{})
 						})
 					return spec
 				}(),
 			},
-			want: &protoDefinitions{
-				Messages: []*protoMessage{
+			want: &definitions{
+				Messages: []*message{
 					{
 						Name: "TestRequest1",
-						Fields: []protoField{
+						Fields: []field{
 							{Name: "Data", Type: "string", Number: 1, IsRepeated: false},
 						},
 					},
 					{
-						Name: "TestRequest2",
-						Fields: []protoField{
-							{Name: "Info", Type: "string", Number: 1, IsRepeated: false},
-						},
-					},
-					{
 						Name: "TestResponse1",
-						Fields: []protoField{
+						Fields: []field{
 							{Name: "Result", Type: "string", Number: 1, IsRepeated: false},
 						},
 					},
 					{
+						Name: "TestRequest2",
+						Fields: []field{
+							{Name: "Info", Type: "string", Number: 1, IsRepeated: false},
+						},
+					},
+					{
 						Name: "TestResponse2",
-						Fields: []protoField{
+						Fields: []field{
 							{Name: "Value", Type: "string", Number: 1, IsRepeated: false},
 						},
 					},
-					{
-						Name: "TestRequest3",
-						Fields: []protoField{
-							{Name: "Input", Type: "string", Number: 1, IsRepeated: false},
-						},
-					},
-					{
-						Name: "TestResponse3",
-						Fields: []protoField{
-							{Name: "Output", Type: "string", Number: 1, IsRepeated: false},
-						},
-					},
 				},
-				Services: []*protoService{
+				Services: []*service{
 					{
 						Name: "TestService1",
-						Methods: []protoMethod{
+						Methods: []method{
 							{
 								Name:       "Method1",
 								InputType:  "TestRequest1",
 								OutputType: "TestResponse1",
 							},
-							{
-								Name:       "Method2",
-								InputType:  "TestRequest2",
-								OutputType: "TestResponse2",
-							},
 						},
 					},
 					{
 						Name: "TestService2",
-						Methods: []protoMethod{
+						Methods: []method{
 							{
-								Name:       "Method3",
-								InputType:  "TestRequest3",
-								OutputType: "TestResponse3",
+								Name:       "Method2",
+								InputType:  "TestRequest2",
+								OutputType: "TestResponse2",
 							},
 						},
 					},

@@ -29,13 +29,13 @@ type pathDefinition struct {
 	Operations []pathOperation
 }
 
-type openAPIDefinitions struct {
+type definitions struct {
 	Schemas []*schemaDefinition
 	Paths   []*pathDefinition
 }
 
-func (*schemaAnalyzer) analyzeSpecs(specs ...AbstractOpenAPIServiceSpec) *openAPIDefinitions {
-	definitions := &openAPIDefinitions{}
+func (*schemaAnalyzer) analyzeSpecs(specs ...AbstractServiceSpec) *definitions {
+	definitions := &definitions{}
 
 	operations := make(map[string]map[string]*pathOperation)
 
