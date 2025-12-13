@@ -6,6 +6,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+type initializerStateMachine struct {
+	StateMachine
+	initialized bool
+}
+
+type initializerState struct {
+	State
+}
+
 func TestNewStateMachineSpec(t *testing.T) {
 	t.Run("create spec with test state machine", func(t *testing.T) {
 		spec := NewStateMachineSpec(&testStateMachine{})
@@ -99,6 +108,36 @@ func TestStateMachineSpec_NewInstance(t *testing.T) {
 
 		if innerSM.halted {
 			t.Error("Instance should not be halted initially")
+		}
+	})
+
+	t.Run("applies provided initializers per instance", func(t *testing.T) {
+		spec := NewStateMachineSpec(&initializerStateMachine{})
+		initialState := &initializerState{}
+		spec.DefineStates(initialState)
+		spec.SetInitialState(initialState)
+
+		instanceWithInitializer, err := spec.NewInstance(
+			func(sm *initializerStateMachine) {
+				sm.initialized = true
+			},
+			nil,
+		)
+		if err != nil {
+			t.Fatalf("NewInstance() returned error: %v", err)
+		}
+
+		if !instanceWithInitializer.initialized {
+			t.Error("initializer should mark state machine as initialized")
+		}
+
+		instanceWithoutInitializer, err := spec.NewInstance()
+		if err != nil {
+			t.Fatalf("NewInstance() returned error: %v", err)
+		}
+
+		if instanceWithoutInitializer.initialized {
+			t.Error("initializer state should not leak between instances")
 		}
 	})
 }

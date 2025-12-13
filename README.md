@@ -17,6 +17,8 @@ package main
 
 import (
     "context"
+    "log"
+
     "github.com/goatx/goat"
 )
 
@@ -52,7 +54,9 @@ func main() {
     })
 
     // Create instance and run model checking
-    sm, err := spec.NewInstance()
+    sm, err := spec.NewInstance(func(sm *MyStateMachine) {
+        sm.Counter = 0
+    })
     if err != nil {
         log.Fatal(err)
     }
@@ -74,6 +78,10 @@ func main() {
     }
 }
 ```
+
+Pass optional initializer callbacks to `NewInstance` to wire dependencies or
+seed default values per instantiation while keeping the spec reusable across
+different runs.
 
 ## Key Functions
 
