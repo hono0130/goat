@@ -43,9 +43,10 @@ func (s *testSuite) generateMainTest() (string, error) {
 			continue
 		}
 		snake := strcase.ToSnakeCase(group.Name)
+		clientVar := snake + "Client"
 		b.WriteString("var ")
-		b.WriteString(snake)
-		b.WriteString("Client pb")
+		b.WriteString(clientVar)
+		b.WriteString(" pb")
 		b.WriteString(snake)
 		b.WriteString(".")
 		b.WriteString(group.Name)
@@ -59,6 +60,7 @@ func (s *testSuite) generateMainTest() (string, error) {
 		}
 		iStr := strconv.Itoa(i)
 		snake := strcase.ToSnakeCase(group.Name)
+		clientVar := snake + "Client"
 
 		b.WriteString("\tlis")
 		b.WriteString(iStr)
@@ -97,8 +99,8 @@ func (s *testSuite) generateMainTest() (string, error) {
 		b.WriteString(".Close()\n\n")
 
 		b.WriteString("\t")
-		b.WriteString(snake)
-		b.WriteString("Client = pb")
+		b.WriteString(clientVar)
+		b.WriteString(" = pb")
 		b.WriteString(snake)
 		b.WriteString(".New")
 		b.WriteString(group.Name)
@@ -151,7 +153,9 @@ func (*testSuite) writeMethodTest(b *strings.Builder, group e2egen.TestGroup, op
 	}
 
 	first := op.TestCases[0]
-	alias := "pb" + strcase.ToSnakeCase(group.Name)
+	snake := strcase.ToSnakeCase(group.Name)
+	alias := "pb" + snake
+	clientVar := snake + "Client"
 
 	b.WriteString("func Test")
 	b.WriteString(op.Name)
@@ -184,8 +188,8 @@ func (*testSuite) writeMethodTest(b *strings.Builder, group e2egen.TestGroup, op
 	b.WriteString("\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n")
 
 	b.WriteString("\t\t\tactual, err := ")
-	b.WriteString(strcase.ToSnakeCase(group.Name))
-	b.WriteString("Client.")
+	b.WriteString(clientVar)
+	b.WriteString(".")
 	b.WriteString(op.Name)
 	b.WriteString("(t.Context(), tt.input)\n")
 
