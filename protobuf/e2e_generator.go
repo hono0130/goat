@@ -54,13 +54,13 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 		return fmt.Errorf("failed to write main_test.go: %w", err)
 	}
 
-	for _, svc := range suite.Services {
-		serviceCode, err := testSuite.generateServiceTest(svc)
+	for _, group := range suite.Groups {
+		serviceCode, err := testSuite.generateServiceTest(group)
 		if err != nil {
-			return fmt.Errorf("failed to generate test for %s: %w", svc.ServiceName, err)
+			return fmt.Errorf("failed to generate test for %s: %w", group.Name, err)
 		}
 
-		filename := strcase.ToSnakeCase(svc.ServiceName) + "_test.go"
+		filename := strcase.ToSnakeCase(group.Name) + "_test.go"
 		outputPath := filepath.Join(opts.OutputDir, filename)
 		if err := os.WriteFile(outputPath, []byte(serviceCode), 0o600); err != nil {
 			return fmt.Errorf("failed to write %s: %w", filename, err)

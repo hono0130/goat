@@ -2,18 +2,18 @@ package e2egen
 
 type TestSuite struct {
 	PackageName string
-	Services    []ServiceTestSuite
+	Groups      []TestGroup
 }
 
-type ServiceTestSuite struct {
-	ServiceName    string
-	ServicePackage string
-	Methods        []MethodTestSuite
+type TestGroup struct {
+	Name          string
+	SchemaPackage string
+	Operations    []Operation
 }
 
-type MethodTestSuite struct {
-	MethodName string
-	TestCases  []TestCase
+type Operation struct {
+	Name      string
+	TestCases []TestCase
 }
 
 type TestCase struct {

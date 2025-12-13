@@ -16,10 +16,6 @@ type testSuite struct {
 	suite e2egen.TestSuite
 }
 
-func clientVarName(serviceName string) string {
-	return strcase.ToSnakeCase(serviceName) + "Client"
-}
-
 func (s *testSuite) generateMainTest() (string, error) {
 	var b strings.Builder
 
@@ -29,39 +25,40 @@ func (s *testSuite) generateMainTest() (string, error) {
 
 	b.WriteString("import (\n\t\"log\"\n\t\"net\"\n\t\"os\"\n\t\"testing\"\n\n\t\"google.golang.org/grpc\"\n")
 	seen := make(map[string]bool)
-	for _, svc := range s.suite.Services {
-		if svc.ServicePackage == "" || seen[svc.ServicePackage] {
+	for _, group := range s.suite.Groups {
+		if group.SchemaPackage == "" || seen[group.SchemaPackage] {
 			continue
 		}
 		b.WriteString("\tpb")
-		b.WriteString(strcase.ToSnakeCase(svc.ServiceName))
+		b.WriteString(strcase.ToSnakeCase(group.Name))
 		b.WriteString(" \"")
-		b.WriteString(svc.ServicePackage)
+		b.WriteString(group.SchemaPackage)
 		b.WriteString("\"\n")
-		seen[svc.ServicePackage] = true
+		seen[group.SchemaPackage] = true
 	}
 	b.WriteString(")\n\n")
 
-	for _, svc := range s.suite.Services {
-		if svc.ServicePackage == "" {
+	for _, group := range s.suite.Groups {
+		if group.SchemaPackage == "" {
 			continue
 		}
+		snake := strcase.ToSnakeCase(group.Name)
 		b.WriteString("var ")
-		b.WriteString(clientVarName(svc.ServiceName))
-		b.WriteString(" pb")
-		b.WriteString(strcase.ToSnakeCase(svc.ServiceName))
+		b.WriteString(snake)
+		b.WriteString("Client pb")
+		b.WriteString(snake)
 		b.WriteString(".")
-		b.WriteString(svc.ServiceName)
+		b.WriteString(group.Name)
 		b.WriteString("Client\n")
 	}
 
 	b.WriteString("\nfunc TestMain(m *testing.M) {\n")
-	for i, svc := range s.suite.Services {
-		if svc.ServicePackage == "" {
+	for i, group := range s.suite.Groups {
+		if group.SchemaPackage == "" {
 			continue
 		}
 		iStr := strconv.Itoa(i)
-		snake := strcase.ToSnakeCase(svc.ServiceName)
+		snake := strcase.ToSnakeCase(group.Name)
 
 		b.WriteString("\tlis")
 		b.WriteString(iStr)
@@ -78,7 +75,7 @@ func (s *testSuite) generateMainTest() (string, error) {
 		b.WriteString("\t// pb")
 		b.WriteString(snake)
 		b.WriteString(".Register")
-		b.WriteString(svc.ServiceName)
+		b.WriteString(group.Name)
 		b.WriteString("Server(grpcServer")
 		b.WriteString(iStr)
 		b.WriteString(", &yourServiceImplementation{})\n\n")
@@ -100,11 +97,11 @@ func (s *testSuite) generateMainTest() (string, error) {
 		b.WriteString(".Close()\n\n")
 
 		b.WriteString("\t")
-		b.WriteString(clientVarName(svc.ServiceName))
-		b.WriteString(" = pb")
+		b.WriteString(snake)
+		b.WriteString("Client = pb")
 		b.WriteString(snake)
 		b.WriteString(".New")
-		b.WriteString(svc.ServiceName)
+		b.WriteString(group.Name)
 		b.WriteString("Client(conn")
 		b.WriteString(iStr)
 		b.WriteString(")\n\n")
@@ -119,24 +116,24 @@ func (s *testSuite) generateMainTest() (string, error) {
 	return string(formatted), nil
 }
 
-func (s *testSuite) generateServiceTest(svc e2egen.ServiceTestSuite) (string, error) {
+func (s *testSuite) generateServiceTest(group e2egen.TestGroup) (string, error) {
 	var b strings.Builder
-	snake := strcase.ToSnakeCase(svc.ServiceName)
+	snake := strcase.ToSnakeCase(group.Name)
 
 	b.WriteString("package ")
 	b.WriteString(s.suite.PackageName)
 	b.WriteString("\n\nimport (\n\t\"testing\"\n\n\t\"github.com/google/go-cmp/cmp\"\n")
-	if svc.ServicePackage != "" {
+	if group.SchemaPackage != "" {
 		b.WriteString("\tpb")
 		b.WriteString(snake)
 		b.WriteString(" \"")
-		b.WriteString(svc.ServicePackage)
+		b.WriteString(group.SchemaPackage)
 		b.WriteString("\"\n")
 	}
 	b.WriteString(")\n\n")
 
-	for _, method := range svc.Methods {
-		if err := s.writeMethodTest(&b, svc, method); err != nil {
+	for _, op := range group.Operations {
+		if err := s.writeMethodTest(&b, group, op); err != nil {
 			return "", err
 		}
 	}
@@ -148,16 +145,16 @@ func (s *testSuite) generateServiceTest(svc e2egen.ServiceTestSuite) (string, er
 	return string(formatted), nil
 }
 
-func (*testSuite) writeMethodTest(b *strings.Builder, svc e2egen.ServiceTestSuite, method e2egen.MethodTestSuite) error {
-	if len(method.TestCases) == 0 {
-		return fmt.Errorf("no test cases for method %s", method.MethodName)
+func (*testSuite) writeMethodTest(b *strings.Builder, group e2egen.TestGroup, op e2egen.Operation) error {
+	if len(op.TestCases) == 0 {
+		return fmt.Errorf("no test cases for method %s", op.Name)
 	}
 
-	first := method.TestCases[0]
-	alias := "pb" + strcase.ToSnakeCase(svc.ServiceName)
+	first := op.TestCases[0]
+	alias := "pb" + strcase.ToSnakeCase(group.Name)
 
 	b.WriteString("func Test")
-	b.WriteString(method.MethodName)
+	b.WriteString(op.Name)
 	b.WriteString("(t *testing.T) {\n")
 
 	b.WriteString("\ttests := []struct {\n\t\tname     string\n\t\tinput    *")
@@ -170,7 +167,7 @@ func (*testSuite) writeMethodTest(b *strings.Builder, svc e2egen.ServiceTestSuit
 	b.WriteString(first.OutputType)
 	b.WriteString("\n\t}{\n")
 
-	for _, tc := range method.TestCases {
+	for _, tc := range op.TestCases {
 		b.WriteString("\t\t{\n")
 		b.WriteString("\t\t\tname: \"")
 		b.WriteString(tc.Name)
@@ -187,15 +184,15 @@ func (*testSuite) writeMethodTest(b *strings.Builder, svc e2egen.ServiceTestSuit
 	b.WriteString("\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n")
 
 	b.WriteString("\t\t\tactual, err := ")
-	b.WriteString(clientVarName(svc.ServiceName))
-	b.WriteString(".")
-	b.WriteString(method.MethodName)
+	b.WriteString(strcase.ToSnakeCase(group.Name))
+	b.WriteString("Client.")
+	b.WriteString(op.Name)
 	b.WriteString("(t.Context(), tt.input)\n")
 
 	b.WriteString("\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"RPC call failed: %v\", err)\n\t\t\t}\n")
 
 	b.WriteString("\t\t\tif diff := cmp.Diff(tt.expected, actual); diff != \"\" {\n\t\t\t\tt.Errorf(\"")
-	b.WriteString(method.MethodName)
+	b.WriteString(op.Name)
 	b.WriteString(" mismatch (-expected +actual):\\n%s\", diff)\n\t\t\t}\n")
 
 	b.WriteString("\t\t})\n\t}\n}\n\n")
