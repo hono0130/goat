@@ -16,6 +16,10 @@ type testSuite struct {
 	suite e2egen.TestSuite
 }
 
+func clientVarName(serviceName string) string {
+	return strcase.ToSnakeCase(serviceName) + "Client"
+}
+
 func (s *testSuite) generateMainTest() (string, error) {
 	var b strings.Builder
 
@@ -43,7 +47,7 @@ func (s *testSuite) generateMainTest() (string, error) {
 			continue
 		}
 		b.WriteString("var ")
-		b.WriteString(svc.ClientVarName)
+		b.WriteString(clientVarName(svc.ServiceName))
 		b.WriteString(" pb")
 		b.WriteString(strcase.ToSnakeCase(svc.ServiceName))
 		b.WriteString(".")
@@ -96,7 +100,7 @@ func (s *testSuite) generateMainTest() (string, error) {
 		b.WriteString(".Close()\n\n")
 
 		b.WriteString("\t")
-		b.WriteString(svc.ClientVarName)
+		b.WriteString(clientVarName(svc.ServiceName))
 		b.WriteString(" = pb")
 		b.WriteString(snake)
 		b.WriteString(".New")
@@ -183,7 +187,7 @@ func (*testSuite) writeMethodTest(b *strings.Builder, svc e2egen.ServiceTestSuit
 	b.WriteString("\t}\n\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n")
 
 	b.WriteString("\t\t\tactual, err := ")
-	b.WriteString(svc.ClientVarName)
+	b.WriteString(clientVarName(svc.ServiceName))
 	b.WriteString(".")
 	b.WriteString(method.MethodName)
 	b.WriteString("(t.Context(), tt.input)\n")

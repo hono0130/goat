@@ -8,7 +8,6 @@ type TestSuite struct {
 type ServiceTestSuite struct {
 	ServiceName    string
 	ServicePackage string
-	ClientVarName  string
 	Methods        []MethodTestSuite
 }
 

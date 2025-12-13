@@ -17,7 +17,6 @@ func buildTestSuite(opts E2ETestOptions) (e2egen.TestSuite, error) {
 
 	for si, svc := range opts.Services {
 		serviceName := svc.Spec.getServiceName()
-		clientVarName := strcase.ToSnakeCase(serviceName) + "Client"
 
 		methods := make([]e2egen.MethodTestSuite, 0, len(svc.Methods))
 
@@ -52,7 +51,6 @@ func buildTestSuite(opts E2ETestOptions) (e2egen.TestSuite, error) {
 		suite.Services = append(suite.Services, e2egen.ServiceTestSuite{
 			ServiceName:    serviceName,
 			ServicePackage: svc.ServicePackage,
-			ClientVarName:  clientVarName,
 			Methods:        methods,
 		})
 	}
