@@ -83,16 +83,44 @@ func createUserServiceModel() *protobuf.ServiceSpec[*UserService] {
 
 func main() {
 	spec := createUserServiceModel()
-
 	opts := protobuf.GenerateOptions{
 		OutputDir:   "./proto",
 		PackageName: "user.service",
-		GoPackage:   "github.com/goatx/goat/user/proto",
+		GoPackage:   "github.com/goatx/goat/protobuf/example/proto",
 		Filename:    "user_service.proto",
 	}
 
 	err := protobuf.Generate(opts, spec)
 	if err != nil {
 		log.Fatalf("Generate() error = %v", err)
+	}
+
+	err = protobuf.GenerateE2ETest(protobuf.E2ETestOptions{
+		OutputDir:   "./e2e",
+		PackageName: "main",
+		Services: []protobuf.ServiceTestCase{
+			{
+				Spec:           spec,
+				ServicePackage: "github.com/goatx/goat/protobuf/example/proto",
+				Methods: []protobuf.MethodTestCase{
+					{
+						MethodName: "CreateUser",
+						Inputs: []protobuf.AbstractMessage{
+							&CreateUserRequest{Username: "alice", Email: "alice@example.com"},
+							&CreateUserRequest{Username: "bob", Email: "bob@example.com"},
+						},
+					},
+					{
+						MethodName: "GetUser",
+						Inputs: []protobuf.AbstractMessage{
+							&GetUserRequest{UserID: "user_123"},
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.Fatalf("GenerateE2ETest() error = %v", err)
 	}
 }
