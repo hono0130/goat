@@ -20,7 +20,7 @@ func (s *testSuite) generateMainTest() (string, error) {
 	var b strings.Builder
 
 	b.WriteString("package ")
-	b.WriteString(s.suite.PackageName)
+	b.WriteString(s.suite.TestPackage)
 	b.WriteString("\n\n")
 
 	b.WriteString("import (\n\t\"log\"\n\t\"net\"\n\t\"os\"\n\t\"testing\"\n\n\t\"google.golang.org/grpc\"\n")
@@ -121,7 +121,7 @@ func (s *testSuite) generateServiceTest(group e2egen.TestGroup) (string, error) 
 	snake := strcase.ToSnakeCase(group.Name)
 
 	b.WriteString("package ")
-	b.WriteString(s.suite.PackageName)
+	b.WriteString(s.suite.TestPackage)
 	b.WriteString("\n\nimport (\n\t\"testing\"\n\n\t\"github.com/google/go-cmp/cmp\"\n")
 	if group.SchemaPackage != "" {
 		b.WriteString("\tpb")

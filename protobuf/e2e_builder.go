@@ -12,7 +12,7 @@ import (
 
 func buildTestSuite(opts E2ETestOptions) (e2egen.TestSuite, error) {
 	suite := e2egen.TestSuite{
-		PackageName: opts.PackageName,
+		TestPackage: opts.PackageName,
 	}
 
 	for si, svc := range opts.Services {

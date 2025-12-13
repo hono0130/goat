@@ -1,7 +1,7 @@
 package e2egen
 
 type TestSuite struct {
-	PackageName string
+	TestPackage string
 	Groups      []TestGroup
 }
 
