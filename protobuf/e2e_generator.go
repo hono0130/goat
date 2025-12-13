@@ -25,7 +25,9 @@ type E2ETestOptions struct {
 	Services    []ServiceTestCase
 }
 
-func GenerateE2ETest(opts E2ETestOptions) error {
+// GenerateMainTest generates main_test.go and writes it to the output directory.
+// This test file typically needs manual modification to register service implementations.
+func GenerateMainTest(opts E2ETestOptions) error {
 	if opts.OutputDir == "" {
 		opts.OutputDir = "./tests"
 	}
@@ -42,30 +44,62 @@ func GenerateE2ETest(opts E2ETestOptions) error {
 		return err
 	}
 
-	testSuite := &testSuite{suite: suite}
-
-	mainTest, err := testSuite.generateMainTest()
+	ts := &testSuite{suite: suite}
+	code, err := ts.generateMainTest()
 	if err != nil {
 		return fmt.Errorf("failed to generate main_test.go: %w", err)
 	}
 
 	mainPath := filepath.Join(opts.OutputDir, "main_test.go")
-	if err := os.WriteFile(mainPath, []byte(mainTest), 0o600); err != nil {
+	if err := os.WriteFile(mainPath, []byte(code), 0o600); err != nil {
 		return fmt.Errorf("failed to write main_test.go: %w", err)
 	}
 
+	return nil
+}
+
+// GenerateServiceTests generates test files for each service and writes them to the output directory.
+// These tests can be regenerated without affecting main_test.go.
+func GenerateServiceTests(opts E2ETestOptions) error {
+	if opts.OutputDir == "" {
+		opts.OutputDir = "./tests"
+	}
+	if opts.PackageName == "" {
+		opts.PackageName = "main"
+	}
+
+	if err := os.MkdirAll(opts.OutputDir, 0o750); err != nil {
+		return fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	suite, err := buildTestSuite(opts)
+	if err != nil {
+		return err
+	}
+
+	ts := &testSuite{suite: suite}
+
 	for _, group := range suite.Groups {
-		serviceTest, err := testSuite.generateServiceTest(group)
+		code, err := ts.generateServiceTest(group)
 		if err != nil {
 			return fmt.Errorf("failed to generate test for %s: %w", group.Name, err)
 		}
 
 		filename := strcase.ToSnakeCase(group.Name) + "_test.go"
 		outputPath := filepath.Join(opts.OutputDir, filename)
-		if err := os.WriteFile(outputPath, []byte(serviceTest), 0o600); err != nil {
+		if err := os.WriteFile(outputPath, []byte(code), 0o600); err != nil {
 			return fmt.Errorf("failed to write %s: %w", filename, err)
 		}
 	}
 
 	return nil
+}
+
+// GenerateE2ETest generates all E2E test files and writes them to the output directory.
+// This is a convenience function that calls GenerateMainTest and GenerateServiceTests.
+func GenerateE2ETest(opts E2ETestOptions) error {
+	if err := GenerateMainTest(opts); err != nil {
+		return err
+	}
+	return GenerateServiceTests(opts)
 }
