@@ -6,6 +6,36 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+type testStateWithMap struct {
+	State
+	Name  string
+	Items map[string]int
+}
+
+func (s *testStateWithMap) isState() bool { return true }
+
+type testStateWithSlice struct {
+	State
+	Name   string
+	Values []int
+}
+
+func (s *testStateWithSlice) isState() bool { return true }
+
+type testStateMachineWithMap struct {
+	StateMachine
+	Counts map[string]int
+}
+
+func (sm *testStateMachineWithMap) isStateMachine() bool { return true }
+
+type testStateMachineWithSlice struct {
+	StateMachine
+	Items []string
+}
+
+func (sm *testStateMachineWithSlice) isStateMachine() bool { return true }
+
 func TestNewStateMachineSpec(t *testing.T) {
 	t.Run("create spec with test state machine", func(t *testing.T) {
 		spec := NewStateMachineSpec(&testStateMachine{})
@@ -142,6 +172,48 @@ func TestCloneStateMachine(t *testing.T) {
 			t.Errorf("Handler count mismatch: original=%d, cloned=%d", len(originalInner.EventHandlers), len(clonedInner.EventHandlers))
 		}
 	})
+
+	t.Run("deep copies map field", func(t *testing.T) {
+		original := &testStateMachineWithMap{
+			StateMachine: StateMachine{
+				smID:  "test",
+				State: newTestState("initial"),
+			},
+			Counts: map[string]int{"x": 1, "y": 2},
+		}
+
+		cloned := cloneStateMachine(original).(*testStateMachineWithMap)
+
+		if cloned == original {
+			t.Error("cloned state machine should be a different instance")
+		}
+
+		original.Counts["x"] = 99
+		original.Counts["z"] = 3
+		if cloned.Counts["x"] != 1 {
+			t.Error("modifying original map affected cloned state machine")
+		}
+		if _, exists := cloned.Counts["z"]; exists {
+			t.Error("adding to original map affected cloned state machine")
+		}
+	})
+
+	t.Run("deep copies slice field", func(t *testing.T) {
+		original := &testStateMachineWithSlice{
+			StateMachine: StateMachine{
+				smID:  "test",
+				State: newTestState("initial"),
+			},
+			Items: []string{"a", "b"},
+		}
+
+		cloned := cloneStateMachine(original).(*testStateMachineWithSlice)
+
+		original.Items[0] = "modified"
+		if cloned.Items[0] != "a" {
+			t.Error("modifying original slice affected cloned state machine")
+		}
+	})
 }
 
 func TestSameState(t *testing.T) {
@@ -224,6 +296,53 @@ func TestCloneState(t *testing.T) {
 
 		if !cmp.Equal(cloned, original) {
 			t.Errorf("Cloned state mismatch:\n%s", cmp.Diff(original, cloned))
+		}
+	})
+
+	t.Run("deep copies map field", func(t *testing.T) {
+		original := &testStateWithMap{
+			Name:  "test",
+			Items: map[string]int{"a": 1, "b": 2},
+		}
+
+		cloned := cloneState(original).(*testStateWithMap)
+
+		if cloned == original {
+			t.Error("cloned state should be a different instance")
+		}
+		if cloned.Name != "test" {
+			t.Error("Name field should be copied")
+		}
+
+		original.Items["a"] = 99
+		original.Items["c"] = 3
+		if cloned.Items["a"] != 1 {
+			t.Error("modifying original map affected cloned state")
+		}
+		if _, exists := cloned.Items["c"]; exists {
+			t.Error("adding to original map affected cloned state")
+		}
+	})
+
+	t.Run("deep copies slice field", func(t *testing.T) {
+		original := &testStateWithSlice{
+			Name:   "test",
+			Values: []int{10, 20, 30},
+		}
+
+		cloned := cloneState(original).(*testStateWithSlice)
+
+		original.Values[0] = 99
+		if cloned.Values[0] != 10 {
+			t.Error("modifying original slice affected cloned state")
+		}
+	})
+
+	t.Run("nil map and slice remain nil", func(t *testing.T) {
+		original := &testStateWithMap{Name: "test"}
+		cloned := cloneState(original).(*testStateWithMap)
+		if cloned.Items != nil {
+			t.Error("nil map should remain nil after clone")
 		}
 	})
 }

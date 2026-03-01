@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestDeepCopyValue_Map(t *testing.T) {
+func TestDeepCopyValue(t *testing.T) {
 	t.Run("nil map returns zero value", func(t *testing.T) {
 		var m map[string]int
 		v := reflect.ValueOf(m)
@@ -46,9 +46,7 @@ func TestDeepCopyValue_Map(t *testing.T) {
 			t.Error("modifying nested slice in original map affected the copy")
 		}
 	})
-}
 
-func TestDeepCopyValue_Slice(t *testing.T) {
 	t.Run("nil slice returns zero value", func(t *testing.T) {
 		var s []int
 		v := reflect.ValueOf(s)
@@ -85,9 +83,7 @@ func TestDeepCopyValue_Slice(t *testing.T) {
 			t.Error("modifying nested map in original slice affected the copy")
 		}
 	})
-}
 
-func TestDeepCopyValue_Primitives(t *testing.T) {
 	t.Run("returns int unchanged", func(t *testing.T) {
 		v := reflect.ValueOf(42)
 		copied := deepCopyValue(v)
@@ -201,179 +197,3 @@ func TestDeepCopyStructFields(t *testing.T) {
 	})
 }
 
-type testStateWithMap struct {
-	State
-	Name  string
-	Items map[string]int
-}
-
-func (s *testStateWithMap) isState() bool { return true }
-
-type testStateWithSlice struct {
-	State
-	Name   string
-	Values []int
-}
-
-func (s *testStateWithSlice) isState() bool { return true }
-
-func TestCloneState_DeepCopy(t *testing.T) {
-	t.Run("deep copies map field in state", func(t *testing.T) {
-		original := &testStateWithMap{
-			Name:  "test",
-			Items: map[string]int{"a": 1, "b": 2},
-		}
-
-		cloned := cloneState(original).(*testStateWithMap)
-
-		if cloned == original {
-			t.Error("cloned state should be a different instance")
-		}
-		if cloned.Name != "test" {
-			t.Error("Name field should be copied")
-		}
-
-		original.Items["a"] = 99
-		original.Items["c"] = 3
-		if cloned.Items["a"] != 1 {
-			t.Error("modifying original map affected cloned state")
-		}
-		if _, exists := cloned.Items["c"]; exists {
-			t.Error("adding to original map affected cloned state")
-		}
-	})
-
-	t.Run("deep copies slice field in state", func(t *testing.T) {
-		original := &testStateWithSlice{
-			Name:   "test",
-			Values: []int{10, 20, 30},
-		}
-
-		cloned := cloneState(original).(*testStateWithSlice)
-
-		original.Values[0] = 99
-		if cloned.Values[0] != 10 {
-			t.Error("modifying original slice affected cloned state")
-		}
-	})
-
-	t.Run("nil map and slice remain nil", func(t *testing.T) {
-		original := &testStateWithMap{Name: "test"}
-		cloned := cloneState(original).(*testStateWithMap)
-		if cloned.Items != nil {
-			t.Error("nil map should remain nil after clone")
-		}
-	})
-}
-
-type testEventWithMap struct {
-	Event[*testStateMachine, *testStateMachine]
-	Data map[string]string
-}
-
-type testEventWithSlice struct {
-	Event[*testStateMachine, *testStateMachine]
-	Tags []string
-}
-
-func TestCloneEvent_DeepCopy(t *testing.T) {
-	t.Run("deep copies map field in event", func(t *testing.T) {
-		original := &testEventWithMap{
-			Data: map[string]string{"key": "value"},
-		}
-
-		cloned := cloneEvent(original).(*testEventWithMap)
-
-		if cloned == original {
-			t.Error("cloned event should be a different instance")
-		}
-
-		original.Data["key"] = "modified"
-		original.Data["new"] = "entry"
-		if cloned.Data["key"] != "value" {
-			t.Error("modifying original map affected cloned event")
-		}
-		if _, exists := cloned.Data["new"]; exists {
-			t.Error("adding to original map affected cloned event")
-		}
-	})
-
-	t.Run("deep copies slice field in event", func(t *testing.T) {
-		original := &testEventWithSlice{
-			Tags: []string{"a", "b", "c"},
-		}
-
-		cloned := cloneEvent(original).(*testEventWithSlice)
-
-		original.Tags[0] = "modified"
-		if cloned.Tags[0] != "a" {
-			t.Error("modifying original slice affected cloned event")
-		}
-	})
-
-	t.Run("nil map remains nil", func(t *testing.T) {
-		original := &testEventWithMap{}
-		cloned := cloneEvent(original).(*testEventWithMap)
-		if cloned.Data != nil {
-			t.Error("nil map should remain nil after clone")
-		}
-	})
-}
-
-type testStateMachineWithMap struct {
-	StateMachine
-	Counts map[string]int
-}
-
-func (sm *testStateMachineWithMap) isStateMachine() bool { return true }
-
-type testStateMachineWithSlice struct {
-	StateMachine
-	Items []string
-}
-
-func (sm *testStateMachineWithSlice) isStateMachine() bool { return true }
-
-func TestCloneStateMachine_DeepCopy(t *testing.T) {
-	t.Run("deep copies map field in state machine", func(t *testing.T) {
-		original := &testStateMachineWithMap{
-			StateMachine: StateMachine{
-				smID:  "test",
-				State: newTestState("initial"),
-			},
-			Counts: map[string]int{"x": 1, "y": 2},
-		}
-
-		cloned := cloneStateMachine(original).(*testStateMachineWithMap)
-
-		if cloned == original {
-			t.Error("cloned state machine should be a different instance")
-		}
-
-		original.Counts["x"] = 99
-		original.Counts["z"] = 3
-		if cloned.Counts["x"] != 1 {
-			t.Error("modifying original map affected cloned state machine")
-		}
-		if _, exists := cloned.Counts["z"]; exists {
-			t.Error("adding to original map affected cloned state machine")
-		}
-	})
-
-	t.Run("deep copies slice field in state machine", func(t *testing.T) {
-		original := &testStateMachineWithSlice{
-			StateMachine: StateMachine{
-				smID:  "test",
-				State: newTestState("initial"),
-			},
-			Items: []string{"a", "b"},
-		}
-
-		cloned := cloneStateMachine(original).(*testStateMachineWithSlice)
-
-		original.Items[0] = "modified"
-		if cloned.Items[0] != "a" {
-			t.Error("modifying original slice affected cloned state machine")
-		}
-	})
-}

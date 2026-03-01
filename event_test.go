@@ -14,6 +14,16 @@ type testStruct struct {
 	value int
 }
 
+type testEventWithMap struct {
+	Event[*testStateMachine, *testStateMachine]
+	Data map[string]string
+}
+
+type testEventWithSlice struct {
+	Event[*testStateMachine, *testStateMachine]
+	Tags []string
+}
+
 func TestCloneEvent(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -75,6 +85,70 @@ func TestCloneEvent(t *testing.T) {
 				},
 			}
 		}(),
+		func() struct {
+			name     string
+			original AbstractEvent
+			setup    func(AbstractEvent)
+			validate func(*testing.T, AbstractEvent)
+		} {
+			original := &testEventWithMap{
+				Data: map[string]string{"key": "value"},
+			}
+			return struct {
+				name     string
+				original AbstractEvent
+				setup    func(AbstractEvent)
+				validate func(*testing.T, AbstractEvent)
+			}{
+				name:     "deep copies map field",
+				original: original,
+				validate: func(t *testing.T, cloned AbstractEvent) {
+					original.Data["key"] = "modified"
+					original.Data["new"] = "entry"
+					clonedEvent := cloned.(*testEventWithMap)
+					if clonedEvent.Data["key"] != "value" {
+						t.Error("modifying original map affected cloned event")
+					}
+					if _, exists := clonedEvent.Data["new"]; exists {
+						t.Error("adding to original map affected cloned event")
+					}
+				},
+			}
+		}(),
+		func() struct {
+			name     string
+			original AbstractEvent
+			setup    func(AbstractEvent)
+			validate func(*testing.T, AbstractEvent)
+		} {
+			original := &testEventWithSlice{
+				Tags: []string{"a", "b", "c"},
+			}
+			return struct {
+				name     string
+				original AbstractEvent
+				setup    func(AbstractEvent)
+				validate func(*testing.T, AbstractEvent)
+			}{
+				name:     "deep copies slice field",
+				original: original,
+				validate: func(t *testing.T, cloned AbstractEvent) {
+					original.Tags[0] = "modified"
+					if cloned.(*testEventWithSlice).Tags[0] != "a" {
+						t.Error("modifying original slice affected cloned event")
+					}
+				},
+			}
+		}(),
+		{
+			name:     "nil map remains nil after clone",
+			original: &testEventWithMap{},
+			validate: func(t *testing.T, cloned AbstractEvent) {
+				if cloned.(*testEventWithMap).Data != nil {
+					t.Error("nil map should remain nil after clone")
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
