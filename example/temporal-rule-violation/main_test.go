@@ -102,7 +102,6 @@ func TestTemporalRuleViolationExample(t *testing.T) {
 	}
 
 	cmpOpts := cmp.Options{
-		cmpopts.IgnoreUnexported(goat.Result{}),
 		cmpopts.IgnoreFields(goat.Summary{}, "ExecutionTimeMs"),
 	}
 	if diff := cmp.Diff(expected, result, cmpOpts...); diff != "" {

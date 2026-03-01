@@ -10,7 +10,6 @@ import (
 type Result struct {
 	Violations []Violation
 	Summary    Summary
-	text       string
 }
 
 // HasViolation reports whether any violations were found.
@@ -20,7 +19,32 @@ func (r *Result) HasViolation() bool {
 
 // String returns a human-readable report of the model checking results.
 func (r *Result) String() string {
-	return r.text
+	var sb strings.Builder
+
+	var invariants, temporals []Violation
+	for _, v := range r.Violations {
+		if v.Loop == nil {
+			invariants = append(invariants, v)
+		} else {
+			temporals = append(temporals, v)
+		}
+	}
+
+	if len(invariants) > 0 {
+		writeInvariantViolations(&sb, invariants)
+	}
+	if len(temporals) > 0 {
+		writeTemporalViolations(&sb, temporals)
+	}
+	if len(invariants) == 0 && len(temporals) == 0 {
+		sb.WriteString("No violations found.\n")
+	}
+
+	fmt.Fprintln(&sb, "\nModel Checking Summary:")
+	fmt.Fprintf(&sb, "Total Worlds: %d\n", r.Summary.TotalWorlds)
+	fmt.Fprintf(&sb, "Execution Time: %dms\n", r.Summary.ExecutionTimeMs)
+
+	return sb.String()
 }
 
 // Summary contains statistics about the model checking run.
@@ -93,7 +117,6 @@ func (m *model) buildResult(trResults []temporalRuleResult, executionTimeMs int6
 		})
 	}
 
-	result.text = m.buildResultText(trResults, executionTimeMs)
 	return result
 }
 
@@ -142,23 +165,3 @@ func (*model) buildWorldSnapshot(w world) WorldSnapshot {
 	}
 }
 
-func (m *model) buildResultText(trResults []temporalRuleResult, executionTimeMs int64) string {
-	var sb strings.Builder
-
-	if m.hasInvariantViolation {
-		m.writeInvariantViolations(&sb)
-	}
-	if m.hasLTLViolation {
-		m.writeTemporalViolations(&sb, trResults)
-	}
-	if !m.hasInvariantViolation && !m.hasLTLViolation {
-		sb.WriteString("No violations found.\n")
-	}
-
-	summary := m.summarize(executionTimeMs)
-	fmt.Fprintln(&sb, "\nModel Checking Summary:")
-	fmt.Fprintf(&sb, "Total Worlds: %d\n", summary.TotalWorlds)
-	fmt.Fprintf(&sb, "Execution Time: %dms\n", summary.ExecutionTimeMs)
-
-	return sb.String()
-}
