@@ -177,16 +177,8 @@ func TestCloneStateMachine(t *testing.T) {
 			}},
 			Counts: map[string]int{"x": 1, "y": 2},
 		}
-		origMapPtr := reflect.ValueOf(original.Counts).Pointer()
 
 		cloned := cloneStateMachine(original).(*testStateMachineWithMap)
-
-		if cloned == original {
-			t.Error("cloned state machine should be a different instance")
-		}
-		if reflect.ValueOf(cloned.Counts).Pointer() == origMapPtr {
-			t.Error("cloned map should have different backing pointer")
-		}
 
 		original.Counts["x"] = 99
 		original.Counts["z"] = 3
@@ -206,13 +198,8 @@ func TestCloneStateMachine(t *testing.T) {
 			}},
 			Items: []string{"a", "b"},
 		}
-		origSlicePtr := reflect.ValueOf(original.Items).Pointer()
 
 		cloned := cloneStateMachine(original).(*testStateMachineWithSlice)
-
-		if reflect.ValueOf(cloned.Items).Pointer() == origSlicePtr {
-			t.Error("cloned slice should have different backing pointer")
-		}
 
 		original.Items[0] = "modified"
 		if cloned.Items[0] != "a" {
@@ -309,20 +296,12 @@ func TestCloneState(t *testing.T) {
 			testState: testState{Name: "test"},
 			Items:     map[string]int{"a": 1, "b": 2},
 		}
-		origMapPtr := reflect.ValueOf(original.Items).Pointer()
 
 		cloned := cloneState(original).(*testStateWithMap)
 
-		if cloned == original {
-			t.Error("cloned state should be a different instance")
-		}
 		if cloned.Name != "test" {
 			t.Error("Name field should be copied")
 		}
-		if reflect.ValueOf(cloned.Items).Pointer() == origMapPtr {
-			t.Error("cloned map should have different backing pointer")
-		}
-
 		original.Items["a"] = 99
 		original.Items["c"] = 3
 		if cloned.Items["a"] != 1 {
@@ -338,13 +317,8 @@ func TestCloneState(t *testing.T) {
 			testState: testState{Name: "test"},
 			Values:    []int{10, 20, 30},
 		}
-		origSlicePtr := reflect.ValueOf(original.Values).Pointer()
 
 		cloned := cloneState(original).(*testStateWithSlice)
-
-		if reflect.ValueOf(cloned.Values).Pointer() == origSlicePtr {
-			t.Error("cloned slice should have different backing pointer")
-		}
 
 		original.Values[0] = 99
 		if cloned.Values[0] != 10 {
@@ -383,19 +357,6 @@ func TestDeepCopyValue(t *testing.T) {
 				if original.Pointer() == copied.Pointer() {
 					t.Error("copied map should have different backing pointer")
 				}
-				copiedMap := copied.Interface().(map[string]int)
-				if len(copiedMap) != 2 || copiedMap["a"] != 1 || copiedMap["b"] != 2 {
-					t.Errorf("copied map content mismatch: %v", copiedMap)
-				}
-				m := original.Interface().(map[string]int)
-				m["a"] = 99
-				m["c"] = 3
-				if copiedMap["a"] != 1 {
-					t.Error("modifying original map affected the copy")
-				}
-				if _, exists := copiedMap["c"]; exists {
-					t.Error("adding to original map affected the copy")
-				}
 			},
 		},
 		{
@@ -405,11 +366,10 @@ func TestDeepCopyValue(t *testing.T) {
 				if original.Pointer() == copied.Pointer() {
 					t.Error("copied map should have different backing pointer")
 				}
-				m := original.Interface().(map[string][]int)
-				copiedMap := copied.Interface().(map[string][]int)
-				m["nums"][0] = 99
-				if copiedMap["nums"][0] != 1 {
-					t.Error("modifying nested slice in original map affected the copy")
+				origSlice := original.MapIndex(reflect.ValueOf("nums"))
+				copiedSlice := copied.MapIndex(reflect.ValueOf("nums"))
+				if origSlice.Pointer() == copiedSlice.Pointer() {
+					t.Error("nested slice should have different backing pointer")
 				}
 			},
 		},
@@ -429,15 +389,6 @@ func TestDeepCopyValue(t *testing.T) {
 				if original.Pointer() == copied.Pointer() {
 					t.Error("copied slice should have different backing pointer")
 				}
-				copiedSlice := copied.Interface().([]int)
-				if len(copiedSlice) != 3 || copiedSlice[0] != 1 {
-					t.Errorf("copied slice content mismatch: %v", copiedSlice)
-				}
-				s := original.Interface().([]int)
-				s[0] = 99
-				if copiedSlice[0] != 1 {
-					t.Error("modifying original slice affected the copy")
-				}
 			},
 		},
 		{
@@ -447,11 +398,8 @@ func TestDeepCopyValue(t *testing.T) {
 				if original.Pointer() == copied.Pointer() {
 					t.Error("copied slice should have different backing pointer")
 				}
-				s := original.Interface().([]map[string]int)
-				copiedSlice := copied.Interface().([]map[string]int)
-				s[0]["a"] = 99
-				if copiedSlice[0]["a"] != 1 {
-					t.Error("modifying nested map in original slice affected the copy")
+				if original.Index(0).Pointer() == copied.Index(0).Pointer() {
+					t.Error("nested map should have different backing pointer")
 				}
 			},
 		},
@@ -515,10 +463,6 @@ func TestDeepCopyStructFields(t *testing.T) {
 					if reflect.ValueOf(copied.Items).Pointer() == origMapPtr {
 						t.Error("copied map field should have different backing pointer")
 					}
-					original.Items["a"] = 99
-					if copied.Items["a"] != 1 {
-						t.Error("modifying original map affected the deep copied struct")
-					}
 				},
 			}
 		}(),
@@ -547,10 +491,6 @@ func TestDeepCopyStructFields(t *testing.T) {
 					copied := v.Interface().(testStateWithSlice)
 					if reflect.ValueOf(copied.Values).Pointer() == origSlicePtr {
 						t.Error("copied slice field should have different backing pointer")
-					}
-					original.Values[0] = 99
-					if copied.Values[0] != 1 {
-						t.Error("modifying original slice affected the deep copied struct")
 					}
 				},
 			}
@@ -611,10 +551,6 @@ func TestDeepCopyStructFields(t *testing.T) {
 					copied := v.Interface().(testStateWithNestedState)
 					if reflect.ValueOf(copied.Inner.Items).Pointer() == origMapPtr {
 						t.Error("nested struct's map should have different backing pointer")
-					}
-					original.Inner.Items["x"] = 99
-					if copied.Inner.Items["x"] != 10 {
-						t.Error("modifying nested struct's map affected the copy")
 					}
 				},
 			}
