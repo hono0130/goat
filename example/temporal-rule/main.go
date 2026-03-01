@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/goatx/goat"
@@ -100,9 +99,8 @@ func createTemporalRuleModel() []goat.Option {
 
 func main() {
 	opts := createTemporalRuleModel()
-	result, err := goat.Test(opts...)
+	_, err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(result)
 }

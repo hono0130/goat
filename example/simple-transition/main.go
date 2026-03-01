@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/goatx/goat"
@@ -74,9 +73,8 @@ func createSimpleTransitionModel() []goat.Option {
 func main() {
 	opts := createSimpleTransitionModel()
 
-	result, err := goat.Test(opts...)
+	_, err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(result)
 }

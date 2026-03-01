@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/goatx/goat"
@@ -77,9 +76,8 @@ func createSimpleNonDeterministicModel() []goat.Option {
 func main() {
 	opts := createSimpleNonDeterministicModel()
 
-	result, err := goat.Test(opts...)
+	_, err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(result)
 }

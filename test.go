@@ -2,7 +2,9 @@ package goat
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"os"
 	"time"
 )
 
@@ -26,7 +28,7 @@ import (
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
-//	fmt.Print(result)
+//	// result is automatically printed to stdout
 func Test(opts ...Option) (*Result, error) {
 	model, err := newModel(opts...)
 	if err != nil {
@@ -40,7 +42,10 @@ func Test(opts ...Option) (*Result, error) {
 	trResults := model.checkLTL()
 	executionTime := time.Since(start).Milliseconds()
 
-	return model.buildResult(trResults, executionTime), nil
+	result := model.buildResult(trResults, executionTime)
+	fmt.Fprint(os.Stdout, result)
+
+	return result, nil
 }
 
 // WithStateMachines configures the test with the specified state machines.
