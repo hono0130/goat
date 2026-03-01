@@ -103,9 +103,12 @@ func TestCloneEvent(t *testing.T) {
 				name:     "deep copies map field",
 				original: original,
 				validate: func(t *testing.T, cloned AbstractEvent) {
+					clonedEvent := cloned.(*testEventWithMap)
+					if reflect.ValueOf(original.Data).Pointer() == reflect.ValueOf(clonedEvent.Data).Pointer() {
+						t.Error("copied map should have different backing pointer")
+					}
 					original.Data["key"] = "modified"
 					original.Data["new"] = "entry"
-					clonedEvent := cloned.(*testEventWithMap)
 					if clonedEvent.Data["key"] != "value" {
 						t.Error("modifying original map affected cloned event")
 					}
@@ -133,6 +136,10 @@ func TestCloneEvent(t *testing.T) {
 				name:     "deep copies slice field",
 				original: original,
 				validate: func(t *testing.T, cloned AbstractEvent) {
+					clonedEvent := cloned.(*testEventWithSlice)
+					if reflect.ValueOf(original.Tags).Pointer() == reflect.ValueOf(clonedEvent.Tags).Pointer() {
+						t.Error("copied slice should have different backing pointer")
+					}
 					original.Tags[0] = "modified"
 					if cloned.(*testEventWithSlice).Tags[0] != "a" {
 						t.Error("modifying original slice affected cloned event")

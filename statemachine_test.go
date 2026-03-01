@@ -37,16 +37,9 @@ type testStateMachineWithSlice struct {
 
 func (sm *testStateMachineWithSlice) isStateMachine() bool { return true }
 
-type structWithMapAndSlice struct {
+type testStateWithNestedState struct {
 	State
-	Name   string
-	Items  map[string]int
-	Values []int
-}
-
-type structWithNestedStruct struct {
-	State
-	Inner structWithMapAndSlice
+	Inner testStateWithMap
 }
 
 func TestNewStateMachineSpec(t *testing.T) {
@@ -194,11 +187,15 @@ func TestCloneStateMachine(t *testing.T) {
 			},
 			Counts: map[string]int{"x": 1, "y": 2},
 		}
+		origMapPtr := reflect.ValueOf(original.Counts).Pointer()
 
 		cloned := cloneStateMachine(original).(*testStateMachineWithMap)
 
 		if cloned == original {
 			t.Error("cloned state machine should be a different instance")
+		}
+		if reflect.ValueOf(cloned.Counts).Pointer() == origMapPtr {
+			t.Error("cloned map should have different backing pointer")
 		}
 
 		original.Counts["x"] = 99
@@ -219,8 +216,13 @@ func TestCloneStateMachine(t *testing.T) {
 			},
 			Items: []string{"a", "b"},
 		}
+		origSlicePtr := reflect.ValueOf(original.Items).Pointer()
 
 		cloned := cloneStateMachine(original).(*testStateMachineWithSlice)
+
+		if reflect.ValueOf(cloned.Items).Pointer() == origSlicePtr {
+			t.Error("cloned slice should have different backing pointer")
+		}
 
 		original.Items[0] = "modified"
 		if cloned.Items[0] != "a" {
@@ -317,6 +319,7 @@ func TestCloneState(t *testing.T) {
 			Name:  "test",
 			Items: map[string]int{"a": 1, "b": 2},
 		}
+		origMapPtr := reflect.ValueOf(original.Items).Pointer()
 
 		cloned := cloneState(original).(*testStateWithMap)
 
@@ -325,6 +328,9 @@ func TestCloneState(t *testing.T) {
 		}
 		if cloned.Name != "test" {
 			t.Error("Name field should be copied")
+		}
+		if reflect.ValueOf(cloned.Items).Pointer() == origMapPtr {
+			t.Error("cloned map should have different backing pointer")
 		}
 
 		original.Items["a"] = 99
@@ -342,8 +348,13 @@ func TestCloneState(t *testing.T) {
 			Name:   "test",
 			Values: []int{10, 20, 30},
 		}
+		origSlicePtr := reflect.ValueOf(original.Values).Pointer()
 
 		cloned := cloneState(original).(*testStateWithSlice)
+
+		if reflect.ValueOf(cloned.Values).Pointer() == origSlicePtr {
+			t.Error("cloned slice should have different backing pointer")
+		}
 
 		original.Values[0] = 99
 		if cloned.Values[0] != 10 {
@@ -361,213 +372,287 @@ func TestCloneState(t *testing.T) {
 }
 
 func TestDeepCopyValue(t *testing.T) {
-	t.Run("nil map returns zero value", func(t *testing.T) {
-		var m map[string]int
-		v := reflect.ValueOf(m)
-		copied := deepCopyValue(v)
-		if !copied.IsNil() {
-			t.Error("expected nil map to remain nil")
-		}
-	})
+	tests := []struct {
+		name     string
+		input    reflect.Value
+		validate func(*testing.T, reflect.Value, reflect.Value)
+	}{
+		{
+			name:  "nil map returns zero value",
+			input: reflect.ValueOf((map[string]int)(nil)),
+			validate: func(t *testing.T, _, copied reflect.Value) {
+				if !copied.IsNil() {
+					t.Error("expected nil map to remain nil")
+				}
+			},
+		},
+		{
+			name:  "copies map with independent backing",
+			input: reflect.ValueOf(map[string]int{"a": 1, "b": 2}),
+			validate: func(t *testing.T, original, copied reflect.Value) {
+				if original.Pointer() == copied.Pointer() {
+					t.Error("copied map should have different backing pointer")
+				}
+				copiedMap := copied.Interface().(map[string]int)
+				if len(copiedMap) != 2 || copiedMap["a"] != 1 || copiedMap["b"] != 2 {
+					t.Errorf("copied map content mismatch: %v", copiedMap)
+				}
+				m := original.Interface().(map[string]int)
+				m["a"] = 99
+				m["c"] = 3
+				if copiedMap["a"] != 1 {
+					t.Error("modifying original map affected the copy")
+				}
+				if _, exists := copiedMap["c"]; exists {
+					t.Error("adding to original map affected the copy")
+				}
+			},
+		},
+		{
+			name:  "deep copies nested slices in map values",
+			input: reflect.ValueOf(map[string][]int{"nums": {1, 2, 3}}),
+			validate: func(t *testing.T, original, copied reflect.Value) {
+				if original.Pointer() == copied.Pointer() {
+					t.Error("copied map should have different backing pointer")
+				}
+				m := original.Interface().(map[string][]int)
+				copiedMap := copied.Interface().(map[string][]int)
+				m["nums"][0] = 99
+				if copiedMap["nums"][0] != 1 {
+					t.Error("modifying nested slice in original map affected the copy")
+				}
+			},
+		},
+		{
+			name:  "nil slice returns zero value",
+			input: reflect.ValueOf(([]int)(nil)),
+			validate: func(t *testing.T, _, copied reflect.Value) {
+				if !copied.IsNil() {
+					t.Error("expected nil slice to remain nil")
+				}
+			},
+		},
+		{
+			name:  "copies slice with independent backing",
+			input: reflect.ValueOf([]int{1, 2, 3}),
+			validate: func(t *testing.T, original, copied reflect.Value) {
+				if original.Pointer() == copied.Pointer() {
+					t.Error("copied slice should have different backing pointer")
+				}
+				copiedSlice := copied.Interface().([]int)
+				if len(copiedSlice) != 3 || copiedSlice[0] != 1 {
+					t.Errorf("copied slice content mismatch: %v", copiedSlice)
+				}
+				s := original.Interface().([]int)
+				s[0] = 99
+				if copiedSlice[0] != 1 {
+					t.Error("modifying original slice affected the copy")
+				}
+			},
+		},
+		{
+			name:  "deep copies nested maps in slice elements",
+			input: reflect.ValueOf([]map[string]int{{"a": 1}, {"b": 2}}),
+			validate: func(t *testing.T, original, copied reflect.Value) {
+				if original.Pointer() == copied.Pointer() {
+					t.Error("copied slice should have different backing pointer")
+				}
+				s := original.Interface().([]map[string]int)
+				copiedSlice := copied.Interface().([]map[string]int)
+				s[0]["a"] = 99
+				if copiedSlice[0]["a"] != 1 {
+					t.Error("modifying nested map in original slice affected the copy")
+				}
+			},
+		},
+		{
+			name:  "returns int unchanged",
+			input: reflect.ValueOf(42),
+			validate: func(t *testing.T, _, copied reflect.Value) {
+				if copied.Interface().(int) != 42 {
+					t.Error("int value changed")
+				}
+			},
+		},
+		{
+			name:  "returns string unchanged",
+			input: reflect.ValueOf("hello"),
+			validate: func(t *testing.T, _, copied reflect.Value) {
+				if copied.Interface().(string) != "hello" {
+					t.Error("string value changed")
+				}
+			},
+		},
+	}
 
-	t.Run("copies map with independent backing", func(t *testing.T) {
-		m := map[string]int{"a": 1, "b": 2}
-		v := reflect.ValueOf(m)
-		copied := deepCopyValue(v)
-
-		if v.Pointer() == copied.Pointer() {
-			t.Error("copied map should have different backing pointer")
-		}
-
-		copiedMap := copied.Interface().(map[string]int)
-		if len(copiedMap) != 2 || copiedMap["a"] != 1 || copiedMap["b"] != 2 {
-			t.Errorf("copied map content mismatch: %v", copiedMap)
-		}
-
-		m["a"] = 99
-		m["c"] = 3
-		if copiedMap["a"] != 1 {
-			t.Error("modifying original map affected the copy")
-		}
-		if _, exists := copiedMap["c"]; exists {
-			t.Error("adding to original map affected the copy")
-		}
-	})
-
-	t.Run("deep copies nested slices in map values", func(t *testing.T) {
-		m := map[string][]int{"nums": {1, 2, 3}}
-		v := reflect.ValueOf(m)
-		copied := deepCopyValue(v)
-
-		if v.Pointer() == copied.Pointer() {
-			t.Error("copied map should have different backing pointer")
-		}
-
-		copiedMap := copied.Interface().(map[string][]int)
-		m["nums"][0] = 99
-		if copiedMap["nums"][0] != 1 {
-			t.Error("modifying nested slice in original map affected the copy")
-		}
-	})
-
-	t.Run("nil slice returns zero value", func(t *testing.T) {
-		var s []int
-		v := reflect.ValueOf(s)
-		copied := deepCopyValue(v)
-		if !copied.IsNil() {
-			t.Error("expected nil slice to remain nil")
-		}
-	})
-
-	t.Run("copies slice with independent backing", func(t *testing.T) {
-		s := []int{1, 2, 3}
-		v := reflect.ValueOf(s)
-		copied := deepCopyValue(v)
-
-		if v.Pointer() == copied.Pointer() {
-			t.Error("copied slice should have different backing pointer")
-		}
-
-		copiedSlice := copied.Interface().([]int)
-		if len(copiedSlice) != 3 || copiedSlice[0] != 1 {
-			t.Errorf("copied slice content mismatch: %v", copiedSlice)
-		}
-
-		s[0] = 99
-		if copiedSlice[0] != 1 {
-			t.Error("modifying original slice affected the copy")
-		}
-	})
-
-	t.Run("deep copies nested maps in slice elements", func(t *testing.T) {
-		s := []map[string]int{{"a": 1}, {"b": 2}}
-		v := reflect.ValueOf(s)
-		copied := deepCopyValue(v)
-
-		if v.Pointer() == copied.Pointer() {
-			t.Error("copied slice should have different backing pointer")
-		}
-
-		copiedSlice := copied.Interface().([]map[string]int)
-		s[0]["a"] = 99
-		if copiedSlice[0]["a"] != 1 {
-			t.Error("modifying nested map in original slice affected the copy")
-		}
-	})
-
-	t.Run("returns int unchanged", func(t *testing.T) {
-		v := reflect.ValueOf(42)
-		copied := deepCopyValue(v)
-		if copied.Interface().(int) != 42 {
-			t.Error("int value changed")
-		}
-	})
-
-	t.Run("returns string unchanged", func(t *testing.T) {
-		v := reflect.ValueOf("hello")
-		copied := deepCopyValue(v)
-		if copied.Interface().(string) != "hello" {
-			t.Error("string value changed")
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			copied := deepCopyValue(tt.input)
+			tt.validate(t, tt.input, copied)
+		})
+	}
 }
 
 func TestDeepCopyStructFields(t *testing.T) {
-	t.Run("deep copies map field", func(t *testing.T) {
-		original := structWithMapAndSlice{
-			Name:  "test",
-			Items: map[string]int{"a": 1, "b": 2},
-		}
-		origMapPtr := reflect.ValueOf(original.Items).Pointer()
-		v := reflect.New(reflect.TypeOf(original)).Elem()
-		v.Set(reflect.ValueOf(original))
-		deepCopyStructFields(v)
-
-		copied := v.Interface().(structWithMapAndSlice)
-		if reflect.ValueOf(copied.Items).Pointer() == origMapPtr {
-			t.Error("copied map field should have different backing pointer")
-		}
-		original.Items["a"] = 99
-		if copied.Items["a"] != 1 {
-			t.Error("modifying original map affected the deep copied struct")
-		}
-	})
-
-	t.Run("deep copies slice field", func(t *testing.T) {
-		original := structWithMapAndSlice{
-			Name:   "test",
-			Values: []int{1, 2, 3},
-		}
-		origSlicePtr := reflect.ValueOf(original.Values).Pointer()
-		v := reflect.New(reflect.TypeOf(original)).Elem()
-		v.Set(reflect.ValueOf(original))
-		deepCopyStructFields(v)
-
-		copied := v.Interface().(structWithMapAndSlice)
-		if reflect.ValueOf(copied.Values).Pointer() == origSlicePtr {
-			t.Error("copied slice field should have different backing pointer")
-		}
-		original.Values[0] = 99
-		if copied.Values[0] != 1 {
-			t.Error("modifying original slice affected the deep copied struct")
-		}
-	})
-
-	t.Run("handles nil map and slice", func(t *testing.T) {
-		original := structWithMapAndSlice{Name: "test"}
-		v := reflect.New(reflect.TypeOf(original)).Elem()
-		v.Set(reflect.ValueOf(original))
-		deepCopyStructFields(v)
-
-		copied := v.Interface().(structWithMapAndSlice)
-		if copied.Items != nil {
-			t.Error("nil map should remain nil")
-		}
-		if copied.Values != nil {
-			t.Error("nil slice should remain nil")
-		}
-	})
-
-	t.Run("recurses into nested structs", func(t *testing.T) {
-		original := structWithNestedStruct{
-			Inner: structWithMapAndSlice{
-				Items:  map[string]int{"x": 10},
-				Values: []int{5, 6},
+	tests := []struct {
+		name     string
+		value    func() reflect.Value
+		validate func(*testing.T, reflect.Value)
+	}{
+		func() struct {
+			name     string
+			value    func() reflect.Value
+			validate func(*testing.T, reflect.Value)
+		} {
+			original := testStateWithMap{
+				Name:  "test",
+				Items: map[string]int{"a": 1, "b": 2},
+			}
+			origMapPtr := reflect.ValueOf(original.Items).Pointer()
+			return struct {
+				name     string
+				value    func() reflect.Value
+				validate func(*testing.T, reflect.Value)
+			}{
+				name: "deep copies map field",
+				value: func() reflect.Value {
+					v := reflect.New(reflect.TypeOf(original)).Elem()
+					v.Set(reflect.ValueOf(original))
+					return v
+				},
+				validate: func(t *testing.T, v reflect.Value) {
+					copied := v.Interface().(testStateWithMap)
+					if reflect.ValueOf(copied.Items).Pointer() == origMapPtr {
+						t.Error("copied map field should have different backing pointer")
+					}
+					original.Items["a"] = 99
+					if copied.Items["a"] != 1 {
+						t.Error("modifying original map affected the deep copied struct")
+					}
+				},
+			}
+		}(),
+		func() struct {
+			name     string
+			value    func() reflect.Value
+			validate func(*testing.T, reflect.Value)
+		} {
+			original := testStateWithSlice{
+				Name:   "test",
+				Values: []int{1, 2, 3},
+			}
+			origSlicePtr := reflect.ValueOf(original.Values).Pointer()
+			return struct {
+				name     string
+				value    func() reflect.Value
+				validate func(*testing.T, reflect.Value)
+			}{
+				name: "deep copies slice field",
+				value: func() reflect.Value {
+					v := reflect.New(reflect.TypeOf(original)).Elem()
+					v.Set(reflect.ValueOf(original))
+					return v
+				},
+				validate: func(t *testing.T, v reflect.Value) {
+					copied := v.Interface().(testStateWithSlice)
+					if reflect.ValueOf(copied.Values).Pointer() == origSlicePtr {
+						t.Error("copied slice field should have different backing pointer")
+					}
+					original.Values[0] = 99
+					if copied.Values[0] != 1 {
+						t.Error("modifying original slice affected the deep copied struct")
+					}
+				},
+			}
+		}(),
+		{
+			name: "handles nil map",
+			value: func() reflect.Value {
+				original := testStateWithMap{Name: "test"}
+				v := reflect.New(reflect.TypeOf(original)).Elem()
+				v.Set(reflect.ValueOf(original))
+				return v
 			},
-		}
-		origMapPtr := reflect.ValueOf(original.Inner.Items).Pointer()
-		origSlicePtr := reflect.ValueOf(original.Inner.Values).Pointer()
-		v := reflect.New(reflect.TypeOf(original)).Elem()
-		v.Set(reflect.ValueOf(original))
-		deepCopyStructFields(v)
+			validate: func(t *testing.T, v reflect.Value) {
+				copied := v.Interface().(testStateWithMap)
+				if copied.Items != nil {
+					t.Error("nil map should remain nil")
+				}
+			},
+		},
+		{
+			name: "handles nil slice",
+			value: func() reflect.Value {
+				original := testStateWithSlice{Name: "test"}
+				v := reflect.New(reflect.TypeOf(original)).Elem()
+				v.Set(reflect.ValueOf(original))
+				return v
+			},
+			validate: func(t *testing.T, v reflect.Value) {
+				copied := v.Interface().(testStateWithSlice)
+				if copied.Values != nil {
+					t.Error("nil slice should remain nil")
+				}
+			},
+		},
+		func() struct {
+			name     string
+			value    func() reflect.Value
+			validate func(*testing.T, reflect.Value)
+		} {
+			original := testStateWithNestedState{
+				Inner: testStateWithMap{
+					Items: map[string]int{"x": 10},
+				},
+			}
+			origMapPtr := reflect.ValueOf(original.Inner.Items).Pointer()
+			return struct {
+				name     string
+				value    func() reflect.Value
+				validate func(*testing.T, reflect.Value)
+			}{
+				name: "recurses into nested structs",
+				value: func() reflect.Value {
+					v := reflect.New(reflect.TypeOf(original)).Elem()
+					v.Set(reflect.ValueOf(original))
+					return v
+				},
+				validate: func(t *testing.T, v reflect.Value) {
+					copied := v.Interface().(testStateWithNestedState)
+					if reflect.ValueOf(copied.Inner.Items).Pointer() == origMapPtr {
+						t.Error("nested struct's map should have different backing pointer")
+					}
+					original.Inner.Items["x"] = 99
+					if copied.Inner.Items["x"] != 10 {
+						t.Error("modifying nested struct's map affected the copy")
+					}
+				},
+			}
+		}(),
+		{
+			name: "works with pointer to struct",
+			value: func() reflect.Value {
+				return reflect.ValueOf(&testStateWithMap{
+					Items: map[string]int{"k": 42},
+				})
+			},
+			validate: func(t *testing.T, v reflect.Value) {
+				original := v.Interface().(*testStateWithMap)
+				original.Items["k"] = 0
+				if original.Items["k"] != 0 {
+					t.Error("unexpected behavior")
+				}
+			},
+		},
+	}
 
-		copied := v.Interface().(structWithNestedStruct)
-		if reflect.ValueOf(copied.Inner.Items).Pointer() == origMapPtr {
-			t.Error("nested struct's map should have different backing pointer")
-		}
-		if reflect.ValueOf(copied.Inner.Values).Pointer() == origSlicePtr {
-			t.Error("nested struct's slice should have different backing pointer")
-		}
-		original.Inner.Items["x"] = 99
-		original.Inner.Values[0] = 99
-		if copied.Inner.Items["x"] != 10 {
-			t.Error("modifying nested struct's map affected the copy")
-		}
-		if copied.Inner.Values[0] != 5 {
-			t.Error("modifying nested struct's slice affected the copy")
-		}
-	})
-
-	t.Run("works with pointer to struct", func(t *testing.T) {
-		original := &structWithMapAndSlice{
-			Items: map[string]int{"k": 42},
-		}
-		v := reflect.ValueOf(original)
-		deepCopyStructFields(v)
-
-		original.Items["k"] = 0
-		if original.Items["k"] != 0 {
-			t.Error("unexpected behavior")
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := tt.value()
+			deepCopyStructFields(v)
+			if tt.validate != nil {
+				tt.validate(t, v)
+			}
+		})
+	}
 }
