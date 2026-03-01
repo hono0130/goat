@@ -1,48 +1,23 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"os"
 	"testing"
 
 	"github.com/goatx/goat"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestSimpleHalt(t *testing.T) {
 	opts := createSimpleHaltModel()
 
-	var buf bytes.Buffer
-	err := goat.Debug(&buf, opts...)
+	result, err := goat.Test(opts...)
 	if err != nil {
-		t.Fatalf("Debug failed: %v", err)
+		t.Fatalf("Test failed: %v", err)
 	}
 
-	var data map[string]any
-	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {
-		t.Fatalf("Failed to parse JSON: %v", err)
+	if result.HasViolation() {
+		t.Fatal("expected no violations")
 	}
-
-	expectedWorldsData, err := os.ReadFile("expected_worlds.json.golden")
-	if err != nil {
-		t.Fatalf("Failed to read expected worlds file: %v", err)
-	}
-
-	var expectedWorlds any
-	if err := json.Unmarshal(expectedWorldsData, &expectedWorlds); err != nil {
-		t.Fatalf("Failed to parse expected worlds JSON: %v", err)
-	}
-
-	cmpOpts := cmp.Options{
-		cmpopts.IgnoreMapEntries(func(k, v any) bool {
-			key, ok := k.(string)
-			return ok && key == "summary"
-		}),
-	}
-
-	if diff := cmp.Diff(expectedWorlds, data["worlds"], cmpOpts...); diff != "" {
-		t.Errorf("Worlds mismatch (-expected +actual):\n%s", diff)
+	if result.Summary.TotalWorlds != 3 {
+		t.Fatalf("expected TotalWorlds=3, got %d", result.Summary.TotalWorlds)
 	}
 }

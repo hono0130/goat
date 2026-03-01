@@ -1,79 +1,108 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"os"
 	"testing"
 
 	"github.com/goatx/goat"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
-
-type temporalRule struct {
-	Expression string `json:"expression"`
-	Satisfied  bool   `json:"satisfied"`
-	Evidence   any    `json:"evidence,omitempty"`
-}
-
-type debugOutput struct {
-	Worlds        any            `json:"worlds"`
-	TemporalRules []temporalRule `json:"temporal_rules"`
-}
 
 func TestTemporalRuleViolationExample(t *testing.T) {
 	opts := createTemporalRuleViolationModel()
 
-	var buf bytes.Buffer
-	if err := goat.Debug(&buf, opts...); err != nil {
-		t.Fatalf("Debug failed: %v", err)
-	}
-
-	var data debugOutput
-	if err := json.Unmarshal(buf.Bytes(), &data); err != nil {
-		t.Fatalf("Failed to parse JSON: %v", err)
-	}
-
-	expectedWorldsData, err := os.ReadFile("expected_worlds.json.golden")
+	result, err := goat.Test(opts...)
 	if err != nil {
-		t.Fatalf("Failed to read expected worlds JSON: %v", err)
+		t.Fatalf("Test failed: %v", err)
 	}
 
-	var expectedWorlds any
-	if err := json.Unmarshal(expectedWorldsData, &expectedWorlds); err != nil {
-		t.Fatalf("Failed to decode expected worlds JSON: %v", err)
+	if result.Summary.TotalWorlds != 11 {
+		t.Fatalf("expected TotalWorlds=11, got %d", result.Summary.TotalWorlds)
+	}
+	if len(result.Violations) != 1 {
+		t.Fatalf("expected 1 violation, got %d", len(result.Violations))
 	}
 
-	cmpOpts := cmp.Options{
-		cmpopts.IgnoreMapEntries(func(k, v any) bool {
-			key, ok := k.(string)
-			return ok && key == "summary"
-		}),
+	expected := goat.Violation{
+		Rule: "whenever inPaid eventually inShipped",
+		Path: []goat.WorldSnapshot{
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Pending}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{
+					{TargetMachine: "FailingShipper", EventName: "entryEvent", Details: "no fields"},
+					{TargetMachine: "Order", EventName: "entryEvent", Details: "no fields"},
+				},
+			},
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Pending}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{
+					{TargetMachine: "Order", EventName: "entryEvent", Details: "no fields"},
+				},
+			},
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Pending}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{
+					{TargetMachine: "Order", EventName: "exitEvent", Details: "no fields"},
+					{TargetMachine: "Order", EventName: "transitionEvent", Details: "{Name:To,Type:goat.AbstractState,Value:&{{0} Paid}}"},
+					{TargetMachine: "Order", EventName: "entryEvent", Details: "no fields"},
+				},
+			},
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Pending}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{
+					{TargetMachine: "Order", EventName: "transitionEvent", Details: "{Name:To,Type:goat.AbstractState,Value:&{{0} Paid}}"},
+					{TargetMachine: "Order", EventName: "entryEvent", Details: "no fields"},
+				},
+			},
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Paid}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{
+					{TargetMachine: "Order", EventName: "entryEvent", Details: "no fields"},
+				},
+			},
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Paid}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{
+					{TargetMachine: "FailingShipper", EventName: "eShipRequest", Details: "no fields"},
+				},
+			},
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Paid}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{},
+			},
+		},
+		Loop: []goat.WorldSnapshot{
+			{
+				StateMachines: []goat.StateMachineSnapshot{
+					{Name: "FailingShipper", State: "no fields", Details: "no fields"},
+					{Name: "Order", State: "{Name:StateType,Type:main.StateType,Value:Paid}", Details: "no fields"},
+				},
+				QueuedEvents: []goat.EventSnapshot{},
+			},
+		},
 	}
 
-	if diff := cmp.Diff(expectedWorlds, data.Worlds, cmpOpts...); diff != "" {
-		t.Fatalf("worlds mismatch (-expected +actual):\n%s", diff)
-	}
-
-	if len(data.TemporalRules) != 1 {
-		t.Fatalf("expected one temporal rule, got: %v", data.TemporalRules)
-	}
-	if data.TemporalRules[0].Satisfied {
-		t.Fatalf("expected temporal rule to be violated")
-	}
-
-	expectedTemporalRulesData, err := os.ReadFile("expected_temporal_rules.json.golden")
-	if err != nil {
-		t.Fatalf("Failed to read expected temporal rules JSON: %v", err)
-	}
-
-	var expectedTemporalRules []temporalRule
-	if err := json.Unmarshal(expectedTemporalRulesData, &expectedTemporalRules); err != nil {
-		t.Fatalf("Failed to parse expected temporal rules JSON: %v", err)
-	}
-
-	if diff := cmp.Diff(expectedTemporalRules, data.TemporalRules); diff != "" {
-		t.Fatalf("temporal rules mismatch (-expected +actual):\n%s", diff)
+	if diff := cmp.Diff(expected, result.Violations[0]); diff != "" {
+		t.Errorf("violation mismatch (-want +got):\n%s", diff)
 	}
 }
