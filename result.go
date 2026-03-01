@@ -164,4 +164,3 @@ func (*model) buildWorldSnapshot(w world) WorldSnapshot {
 		QueuedEvents:  events,
 	}
 }
-

@@ -43,7 +43,7 @@ func Test(opts ...Option) (*Result, error) {
 	executionTime := time.Since(start).Milliseconds()
 
 	result := model.buildResult(trResults, executionTime)
-	fmt.Fprint(os.Stdout, result)
+	_, _ = fmt.Fprint(os.Stdout, result)
 
 	return result, nil
 }
