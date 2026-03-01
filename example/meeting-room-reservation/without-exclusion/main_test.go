@@ -16,60 +16,63 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 		t.Fatalf("Test failed: %v", err)
 	}
 
-	sm := func(name, state, details string) goat.StateMachineSnapshot {
-		return goat.StateMachineSnapshot{Name: name, State: state, Details: details}
-	}
-	ev := func(target, event, details string) goat.EventSnapshot {
-		return goat.EventSnapshot{TargetMachine: target, EventName: event, Details: details}
-	}
+	client0Idle := goat.StateMachineSnapshot{Name: "ClientStateMachine", State: "{Name:StateType,Type:main.StateType,Value:ClientIdle}", Details: "{Name:ClientID,Type:int,Value:0},{Name:TargetRoom,Type:int,Value:101}"}
+	client1Idle := goat.StateMachineSnapshot{Name: "ClientStateMachine", State: "{Name:StateType,Type:main.StateType,Value:ClientIdle}", Details: "{Name:ClientID,Type:int,Value:1},{Name:TargetRoom,Type:int,Value:101}"}
+	dbIdle := goat.StateMachineSnapshot{Name: "DBStateMachine", State: "{Name:StateType,Type:main.StateType,Value:DBIdle}", Details: "{Name:Reservations,Type:[]main.Reservation,Value:[]}"}
+	dbIdleReserved0 := goat.StateMachineSnapshot{Name: "DBStateMachine", State: "{Name:StateType,Type:main.StateType,Value:DBIdle}", Details: "{Name:Reservations,Type:[]main.Reservation,Value:[{101 0}]}"}
+	dbIdleReservedBoth := goat.StateMachineSnapshot{Name: "DBStateMachine", State: "{Name:StateType,Type:main.StateType,Value:DBIdle}", Details: "{Name:Reservations,Type:[]main.Reservation,Value:[{101 0} {101 1}]}"}
+	server1Idle := goat.StateMachineSnapshot{Name: "ServerStateMachine", State: "{Name:StateType,Type:main.StateType,Value:ServerIdle}", Details: "no fields"}
+	server2Idle := goat.StateMachineSnapshot{Name: "ServerStateMachine", State: "{Name:StateType,Type:main.StateType,Value:ServerIdle}", Details: "no fields"}
+	server1Processing := goat.StateMachineSnapshot{Name: "ServerStateMachine", State: "{Name:StateType,Type:main.StateType,Value:ServerProcessing}", Details: "no fields"}
+	server2Processing := goat.StateMachineSnapshot{Name: "ServerStateMachine", State: "{Name:StateType,Type:main.StateType,Value:ServerProcessing}", Details: "no fields"}
 
-	client0Idle := sm("ClientStateMachine", "{Name:StateType,Type:main.StateType,Value:ClientIdle}", "{Name:ClientID,Type:int,Value:0},{Name:TargetRoom,Type:int,Value:101}")
-	client1Idle := sm("ClientStateMachine", "{Name:StateType,Type:main.StateType,Value:ClientIdle}", "{Name:ClientID,Type:int,Value:1},{Name:TargetRoom,Type:int,Value:101}")
-	dbIdle := sm("DBStateMachine", "{Name:StateType,Type:main.StateType,Value:DBIdle}", "{Name:Reservations,Type:[]main.Reservation,Value:[]}")
-	dbIdleReserved0 := sm("DBStateMachine", "{Name:StateType,Type:main.StateType,Value:DBIdle}", "{Name:Reservations,Type:[]main.Reservation,Value:[{101 0}]}")
-	dbIdleReservedBoth := sm("DBStateMachine", "{Name:StateType,Type:main.StateType,Value:DBIdle}", "{Name:Reservations,Type:[]main.Reservation,Value:[{101 0} {101 1}]}")
-	server1Idle := sm("ServerStateMachine", "{Name:StateType,Type:main.StateType,Value:ServerIdle}", "no fields")
-	server2Idle := sm("ServerStateMachine", "{Name:StateType,Type:main.StateType,Value:ServerIdle}", "no fields")
-	server1Processing := sm("ServerStateMachine", "{Name:StateType,Type:main.StateType,Value:ServerProcessing}", "no fields")
-	server2Processing := sm("ServerStateMachine", "{Name:StateType,Type:main.StateType,Value:ServerProcessing}", "no fields")
-
-	entryClient := func() goat.EventSnapshot { return ev("ClientStateMachine", "entryEvent", "no fields") }
-	exitClient := func() goat.EventSnapshot { return ev("ClientStateMachine", "exitEvent", "no fields") }
+	entryClient := func() goat.EventSnapshot {
+		return goat.EventSnapshot{TargetMachine: "ClientStateMachine", EventName: "entryEvent", Details: "no fields"}
+	}
+	exitClient := func() goat.EventSnapshot {
+		return goat.EventSnapshot{TargetMachine: "ClientStateMachine", EventName: "exitEvent", Details: "no fields"}
+	}
 	transClient := func() goat.EventSnapshot {
-		return ev("ClientStateMachine", "transitionEvent", "{Name:To,Type:goat.AbstractState,Value:&{{0} ClientRequesting}}")
+		return goat.EventSnapshot{TargetMachine: "ClientStateMachine", EventName: "transitionEvent", Details: "{Name:To,Type:goat.AbstractState,Value:&{{0} ClientRequesting}}"}
 	}
-	entryDB := func() goat.EventSnapshot { return ev("DBStateMachine", "entryEvent", "no fields") }
-	entryServer := func() goat.EventSnapshot { return ev("ServerStateMachine", "entryEvent", "no fields") }
-	exitServer := func() goat.EventSnapshot { return ev("ServerStateMachine", "exitEvent", "no fields") }
+	entryDB := func() goat.EventSnapshot {
+		return goat.EventSnapshot{TargetMachine: "DBStateMachine", EventName: "entryEvent", Details: "no fields"}
+	}
+	entryServer := func() goat.EventSnapshot {
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "entryEvent", Details: "no fields"}
+	}
+	exitServer := func() goat.EventSnapshot {
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "exitEvent", Details: "no fields"}
+	}
 	transServer := func() goat.EventSnapshot {
-		return ev("ServerStateMachine", "transitionEvent", "{Name:To,Type:goat.AbstractState,Value:&{{0} ServerProcessing}}")
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "transitionEvent", Details: "{Name:To,Type:goat.AbstractState,Value:&{{0} ServerProcessing}}"}
 	}
 	reserveReq0 := func() goat.EventSnapshot {
-		return ev("ServerStateMachine", "ReservationRequestEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0}")
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "ReservationRequestEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0}"}
 	}
 	reserveReq1 := func() goat.EventSnapshot {
-		return ev("ServerStateMachine", "ReservationRequestEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1}")
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "ReservationRequestEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1}"}
 	}
 	dbSelect1 := func() goat.EventSnapshot {
-		return ev("DBStateMachine", "DBSelectEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1}")
+		return goat.EventSnapshot{TargetMachine: "DBStateMachine", EventName: "DBSelectEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1}"}
 	}
 	dbSelectResult0NotReserved := func() goat.EventSnapshot {
-		return ev("ServerStateMachine", "DBSelectResultEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0},{Name:IsReserved,Type:bool,Value:false}")
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "DBSelectResultEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0},{Name:IsReserved,Type:bool,Value:false}"}
 	}
 	dbSelectResult1NotReserved := func() goat.EventSnapshot {
-		return ev("ServerStateMachine", "DBSelectResultEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1},{Name:IsReserved,Type:bool,Value:false}")
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "DBSelectResultEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1},{Name:IsReserved,Type:bool,Value:false}"}
 	}
 	dbUpdate0 := func() goat.EventSnapshot {
-		return ev("DBStateMachine", "DBUpdateEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0}")
+		return goat.EventSnapshot{TargetMachine: "DBStateMachine", EventName: "DBUpdateEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0}"}
 	}
 	dbUpdate1 := func() goat.EventSnapshot {
-		return ev("DBStateMachine", "DBUpdateEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1}")
+		return goat.EventSnapshot{TargetMachine: "DBStateMachine", EventName: "DBUpdateEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1}"}
 	}
 	dbUpdateResult0Success := func() goat.EventSnapshot {
-		return ev("ServerStateMachine", "DBUpdateResultEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0},{Name:Succeeded,Type:bool,Value:true}")
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "DBUpdateResultEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0},{Name:Succeeded,Type:bool,Value:true}"}
 	}
 	dbUpdateResult1Success := func() goat.EventSnapshot {
-		return ev("ServerStateMachine", "DBUpdateResultEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1},{Name:Succeeded,Type:bool,Value:true}")
+		return goat.EventSnapshot{TargetMachine: "ServerStateMachine", EventName: "DBUpdateResultEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:1},{Name:Succeeded,Type:bool,Value:true}"}
 	}
 
 	expected := &goat.Result{
@@ -107,7 +110,7 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 						StateMachines: []goat.StateMachineSnapshot{client0Idle, client1Idle, dbIdle, server1Idle, server2Idle},
 						QueuedEvents: []goat.EventSnapshot{
 							exitClient(), transClient(), entryClient(), exitClient(), transClient(), entryClient(),
-							ev("DBStateMachine", "DBSelectEvent", "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0}"),
+							{TargetMachine: "DBStateMachine", EventName: "DBSelectEvent", Details: "{Name:RoomID,Type:int,Value:101},{Name:ClientID,Type:int,Value:0}"},
 							exitServer(), transServer(), entryServer(),
 							entryServer(), reserveReq1(),
 						},
