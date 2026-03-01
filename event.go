@@ -149,8 +149,6 @@ func newEventPrototype[T AbstractEvent]() AbstractEvent {
 	return evt
 }
 
-// WARNING: cloneEvent performs shallow copy, so nested pointers are shared
-// This is a potential bug - modifications to nested structs will affect both instances
 func cloneEvent(event AbstractEvent) AbstractEvent {
 	v := reflect.ValueOf(event)
 	if v.Kind() == reflect.Ptr {
@@ -159,6 +157,7 @@ func cloneEvent(event AbstractEvent) AbstractEvent {
 
 	newEvent := reflect.New(v.Type()).Elem()
 	newEvent.Set(v)
+	deepCopyStructFields(newEvent)
 
 	return newEvent.Addr().Interface().(AbstractEvent)
 }

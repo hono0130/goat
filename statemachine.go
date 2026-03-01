@@ -193,6 +193,7 @@ func cloneState(state AbstractState) AbstractState {
 
 	newState := reflect.New(v.Type()).Elem()
 	newState.Set(v)
+	deepCopyStructFields(newState)
 
 	return newState.Addr().Interface().(AbstractState)
 }
@@ -257,6 +258,7 @@ func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
 	smc := reflect.New(v.Type()).Elem()
 
 	smc.Set(v)
+	deepCopyStructFields(smc)
 
 	currentStateField := smc.FieldByName("State")
 	if currentStateField.IsValid() && !currentStateField.IsZero() {
