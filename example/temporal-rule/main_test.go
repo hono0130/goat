@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/goatx/goat"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestTemporalRuleExample(t *testing.T) {
@@ -14,10 +16,15 @@ func TestTemporalRuleExample(t *testing.T) {
 		t.Fatalf("Test failed: %v", err)
 	}
 
-	if result.HasViolation() {
-		t.Fatal("expected no violations")
+	expected := &goat.Result{
+		Summary: goat.Summary{TotalWorlds: 15},
 	}
-	if result.Summary.TotalWorlds != 15 {
-		t.Fatalf("expected TotalWorlds=15, got %d", result.Summary.TotalWorlds)
+
+	cmpOpts := cmp.Options{
+		cmpopts.IgnoreUnexported(goat.Result{}),
+		cmpopts.IgnoreFields(goat.Summary{}, "ExecutionTimeMs"),
+	}
+	if diff := cmp.Diff(expected, result, cmpOpts...); diff != "" {
+		t.Errorf("result mismatch (-want +got):\n%s", diff)
 	}
 }
