@@ -25,7 +25,6 @@ func TestDeepCopyValue_Map(t *testing.T) {
 			t.Errorf("copied map content mismatch: %v", copiedMap)
 		}
 
-		// Mutate original, verify copy is independent
 		m["a"] = 99
 		m["c"] = 3
 		if copiedMap["a"] != 1 {
@@ -196,9 +195,6 @@ func TestDeepCopyStructFields(t *testing.T) {
 		deepCopyStructFields(v)
 
 		original.Items["k"] = 0
-		// After deepCopyStructFields, the struct pointed to by original should have a new map
-		// But since we passed a pointer and modified the struct in-place,
-		// the original pointer's map is now the deep copy
 		if original.Items["k"] != 0 {
 			t.Error("unexpected behavior")
 		}
@@ -237,7 +233,6 @@ func TestCloneState_DeepCopy(t *testing.T) {
 			t.Error("Name field should be copied")
 		}
 
-		// Mutate original map
 		original.Items["a"] = 99
 		original.Items["c"] = 3
 		if cloned.Items["a"] != 1 {
