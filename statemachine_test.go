@@ -8,37 +8,27 @@ import (
 )
 
 type testStateWithMap struct {
-	State
-	Name  string
+	testState
 	Items map[string]int
 }
 
-func (s *testStateWithMap) isState() bool { return true }
-
 type testStateWithSlice struct {
-	State
-	Name   string
+	testState
 	Values []int
 }
 
-func (s *testStateWithSlice) isState() bool { return true }
-
 type testStateMachineWithMap struct {
-	StateMachine
+	testStateMachine
 	Counts map[string]int
 }
 
-func (sm *testStateMachineWithMap) isStateMachine() bool { return true }
-
 type testStateMachineWithSlice struct {
-	StateMachine
+	testStateMachine
 	Items []string
 }
 
-func (sm *testStateMachineWithSlice) isStateMachine() bool { return true }
-
 type testStateWithNestedState struct {
-	State
+	testState
 	Inner testStateWithMap
 }
 
@@ -181,10 +171,10 @@ func TestCloneStateMachine(t *testing.T) {
 
 	t.Run("deep copies map field", func(t *testing.T) {
 		original := &testStateMachineWithMap{
-			StateMachine: StateMachine{
+			testStateMachine: testStateMachine{StateMachine: StateMachine{
 				smID:  "test",
 				State: newTestState("initial"),
-			},
+			}},
 			Counts: map[string]int{"x": 1, "y": 2},
 		}
 		origMapPtr := reflect.ValueOf(original.Counts).Pointer()
@@ -210,10 +200,10 @@ func TestCloneStateMachine(t *testing.T) {
 
 	t.Run("deep copies slice field", func(t *testing.T) {
 		original := &testStateMachineWithSlice{
-			StateMachine: StateMachine{
+			testStateMachine: testStateMachine{StateMachine: StateMachine{
 				smID:  "test",
 				State: newTestState("initial"),
-			},
+			}},
 			Items: []string{"a", "b"},
 		}
 		origSlicePtr := reflect.ValueOf(original.Items).Pointer()
@@ -316,8 +306,8 @@ func TestCloneState(t *testing.T) {
 
 	t.Run("deep copies map field", func(t *testing.T) {
 		original := &testStateWithMap{
-			Name:  "test",
-			Items: map[string]int{"a": 1, "b": 2},
+			testState: testState{Name: "test"},
+			Items:     map[string]int{"a": 1, "b": 2},
 		}
 		origMapPtr := reflect.ValueOf(original.Items).Pointer()
 
@@ -345,8 +335,8 @@ func TestCloneState(t *testing.T) {
 
 	t.Run("deep copies slice field", func(t *testing.T) {
 		original := &testStateWithSlice{
-			Name:   "test",
-			Values: []int{10, 20, 30},
+			testState: testState{Name: "test"},
+			Values:    []int{10, 20, 30},
 		}
 		origSlicePtr := reflect.ValueOf(original.Values).Pointer()
 
@@ -363,7 +353,7 @@ func TestCloneState(t *testing.T) {
 	})
 
 	t.Run("nil map and slice remain nil", func(t *testing.T) {
-		original := &testStateWithMap{Name: "test"}
+		original := &testStateWithMap{testState: testState{Name: "test"}}
 		cloned := cloneState(original).(*testStateWithMap)
 		if cloned.Items != nil {
 			t.Error("nil map should remain nil after clone")
@@ -505,8 +495,8 @@ func TestDeepCopyStructFields(t *testing.T) {
 			validate func(*testing.T, reflect.Value)
 		} {
 			original := testStateWithMap{
-				Name:  "test",
-				Items: map[string]int{"a": 1, "b": 2},
+				testState: testState{Name: "test"},
+				Items:     map[string]int{"a": 1, "b": 2},
 			}
 			origMapPtr := reflect.ValueOf(original.Items).Pointer()
 			return struct {
@@ -538,8 +528,8 @@ func TestDeepCopyStructFields(t *testing.T) {
 			validate func(*testing.T, reflect.Value)
 		} {
 			original := testStateWithSlice{
-				Name:   "test",
-				Values: []int{1, 2, 3},
+				testState: testState{Name: "test"},
+				Values:    []int{1, 2, 3},
 			}
 			origSlicePtr := reflect.ValueOf(original.Values).Pointer()
 			return struct {
@@ -568,7 +558,7 @@ func TestDeepCopyStructFields(t *testing.T) {
 		{
 			name: "handles nil map",
 			value: func() reflect.Value {
-				original := testStateWithMap{Name: "test"}
+				original := testStateWithMap{testState: testState{Name: "test"}}
 				v := reflect.New(reflect.TypeOf(original)).Elem()
 				v.Set(reflect.ValueOf(original))
 				return v
@@ -583,7 +573,7 @@ func TestDeepCopyStructFields(t *testing.T) {
 		{
 			name: "handles nil slice",
 			value: func() reflect.Value {
-				original := testStateWithSlice{Name: "test"}
+				original := testStateWithSlice{testState: testState{Name: "test"}}
 				v := reflect.New(reflect.TypeOf(original)).Elem()
 				v.Set(reflect.ValueOf(original))
 				return v
