@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/goatx/goat"
@@ -99,7 +100,9 @@ func createTemporalRuleViolationModel() []goat.Option {
 
 func main() {
 	opts := createTemporalRuleViolationModel()
-	if err := goat.Test(opts...); err != nil {
+	result, err := goat.Test(opts...)
+	if err != nil {
 		panic(err)
 	}
+	fmt.Print(result)
 }

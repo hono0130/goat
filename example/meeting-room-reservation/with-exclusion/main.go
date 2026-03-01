@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/goatx/goat"
@@ -331,8 +332,9 @@ func createMeetingRoomWithExclusionModel() []goat.Option {
 
 func main() {
 	opts := createMeetingRoomWithExclusionModel()
-	err := goat.Test(opts...)
+	result, err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Print(result)
 }

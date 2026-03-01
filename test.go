@@ -2,58 +2,45 @@ package goat
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
-	"os"
 	"time"
 )
 
 // Test performs model checking on state machines with the provided options.
-// It creates a Kripke model, explores all reachable states, checks invariants,
-// and outputs results to stdout.
+// It creates a Kripke model, explores all reachable states, checks invariants
+// and temporal properties, and returns the results.
 //
 // Parameters:
-//   - opts: Configuration options including state machines and invariants
+//   - opts: Configuration options including state machines and rules
 //
-// Returns an error if model creation or solving fails.
+// Returns:
+//   - *Result: verification results (violations, path information, summary)
+//   - error: if model creation or solving fails
 //
 // Example:
 //
-//	err := goat.Test(
+//	result, err := goat.Test(
 //	    goat.WithStateMachines(serverSM, clientSM),
 //	    goat.WithRules(goat.Always(cond)),
 //	)
-func Test(opts ...Option) error {
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	fmt.Print(result)
+func Test(opts ...Option) (*Result, error) {
 	model, err := newModel(opts...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	start := time.Now()
 	if err := model.Solve(); err != nil {
-		return err
+		return nil, err
 	}
 	trResults := model.checkLTL()
 	executionTime := time.Since(start).Milliseconds()
 
-	if model.hasInvariantViolation {
-		model.writeInvariantViolations(os.Stdout)
-	}
-	if model.hasLTLViolation {
-		model.writeTemporalViolations(os.Stdout, trResults)
-	}
-	if !model.hasInvariantViolation && !model.hasLTLViolation {
-		if _, err := os.Stdout.WriteString("No violations found.\n"); err != nil {
-			return err
-		}
-	}
-
-	summary := model.summarize(executionTime)
-	_, _ = fmt.Fprintln(os.Stdout, "\nModel Checking Summary:")
-	_, _ = fmt.Fprintf(os.Stdout, "Total Worlds: %d\n", summary.TotalWorlds)
-	_, _ = fmt.Fprintf(os.Stdout, "Execution Time: %dms\n", summary.ExecutionTimeMs)
-
-	return nil
+	return model.buildResult(trResults, executionTime), nil
 }
 
 // WithStateMachines configures the test with the specified state machines.

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/goatx/goat"
@@ -176,10 +177,11 @@ func createClientServerModel() []goat.Option {
 
 func main() {
 	opts := createClientServerModel()
-	err := goat.Test(opts...)
+	result, err := goat.Test(opts...)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Print(result)
 }
 
 func randomRequestID() string {
