@@ -60,13 +60,11 @@ func TestResultInvariantViolation(t *testing.T) {
 		t.Fatal("expected nil loop for invariant violation")
 	}
 
-	// Check WorldSnapshot contents
 	snap := v.Path[len(v.Path)-1]
 	if len(snap.StateMachines) == 0 {
 		t.Fatal("expected state machines in snapshot")
 	}
 
-	// Check String() output
 	text := result.String()
 	if !strings.Contains(text, "Condition failed. Not Always bad.") {
 		t.Fatalf("expected violation text in output, got: %s", text)
@@ -104,7 +102,6 @@ func TestResultTemporalViolation(t *testing.T) {
 		t.Fatal("expected non-empty loop (lasso cycle)")
 	}
 
-	// Check String() output
 	text := result.String()
 	if !strings.Contains(text, "Condition failed. Not eventually always cF.") {
 		t.Fatalf("expected violation text in output, got: %s", text)
