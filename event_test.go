@@ -107,7 +107,7 @@ func TestCloneEvent(t *testing.T) {
 					if reflect.ValueOf(original.Data).Pointer() == reflect.ValueOf(clonedEvent.Data).Pointer() {
 						t.Error("copied map should have different backing pointer")
 					}
-					original.Data["key"] = "modified"
+					original.Data["key"] = testModifiedValue
 					original.Data["new"] = "entry"
 					if clonedEvent.Data["key"] != "value" {
 						t.Error("modifying original map affected cloned event")
@@ -140,7 +140,7 @@ func TestCloneEvent(t *testing.T) {
 					if reflect.ValueOf(original.Tags).Pointer() == reflect.ValueOf(clonedEvent.Tags).Pointer() {
 						t.Error("copied slice should have different backing pointer")
 					}
-					original.Tags[0] = "modified"
+					original.Tags[0] = testModifiedValue
 					if cloned.(*testEventWithSlice).Tags[0] != "a" {
 						t.Error("modifying original slice affected cloned event")
 					}

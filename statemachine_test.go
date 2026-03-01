@@ -201,7 +201,7 @@ func TestCloneStateMachine(t *testing.T) {
 
 		cloned := cloneStateMachine(original).(*testStateMachineWithSlice)
 
-		original.Items[0] = "modified"
+		original.Items[0] = testModifiedValue
 		if cloned.Items[0] != "a" {
 			t.Error("modifying original slice affected cloned state machine")
 		}
@@ -343,7 +343,7 @@ func TestDeepCopyValue(t *testing.T) {
 	}{
 		{
 			name:  "nil map returns zero value",
-			input: reflect.ValueOf((map[string]int)(nil)),
+			input: reflect.ValueOf(map[string]int(nil)),
 			validate: func(t *testing.T, _, copied reflect.Value) {
 				if !copied.IsNil() {
 					t.Error("expected nil map to remain nil")
@@ -375,7 +375,7 @@ func TestDeepCopyValue(t *testing.T) {
 		},
 		{
 			name:  "nil slice returns zero value",
-			input: reflect.ValueOf(([]int)(nil)),
+			input: reflect.ValueOf([]int(nil)),
 			validate: func(t *testing.T, _, copied reflect.Value) {
 				if !copied.IsNil() {
 					t.Error("expected nil slice to remain nil")
