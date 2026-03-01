@@ -106,7 +106,7 @@ func (m *model) buildWorldSnapshots(ids []worldID) []WorldSnapshot {
 	return snapshots
 }
 
-func (m *model) buildWorldSnapshot(w world) WorldSnapshot {
+func (*model) buildWorldSnapshot(w world) WorldSnapshot {
 	smIDs := make([]string, 0, len(w.env.machines))
 	for smID := range w.env.machines {
 		smIDs = append(smIDs, smID)
