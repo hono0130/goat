@@ -8,10 +8,6 @@ import (
 // EventHandler is a function type for handling generic events in a state machine.
 // It receives the event, the state machine instance, and a context for
 // interacting with other state machines via SendTo, Goto, or Halt functions.
-//
-// Important: Do not read or write other machines' fields directly inside a handler.
-// The model checker copies each machine's state independently, so direct access
-// will read stale data or silently lose writes. Always communicate through events.
 type EventHandler[T AbstractEvent, SM AbstractStateMachine] func(ctx context.Context, event T, sm SM)
 
 // EntryHandler is a function type for handling state entry events.
