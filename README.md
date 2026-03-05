@@ -108,7 +108,7 @@ server, _ := serverSpec.NewInstance()
 client.Server = server
 ```
 
-This reference is only for passing to `SendTo`. Do not read or write another machine's fields directly in a handler — the model checker copies each machine's state independently, so you would see stale values and writes would be lost. Use events for all communication between machines.
+Use this reference only with `SendTo`. Handlers must not read or write fields of other machines directly. The model checker won't propagate those changes.
 
 ### Defining Rules
 
