@@ -108,6 +108,8 @@ server, _ := serverSpec.NewInstance()
 client.Server = server
 ```
 
+**Important:** This reference is only for use with `SendTo`. Do not read or write the other machine's fields directly inside a handler. The model checker copies each machine's state independently, so direct field access on another machine will read stale data and writes will be silently lost. Always communicate through events.
+
 ### Defining Rules
 
 A **condition** is a named boolean check on one or more state machines. A **rule** takes a condition and specifies how to verify it — always true, eventually true, and so on.
