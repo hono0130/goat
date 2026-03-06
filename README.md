@@ -247,7 +247,7 @@ This works with any handler type, not just `OnEvent`. For example, two `OnEntry`
 `goat.Test` runs the model checker. Pass options to specify which state machines to check and which rules to verify:
 
 ```go
-err := goat.Test(
+result, err := goat.Test(
     goat.WithStateMachines(server, client),
     goat.WithRules(
         goat.Always(nonNegative),
@@ -258,7 +258,17 @@ err := goat.Test(
 
 `WithStateMachines` takes the state machine instances to include in the model. `WithRules` takes the rules defined with `Always`, `WheneverPEventuallyQ`, and the other rule constructors.
 
-When a violation is found, `Test` prints the path to the violating state to stdout — which machine was in which state at each step — so you can trace the exact scenario:
+`Test` returns a `*Result` you can use programmatically:
+
+- `result.HasViolation()` — whether any violations were found.
+- `result.Violations` — the list of violations. Each `Violation` has:
+  - `Rule` — which rule was violated.
+  - `Path` — the sequence of states leading to the violation. Each element is a `WorldSnapshot` — a snapshot of every state machine's current state and all queued events at that point.
+  - `Loop` — for temporal violations, the cycle that prevents the property from being satisfied.
+- `result.Summary.TotalWorlds` — the number of distinct reachable combinations of state machine states and queued events that were explored.
+- `result.Summary.ExecutionTimeMs` — how long model checking took in milliseconds.
+
+`Test` also prints results to stdout. When a violation is found, it prints the path to the violating state — which machine was in which state at each step — so you can trace the exact scenario:
 
 ```
 Condition failed. Not Always non-negative.
