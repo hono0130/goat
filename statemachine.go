@@ -212,9 +212,6 @@ func deepCopyValue(v reflect.Value) reflect.Value {
 }
 
 func deepCopyStructFields(v reflect.Value) {
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
 	if v.Kind() != reflect.Struct {
 		return
 	}
