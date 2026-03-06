@@ -149,20 +149,6 @@ func newEventPrototype[T AbstractEvent]() AbstractEvent {
 	return evt
 }
 
-// WARNING: cloneEvent deep copies map and slice fields, but nested pointers are still shared.
-func cloneEvent(event AbstractEvent) AbstractEvent {
-	v := reflect.ValueOf(event)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-
-	newEvent := reflect.New(v.Type()).Elem()
-	newEvent.Set(v)
-	deepCopyStructFields(newEvent)
-
-	return newEvent.Addr().Interface().(AbstractEvent)
-}
-
 func sameEvent(e1, e2 AbstractEvent) bool {
 	return getEventName(e1) == getEventName(e2)
 }
