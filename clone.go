@@ -70,6 +70,12 @@ func cloneStateMachine(sm AbstractStateMachine) AbstractStateMachine {
 	smc := reflect.New(v.Type()).Elem()
 
 	smc.Set(v)
+
+	// EventHandlers は下で専用コピーする。HandlerBuilders はモデル検査中不要。
+	// nil にして deepCopyStructFields の無駄なコピーを防ぐ。
+	smc.FieldByName("EventHandlers").Set(reflect.Zero(smc.FieldByName("EventHandlers").Type()))
+	smc.FieldByName("HandlerBuilders").Set(reflect.Zero(smc.FieldByName("HandlerBuilders").Type()))
+
 	deepCopyStructFields(smc)
 
 	currentStateField := smc.FieldByName("State")
