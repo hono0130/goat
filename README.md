@@ -258,17 +258,12 @@ result, err := goat.Test(
 
 `WithStateMachines` takes the state machine instances to include in the model. `WithRules` takes the rules defined with `Always`, `WheneverPEventuallyQ`, and the other rule constructors.
 
-`Test` explores every reachable combination of state machine states and queued events, and checks rules against each one. In the API, this combination is called a **world**.
+The model checker explores every reachable combination of state machine states and queued events. This combination is called a **world**. `Test` checks all rules against every world and returns a `*Result`:
 
-`Test` returns a `*Result` you can use programmatically:
-
-- `result.HasViolation()` — whether any violations were found.
-- `result.Violations` — the list of violations. Each `Violation` has:
-  - `Rule` — which rule was violated.
-  - `Path` — the sequence of worlds leading to the violation.
-  - `Loop` — for temporal violations, the cycle that prevents the property from being satisfied.
-- `result.Summary.TotalWorlds` — the number of distinct worlds explored.
-- `result.Summary.ExecutionTimeMs` — how long model checking took in milliseconds.
+- `result.HasViolation()` — true if any rule was violated.
+- `result.Violations` — each `Violation` contains `Rule` (the violated rule), `Path` (the sequence of worlds leading to the violation), and `Loop` (for temporal violations, the cycle).
+- `result.Summary.TotalWorlds` — how many worlds were explored.
+- `result.Summary.ExecutionTimeMs` — execution time in milliseconds.
 
 `Test` also prints results to stdout. When a violation is found, it prints the path to the violating state — which machine was in which state at each step — so you can trace the exact scenario:
 
