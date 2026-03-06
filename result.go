@@ -41,7 +41,7 @@ func (r *Result) String() string {
 	}
 
 	fmt.Fprintln(&sb, "\nModel Checking Summary:")
-	fmt.Fprintf(&sb, "Total Steps: %d\n", r.Summary.TotalSteps)
+	fmt.Fprintf(&sb, "Total Worlds: %d\n", r.Summary.TotalWorlds)
 	fmt.Fprintf(&sb, "Execution Time: %dms\n", r.Summary.ExecutionTimeMs)
 
 	return sb.String()
@@ -49,19 +49,23 @@ func (r *Result) String() string {
 
 // Summary contains statistics about the model checking run.
 type Summary struct {
-	TotalSteps     int
+	// TotalWorlds is the number of distinct worlds (unique combinations of
+	// state machine states and queued events) explored during model checking.
+	TotalWorlds     int
 	ExecutionTimeMs int64
 }
 
 // Violation represents a single property violation found during model checking.
 type Violation struct {
 	Rule string
-	Path []StepSnapshot
-	Loop []StepSnapshot
+	Path []WorldSnapshot
+	Loop []WorldSnapshot
 }
 
-// StepSnapshot is a snapshot of the entire system at one point in a trace.
-type StepSnapshot struct {
+// WorldSnapshot represents a world — the combination of every state machine's
+// current state and all queued events at a single point in time.
+// A violation path is a sequence of worlds that leads to the violation.
+type WorldSnapshot struct {
 	StateMachines []StateMachineSnapshot
 	QueuedEvents  []EventSnapshot
 }
@@ -83,7 +87,7 @@ type EventSnapshot struct {
 func (m *model) buildResult(trResults []temporalRuleResult, executionTimeMs int64) *Result {
 	result := &Result{
 		Summary: Summary{
-			TotalSteps:     len(m.worlds),
+			TotalWorlds:     len(m.worlds),
 			ExecutionTimeMs: executionTimeMs,
 		},
 	}
@@ -97,7 +101,7 @@ func (m *model) buildResult(trResults []temporalRuleResult, executionTimeMs int6
 			}
 			result.Violations = append(result.Violations, Violation{
 				Rule: rule,
-				Path: m.buildStepSnapshots(w.path),
+				Path: m.buildWorldSnapshots(w.path),
 			})
 		}
 	}
@@ -112,24 +116,24 @@ func (m *model) buildResult(trResults []temporalRuleResult, executionTimeMs int6
 		}
 		result.Violations = append(result.Violations, Violation{
 			Rule: tr.Rule,
-			Path: m.buildStepSnapshots(l.Prefix),
-			Loop: m.buildStepSnapshots(l.Loop),
+			Path: m.buildWorldSnapshots(l.Prefix),
+			Loop: m.buildWorldSnapshots(l.Loop),
 		})
 	}
 
 	return result
 }
 
-func (m *model) buildStepSnapshots(ids []worldID) []StepSnapshot {
-	snapshots := make([]StepSnapshot, len(ids))
+func (m *model) buildWorldSnapshots(ids []worldID) []WorldSnapshot {
+	snapshots := make([]WorldSnapshot, len(ids))
 	for i, wid := range ids {
 		w := m.worlds[wid]
-		snapshots[i] = m.buildStepSnapshot(w)
+		snapshots[i] = m.buildWorldSnapshot(w)
 	}
 	return snapshots
 }
 
-func (*model) buildStepSnapshot(w world) StepSnapshot {
+func (*model) buildWorldSnapshot(w world) WorldSnapshot {
 	smIDs := make([]string, 0, len(w.env.machines))
 	for smID := range w.env.machines {
 		smIDs = append(smIDs, smID)
@@ -159,7 +163,7 @@ func (*model) buildStepSnapshot(w world) StepSnapshot {
 		}
 	}
 
-	return StepSnapshot{
+	return WorldSnapshot{
 		StateMachines: sms,
 		QueuedEvents:  events,
 	}

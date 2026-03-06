@@ -17,7 +17,7 @@ func TestTemporalRuleExample(t *testing.T) {
 	}
 
 	expected := &goat.Result{
-		Summary: goat.Summary{TotalSteps: 15},
+		Summary: goat.Summary{TotalWorlds: 15},
 	}
 
 	cmpOpts := cmp.Options{

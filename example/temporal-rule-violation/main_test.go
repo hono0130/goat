@@ -20,7 +20,7 @@ func TestTemporalRuleViolationExample(t *testing.T) {
 		Violations: []goat.Violation{
 			{
 				Rule: "whenever inPaid eventually inShipped",
-				Path: []goat.StepSnapshot{
+				Path: []goat.WorldSnapshot{
 					{
 						StateMachines: []goat.StateMachineSnapshot{
 							{Name: "FailingShipper", State: "no fields", Details: "no fields"},
@@ -87,7 +87,7 @@ func TestTemporalRuleViolationExample(t *testing.T) {
 						QueuedEvents: []goat.EventSnapshot{},
 					},
 				},
-				Loop: []goat.StepSnapshot{
+				Loop: []goat.WorldSnapshot{
 					{
 						StateMachines: []goat.StateMachineSnapshot{
 							{Name: "FailingShipper", State: "no fields", Details: "no fields"},
@@ -98,7 +98,7 @@ func TestTemporalRuleViolationExample(t *testing.T) {
 				},
 			},
 		},
-		Summary: goat.Summary{TotalSteps: 11},
+		Summary: goat.Summary{TotalWorlds: 11},
 	}
 
 	cmpOpts := cmp.Options{

@@ -48,7 +48,7 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 		Violations: []goat.Violation{
 			{
 				Rule: "Always no-double-book",
-				Path: []goat.StepSnapshot{
+				Path: []goat.WorldSnapshot{
 					// [0] initial state
 					{
 						StateMachines: []goat.StateMachineSnapshot{client0Idle, client1Idle, dbIdle, server1Idle, server2Idle},
@@ -221,7 +221,7 @@ func TestMeetingRoomReservationWithoutExclusion(t *testing.T) {
 				},
 			},
 		},
-		Summary: goat.Summary{TotalSteps: 12152},
+		Summary: goat.Summary{TotalWorlds: 12152},
 	}
 
 	cmpOpts := cmp.Options{

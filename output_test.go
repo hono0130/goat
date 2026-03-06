@@ -646,7 +646,7 @@ func TestModel_summarize(t *testing.T) {
 			},
 			executionTimeMs: 150,
 			wantSummary: &modelSummary{
-				TotalSteps:     2,
+				TotalWorlds:     2,
 				ExecutionTimeMs: 150,
 			},
 		},
@@ -664,7 +664,7 @@ func TestModel_summarize(t *testing.T) {
 			},
 			executionTimeMs: 250,
 			wantSummary: &modelSummary{
-				TotalSteps:     2,
+				TotalWorlds:     2,
 				ExecutionTimeMs: 250,
 			},
 		},
@@ -676,7 +676,7 @@ func TestModel_summarize(t *testing.T) {
 			},
 			executionTimeMs: 0,
 			wantSummary: &modelSummary{
-				TotalSteps:     0,
+				TotalWorlds:     0,
 				ExecutionTimeMs: 0,
 			},
 		},
@@ -691,7 +691,7 @@ func TestModel_summarize(t *testing.T) {
 			},
 			executionTimeMs: 500,
 			wantSummary: &modelSummary{
-				TotalSteps:     4,
+				TotalWorlds:     4,
 				ExecutionTimeMs: 500,
 			},
 		},

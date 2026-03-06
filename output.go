@@ -10,7 +10,7 @@ import (
 )
 
 type modelSummary struct {
-	TotalSteps     int   `json:"total_steps"`
+	TotalWorlds     int   `json:"total_worlds"`
 	ExecutionTimeMs int64 `json:"execution_time_ms"`
 }
 
@@ -90,7 +90,7 @@ func writeInvariantViolations(w io.Writer, violations []Violation) {
 		sb.WriteString("):\n")
 
 		pathLen := len(v.Path)
-		writeStepSequence(&sb, v.Path, func(idx int) string {
+		writeWorldSequence(&sb, v.Path, func(idx int) string {
 			if idx == pathLen-1 {
 				return "<-- violation here"
 			}
@@ -123,7 +123,7 @@ func writeTemporalViolations(w io.Writer, violations []Violation) {
 		prefixLen := len(v.Path)
 		loopLen := len(v.Loop)
 
-		sequence := make([]StepSnapshot, 0, prefixLen+loopLen)
+		sequence := make([]WorldSnapshot, 0, prefixLen+loopLen)
 		sequence = append(sequence, v.Path...)
 		if loopLen > 0 {
 			if prefixLen == 0 || !reflect.DeepEqual(v.Path[prefixLen-1], v.Loop[0]) {
@@ -143,7 +143,7 @@ func writeTemporalViolations(w io.Writer, violations []Violation) {
 		fmt.Fprintf(&sb, "%d", len(sequence))
 		sb.WriteString("):\n")
 
-		writeStepSequence(&sb, sequence, nil)
+		writeWorldSequence(&sb, sequence, nil)
 	}
 
 	if block == 0 {
@@ -153,7 +153,7 @@ func writeTemporalViolations(w io.Writer, violations []Violation) {
 	_, _ = io.WriteString(w, sb.String())
 }
 
-func writeStepSequence(sb *strings.Builder, snapshots []StepSnapshot, annotate func(int) string) {
+func writeWorldSequence(sb *strings.Builder, snapshots []WorldSnapshot, annotate func(int) string) {
 	for idx, snap := range snapshots {
 		sb.WriteString("  [")
 		fmt.Fprintf(sb, "%d", idx)
@@ -414,7 +414,7 @@ func (*model) worldToJSON(w world) worldJSON {
 
 func (m *model) summarize(executionTimeMs int64) *modelSummary {
 	summary := &modelSummary{
-		TotalSteps:     len(m.worlds),
+		TotalWorlds:     len(m.worlds),
 		ExecutionTimeMs: executionTimeMs,
 	}
 	return summary

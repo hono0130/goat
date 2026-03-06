@@ -67,7 +67,7 @@ func WithStateMachines(sms ...AbstractStateMachine) Option {
 
 // Debug performs model checking and outputs detailed JSON results.
 // Unlike Test(), this function provides comprehensive debugging information
-// including all explored steps and their states in JSON format.
+// including all explored worlds and their states in JSON format.
 //
 // Parameters:
 //   - w: Writer to output the JSON results to

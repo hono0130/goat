@@ -17,7 +17,7 @@ func TestClientServer(t *testing.T) {
 	}
 
 	expected := &goat.Result{
-		Summary: goat.Summary{TotalSteps: 40},
+		Summary: goat.Summary{TotalWorlds: 40},
 	}
 
 	cmpOpts := cmp.Options{

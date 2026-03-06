@@ -17,7 +17,7 @@ func TestSimpleNonDeterministic(t *testing.T) {
 	}
 
 	expected := &goat.Result{
-		Summary: goat.Summary{TotalSteps: 12},
+		Summary: goat.Summary{TotalWorlds: 12},
 	}
 
 	cmpOpts := cmp.Options{
