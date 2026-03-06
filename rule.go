@@ -39,7 +39,7 @@ func WithRules(rs ...Rule) Option {
 	})
 }
 
-// Always returns a rule that ensures c holds in every explored world.
+// Always returns a rule that ensures c holds in every explored step.
 //
 // Parameters:
 //   - c: Condition that must remain true in all explored states

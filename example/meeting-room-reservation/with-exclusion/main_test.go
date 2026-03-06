@@ -17,7 +17,7 @@ func TestMeetingRoomReservationWithExclusion(t *testing.T) {
 	}
 
 	expected := &goat.Result{
-		Summary: goat.Summary{TotalWorlds: 10792},
+		Summary: goat.Summary{TotalSteps: 10792},
 	}
 
 	cmpOpts := cmp.Options{

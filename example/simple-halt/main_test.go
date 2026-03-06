@@ -17,7 +17,7 @@ func TestSimpleHalt(t *testing.T) {
 	}
 
 	expected := &goat.Result{
-		Summary: goat.Summary{TotalWorlds: 3},
+		Summary: goat.Summary{TotalSteps: 3},
 	}
 
 	cmpOpts := cmp.Options{

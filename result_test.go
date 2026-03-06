@@ -24,7 +24,7 @@ func TestTest(t *testing.T) {
 				return []Option{WithStateMachines(sm), WithRules(Always(BoolCondition("ok", true)))}
 			}(),
 			want: &Result{
-				Summary: Summary{TotalWorlds: 2},
+				Summary: Summary{TotalSteps: 2},
 			},
 		},
 		{
@@ -37,7 +37,7 @@ func TestTest(t *testing.T) {
 				Violations: []Violation{
 					{
 						Rule: "Always bad",
-						Path: []WorldSnapshot{
+						Path: []StepSnapshot{
 							{
 								StateMachines: []StateMachineSnapshot{sm},
 								QueuedEvents:  []EventSnapshot{entry},
@@ -45,7 +45,7 @@ func TestTest(t *testing.T) {
 						},
 					},
 				},
-				Summary: Summary{TotalWorlds: 2},
+				Summary: Summary{TotalSteps: 2},
 			},
 		},
 		{
@@ -58,7 +58,7 @@ func TestTest(t *testing.T) {
 				Violations: []Violation{
 					{
 						Rule: "eventually always cF",
-						Path: []WorldSnapshot{
+						Path: []StepSnapshot{
 							{
 								StateMachines: []StateMachineSnapshot{sm},
 								QueuedEvents:  []EventSnapshot{entry},
@@ -68,7 +68,7 @@ func TestTest(t *testing.T) {
 								QueuedEvents:  []EventSnapshot{},
 							},
 						},
-						Loop: []WorldSnapshot{
+						Loop: []StepSnapshot{
 							{
 								StateMachines: []StateMachineSnapshot{sm},
 								QueuedEvents:  []EventSnapshot{},
@@ -76,7 +76,7 @@ func TestTest(t *testing.T) {
 						},
 					},
 				},
-				Summary: Summary{TotalWorlds: 2},
+				Summary: Summary{TotalSteps: 2},
 			},
 		},
 		{

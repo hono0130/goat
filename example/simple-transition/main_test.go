@@ -20,7 +20,7 @@ func TestSimpleTransition(t *testing.T) {
 		Violations: []goat.Violation{
 			{
 				Rule: "Always mut<=1",
-				Path: []goat.WorldSnapshot{
+				Path: []goat.StepSnapshot{
 					{
 						StateMachines: []goat.StateMachineSnapshot{
 							{Name: "StateMachine", State: "{Name:StateType,Type:main.StateType,Value:A}", Details: "{Name:Mut,Type:int,Value:0}"},
@@ -69,7 +69,7 @@ func TestSimpleTransition(t *testing.T) {
 				},
 			},
 		},
-		Summary: goat.Summary{TotalWorlds: 8},
+		Summary: goat.Summary{TotalSteps: 8},
 	}
 
 	cmpOpts := cmp.Options{

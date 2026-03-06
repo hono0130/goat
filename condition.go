@@ -9,9 +9,9 @@ func (c ConditionName) String() string {
 	return strings.TrimSpace(string(c))
 }
 
-// Condition represents a named predicate evaluated against a world.
+// Condition represents a named predicate evaluated against a step.
 // Implementations must return true when the condition holds for the
-// provided world state, and false otherwise.
+// provided step, and false otherwise.
 type Condition interface {
 	Name() ConditionName
 	Evaluate(w world) bool
@@ -78,7 +78,7 @@ func NewCondition[T AbstractStateMachine](name string, sm T, check func(T) bool)
 // It is used inside check functions to reference multiple state machines.
 //
 // Implementations return false when the requested state machine does not exist
-// in the current world.
+// in the current step.
 type Machines interface {
 	Get(sm AbstractStateMachine) (AbstractStateMachine, bool)
 }
