@@ -258,7 +258,7 @@ result, err := goat.Test(
 
 `WithStateMachines` takes the state machine instances to include in the model. `WithRules` takes the rules defined with `Always`, `WheneverPEventuallyQ`, and the other rule constructors.
 
-`Test` explores every reachable combination of state machine states and queued events, and checks rules against each one. In the API, this combination is called a **world** — one possible snapshot of the entire system at a point in time.
+`Test` explores every reachable combination of state machine states and queued events, and checks rules against each one. In the API, this combination is called a **world**.
 
 `Test` returns a `*Result` you can use programmatically:
 
